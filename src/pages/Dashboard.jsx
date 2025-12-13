@@ -21,10 +21,10 @@ const Dashboard = () => {
     return (
         <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                Hola, {profile?.full_name ? profile.full_name.split(' ')[0] : 'Admin'} 👋
+                Hola, {profile?.full_name || 'Admin'} 👋
             </h1>
             <p style={{ opacity: 0.7, marginBottom: '3rem', fontSize: '1.2rem' }}>
-                ¿Qué quieres gestionar hoy?
+                Bienvenido a su administrador de juegos en línea
             </p>
 
             <div style={{
