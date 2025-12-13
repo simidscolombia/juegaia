@@ -201,14 +201,26 @@ export const mockRecharge = async (amount) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Call the admin RPC we defined in SQL
-    const { error } = await supabase
-        .rpc('admin_recharge_wallet', {
-            target_user_id: user.id,
-            amount: amount
-        });
+    // Fallback: Try direct update (Works if RLS allows or if Admin)
+    const { data: currentWallet } = await supabase
+        .from('wallets')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single();
 
-    if (error) throw error;
+    const currentBalance = currentWallet?.balance || 0;
+    const newBalance = currentBalance + amount;
+
+    const { error: updateError } = await supabase
+        .from('wallets')
+        .update({ balance: newBalance })
+        .eq('user_id', user.id);
+
+    if (updateError) {
+        // If direct update fails, it might be RLS. we can't do much without SQL console.
+        console.error("Recharge failed:", updateError);
+        throw new Error("No se pudo recargar. (Error de permisos/RPC missing)");
+    }
 };
 
 // Events are now handled via Realtime, but keeping constant for ref if needed
