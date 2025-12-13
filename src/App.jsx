@@ -14,6 +14,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Recharge from './pages/Recharge'
 import Network from './pages/Network'
+import PlayerLobby from './pages/PlayerLobby'
 import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './components/MainLayout'
 
@@ -62,6 +63,15 @@ function App() {
                     <ProtectedRoute>
                         <MainLayout>
                             <Network />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
+                {/* Player Specific Routes */}
+                <Route path="/my-lobby" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <PlayerLobby />
                         </MainLayout>
                     </ProtectedRoute>
                 } />

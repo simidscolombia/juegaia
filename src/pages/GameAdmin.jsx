@@ -221,43 +221,39 @@ const GameAdmin = () => {
                 );
             })()}
 
+            {/* Active Players Section (Grouped) */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: 'var(--color-secondary)', textAlign: 'left' }}>
-                            <th style={{ padding: '15px' }}>Nombre</th>
-                            <th style={{ padding: '15px' }}>PIN</th>
-                            <th style={{ padding: '15px', textAlign: 'right' }}>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {players.filter(p => p.status !== 'PENDING').map(player => (
-                            <tr key={player.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                <td style={{ padding: '15px' }}>
-                                    <div style={{ fontWeight: 'bold' }}>{player.name}</div>
-                                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Pagado</div>
-                                </td>
-                                <td style={{ padding: '15px', fontFamily: 'monospace' }}>{player.pin}</td>
-                                <td style={{ padding: '15px', textAlign: 'right', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                    <button
-                                        onClick={() => copyShareLink(player)}
-                                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                                        title="Copiar para WhatsApp"
-                                    >
-                                        <Share2 size={16} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                        {players.length === 0 && (
-                            <tr>
-                                <td colSpan={3} style={{ padding: '30px', textAlign: 'center', opacity: 0.5 }}>
-                                    No hay jugadores registrados.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                <div style={{ padding: '15px', background: 'var(--color-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0 }}>Clientes Activos</h3>
+                    <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>Agrupados por Teléfono/Nombre</span>
+                </div>
+
+                {(() => {
+                    // Grouping Logic
+                    const activePlayers = players.filter(p => p.status !== 'PENDING');
+                    if (activePlayers.length === 0) {
+                        return <div style={{ padding: '30px', textAlign: 'center', opacity: 0.5 }}>No hay jugadores registrados.</div>;
+                    }
+
+                    const grouped = {};
+                    activePlayers.forEach(p => {
+                        const key = p.phone || p.name;
+                        if (!grouped[key]) grouped[key] = {
+                            name: p.name,
+                            phone: p.phone,
+                            tickets: []
+                        };
+                        grouped[key].tickets.push(p);
+                    });
+
+                    return (
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {Object.values(grouped).map((group, i) => (
+                                <ClientGroupRow key={i} group={group} gameId={gameId} />
+                            ))}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* Modal Vender Cartón */}
@@ -291,6 +287,81 @@ const GameAdmin = () => {
                             </div>
                         </form>
                     </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const ClientGroupRow = ({ group, gameId }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    const shareAll = () => {
+        const links = group.tickets.map((t, i) => `🎟️ *Cartón ${t.pin}*: ${window.location.origin}/play/${gameId}?card=${t.id}`).join('\n');
+        const msg = `👋 *¡Hola ${group.name}!* \n\nAquí están tus ${group.tickets.length} cartones para el Bingo:\n\n${links}\n\n¡Buena suerte! 🍀`;
+
+        // Use Native Share if mobile, otherwise copy
+        if (navigator.share) {
+            navigator.share({ title: 'Tus Cartones', text: msg }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(msg);
+            alert('Enlaces copiados. ¡Pégalos en WhatsApp!');
+        }
+    };
+
+    return (
+        <div style={{ borderBottom: '1px solid var(--color-border)', padding: '15px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%',
+                        background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '1.2rem', fontWeight: 'bold'
+                    }}>
+                        {group.tickets.length}
+                    </div>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>{group.name}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{group.phone || 'Sin teléfono'}</div>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        onClick={shareAll}
+                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                        <Share2 size={16} /> Enviar Todo
+                    </button>
+                    <button
+                        onClick={() => setExpanded(!expanded)}
+                        style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                    >
+                        {expanded ? 'Ocultar' : 'Ver Cartones'}
+                    </button>
+                </div>
+            </div>
+
+            {expanded && (
+                <div style={{ marginTop: '15px', paddingLeft: '50px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {group.tickets.map(ticket => (
+                        <div key={ticket.id} style={{
+                            background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '4px',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                        }}>
+                            <span style={{ fontFamily: 'monospace' }}>PIN: <strong>{ticket.pin}</strong></span>
+                            <button
+                                onClick={() => {
+                                    const link = `${window.location.origin}/play/${gameId}?card=${ticket.id}`;
+                                    const msg = `🎟️ *Tu Cartón ${ticket.pin}*: ${link}`;
+                                    if (navigator.share) navigator.share({ text: msg });
+                                    else { navigator.clipboard.writeText(msg); alert('Copiado!'); }
+                                }}
+                                style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}
+                            >
+                                Compartir Individual
+                            </button>
+                        </div>
+                    ))}
                 </div>
             )}
         </div>

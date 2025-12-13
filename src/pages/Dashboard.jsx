@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, getWallet } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
-import { LayoutDashboard, Ticket, ArrowRight, Wallet } from 'lucide-react';
+import { LayoutDashboard, Ticket, ArrowRight, Wallet, Trophy } from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -232,6 +232,41 @@ const Dashboard = () => {
                         fontWeight: 'bold',
                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
+                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
+                    </button>
+                </div>
+
+                {/* Player Zone Card */}
+                <div
+                    onClick={() => navigate('/my-lobby')}
+                    className="card"
+                    style={{
+                        cursor: 'pointer',
+                        padding: '3rem 2rem',
+                        textAlign: 'center',
+                        transition: 'transform 0.2s, border-color 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '1.5rem',
+                        border: '2px solid #10B981'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <div style={{
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        padding: '20px',
+                        borderRadius: '50%',
+                        color: '#10B981'
+                    }}>
+                        <Trophy size={48} />
+                    </div>
+                    <div>
+                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Zona Jugador</h2>
+                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Mis cartones y premios</p>
+                    </div>
+                    <button className="primary" style={{ width: '100%', marginTop: 'auto', background: '#10B981' }}>
                         Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
                     </button>
                 </div>
