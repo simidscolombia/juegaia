@@ -185,7 +185,7 @@ export const getWallet = async () => {
         console.error("Error fetching wallet:", error);
         return { balance: 0 }; // Fallback
     }
-    return data?.[0] || null;
+    return data || null;
 };
 
 export const getProfile = async () => {
