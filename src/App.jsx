@@ -30,6 +30,14 @@ function App() {
                     </ProtectedRoute>
                 } />
 
+                <Route path="/manage/:gameId" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <GameAdmin />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
                 <Route path="/raffle-dashboard" element={
                     <ProtectedRoute>
                         <MainLayout>
