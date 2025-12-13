@@ -149,6 +149,13 @@ const Dashboard = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => {
+                                const link = `${window.location.origin}/bingo/${game.id}/join`;
+                                navigator.clipboard.writeText(link);
+                                alert("Link copiado: " + link);
+                            }} title="Copiar Link de Tienda">
+                                <Copy size={18} />
+                            </button>
                             <button onClick={() => navigate(`/manage/${game.id}`)} title="Administrar y Vender">
                                 <Users size={18} />
                             </button>

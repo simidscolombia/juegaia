@@ -100,11 +100,33 @@ const GameAdmin = () => {
                         <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{game.name}</h1>
                         <p style={{ margin: '5px 0 0', opacity: 0.7 }}>Panel de Administración</p>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-accent)' }}>
-                            {players.length}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+                        <button
+                            onClick={() => {
+                                const link = `${window.location.origin}/bingo/${gameId}/join`;
+                                navigator.clipboard.writeText(link);
+                                alert("Link de Tienda copiado: " + link);
+                            }}
+                            className="text-accent"
+                            style={{
+                                background: 'rgba(233, 69, 96, 0.1)',
+                                border: '1px solid var(--color-accent)',
+                                padding: '8px 15px',
+                                borderRadius: '20px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <LinkIcon size={16} style={{ marginRight: '5px' }} /> Copiar Link Tienda
+                        </button>
+                        <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-text)' }}>
+                                {players.length}
+                            </span>
+                            <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>Jugadores</span>
                         </div>
-                        <div style={{ fontSize: '0.8rem' }}>Jugadores</div>
                     </div>
                 </div>
             </div>
