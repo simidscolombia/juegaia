@@ -3,21 +3,24 @@
   line-height: 1.5;
   font-weight: 400;
 
-  --color-bg-dark: #1a1a2e;
-  --color-bg-card: #16213e;
-  --color-primary: #0f3460;
-  --color-accent: #e94560;
-  --color-text: #ffffff;
-  --color-success: #4cc9f0;
+  /* Default Midnight Theme Variables (Fallback) */
+  --color-bg: #0f172a;
+  --color-card: #1e293b;
+  --color-primary: #6366f1;
+  --color-accent: #10b981;
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
   
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--color-text);
-  background-color: var(--color-bg-dark);
+  background-color: var(--color-bg);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
@@ -26,6 +29,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--color-bg);
 }
 
 #root {
@@ -35,6 +39,17 @@ body {
   text-align: center;
 }
 
+/* Card Utility */
+.card {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Button Base */
 button {
   border-radius: 8px;
   border: 1px solid transparent;
@@ -42,16 +57,67 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: var(--color-bg-card);
+  background-color: var(--color-card);
+  color: var(--color-text);
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.25s;
 }
-button:hover {
-  border-color: var(--color-accent);
+
+/* Primary Button */
+button.primary {
+  background-color: var(--color-primary);
+  color: white;
 }
+button.primary:hover {
+  filter: brightness(1.1);
+  border-color: transparent;
+}
+
+/* Accent Button */
+button.accent {
+  background-color: var(--color-accent);
+  color: white; /* or black depending on contrast, usually white for emerald/violet */
+}
+
+/* Standard Button Hover (Secondary) */
+button:not(.primary):not(.accent):hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg); 
+}
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Input Fields */
+input, select, textarea {
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.8rem;
+  border-radius: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  ring: 2px var(--color-primary);
+}
+
+/* Helpers */
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-accent {
+  color: var(--color-accent);
 }
 
 .blink-animation {

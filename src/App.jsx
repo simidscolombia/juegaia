@@ -10,32 +10,37 @@ import RafflePublic from './pages/RafflePublic'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ProtectedRoute from './components/ProtectedRoute'
+import MainLayout from './components/MainLayout'
 
 function App() {
     return (
-        <div style={{ width: '100%', height: '100vh' }}>
+        <div style={{ width: '100%', height: '100vh', background: 'var(--color-bg)' }}>
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
 
-                {/* Admin Routes - Protected */}
+                {/* Admin Routes - Protected & Layout Wrapped */}
                 <Route path="/dashboard" element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <MainLayout>
+                            <Dashboard />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/raffle-dashboard" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <RaffleDashboard />
+                        </MainLayout>
                     </ProtectedRoute>
                 } />
 
                 <Route path="/tv/:gameId" element={<TVMode />} />
                 <Route path="/play/:token" element={<PlayerView />} />
 
-                {/* Raffle Routes */}
-                <Route path="/raffle-dashboard" element={
-                    <ProtectedRoute>
-                        <RaffleDashboard />
-                    </ProtectedRoute>
-                } />
-
+                {/* Raffle Routes - Public/TV no layout */}
                 <Route path="/raffle-tv/:raffleId" element={<RaffleTV />} />
                 <Route path="/raffle/:raffleId" element={<RafflePublic />} />
             </Routes>

@@ -155,23 +155,16 @@ const RaffleDashboard = () => {
                 }
             `}</style>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.5rem', margin: 0 }}>
-                    <Ticket color="#e94560" /> Panel Rifas
-                </h1>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <Link to="/dashboard">
-                        <button style={{ background: '#30475e', padding: '0.5rem 1rem', fontSize: '0.9rem' }}>Bingo</button>
-                    </Link>
-                    <button onClick={() => setShowCreate(!showCreate)} style={{ background: '#e94560', padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                        <Plus size={18} /> <span className="hide-on-mobile">Nueva</span>
-                    </button>
-                </div>
+            {/* Header Removed (Handled by MainLayout) */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                <button onClick={() => setShowCreate(!showCreate)} className="primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                    <Plus size={18} /> <span className="hide-on-mobile">Nueva Rifa</span>
+                </button>
             </div>
 
             <div className="raffle-dashboard-grid">
                 {/* Left: List of Raffles */}
-                <div style={{ background: '#16213e', padding: '1.5rem', borderRadius: '15px' }}>
+                <div className="card">
                     <h3>Mis Rifas</h3>
                     {raffles.map(r => (
                         <div
@@ -288,7 +281,7 @@ const RaffleDashboard = () => {
 
                 {/* Right: Raffle Details and Actions */}
                 {selectedRaffle ? (
-                    <div style={{ background: '#16213e', padding: '1.5rem', borderRadius: '15px' }}>
+                    <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2rem', flexWrap: 'wrap', gap: '10px' }}>
                             <div>
                                 <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{selectedRaffle.name}</h2>

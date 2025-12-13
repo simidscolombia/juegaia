@@ -79,10 +79,9 @@ const Register = () => {
     return (
         <div style={{
             minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: '#1a1a2e', padding: '1rem'
+            background: 'var(--color-bg)', padding: '1rem'
         }}>
-            <div style={{
-                background: '#16213e', padding: '2rem', borderRadius: '15px',
+            <div className="card" style={{
                 width: '100%', maxWidth: '400px', boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
