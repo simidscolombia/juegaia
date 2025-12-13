@@ -11,7 +11,7 @@
   --color-text: #f8fafc;
   --color-text-muted: #94a3b8;
   --color-border: #334155;
-  
+
   color-scheme: dark;
   color: var(--color-text);
   background-color: var(--color-bg);
@@ -45,8 +45,15 @@ body {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1rem;
+  /* Default mobile padding */
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+  }
 }
 
 /* Button Base */
@@ -68,6 +75,7 @@ button.primary {
   background-color: var(--color-primary);
   color: white;
 }
+
 button.primary:hover {
   filter: brightness(1.1);
   border-color: transparent;
@@ -76,13 +84,14 @@ button.primary:hover {
 /* Accent Button */
 button.accent {
   background-color: var(--color-accent);
-  color: white; /* or black depending on contrast, usually white for emerald/violet */
+  color: white;
+  /* or black depending on contrast, usually white for emerald/violet */
 }
 
 /* Standard Button Hover (Secondary) */
 button:not(.primary):not(.accent):hover {
   border-color: var(--color-primary);
-  background-color: var(--color-bg); 
+  background-color: var(--color-bg);
 }
 
 button:focus,
@@ -91,7 +100,9 @@ button:focus-visible {
 }
 
 /* Input Fields */
-input, select, textarea {
+input,
+select,
+textarea {
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   color: var(--color-text);

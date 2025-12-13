@@ -54,6 +54,19 @@ export const THEMES = {
             textMuted: '#fbcfe8',
             border: '#6d28d9'
         }
+    },
+    light: {
+        id: 'light',
+        name: 'Clean Light',
+        colors: {
+            bg: '#f8fafc',      // Slate-50
+            card: '#ffffff',    // White
+            primary: '#3b82f6', // Blue-500
+            accent: '#ef4444',  // Red-500
+            text: '#0f172a',    // Slate-900
+            textMuted: '#64748b', // Slate-500
+            border: '#e2e8f0'   // Slate-200
+        }
     }
 };
 

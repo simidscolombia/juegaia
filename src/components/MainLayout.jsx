@@ -50,25 +50,20 @@ const MainLayout = ({ children }) => {
     ];
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--color-bg)', color: 'var(--color-text)' }}>
+        <div style={{
+            display: 'flex',
+            minHeight: '100vh',
+            background: 'var(--color-bg)',
+            color: 'var(--color-text)',
+            flexDirection: 'column' // Default to column for mobile
+        }}>
 
-            {/* Mobile Menu Toggle */}
-            <button
-                onClick={() => setSidebarOpen(!isSidebarOpen)}
-                style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000, padding: '10px', display: 'none' }} // Visible only on mobile via CSS if needed
-                className="mobile-toggle"
-            >
-                {isSidebarOpen ? <X /> : <Menu />}
-            </button>
-
-            {/* Sidebar */}
-            <aside style={{
-                width: isSidebarOpen ? '260px' : '0',
-                transition: 'width 0.3s ease',
-                overflow: 'hidden',
+            {/* Desktop Sidebar (Hidden on Mobile) */}
+            <aside className="desktop-sidebar" style={{
+                width: '260px',
                 background: 'var(--color-card)',
                 borderRight: '1px solid var(--color-border)',
-                display: 'flex',
+                display: 'none', // Hidden by default (mobile), shown via CSS media query
                 flexDirection: 'column',
                 position: 'sticky',
                 top: 0,
@@ -104,12 +99,9 @@ const MainLayout = ({ children }) => {
                 </nav>
 
                 <div style={{ padding: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
-                    {/* Theme Selector - Compact */}
+                    {/* Theme Selector */}
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                            <Palette size={16} /> Tema
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
                             {Object.values(themes).map(t => (
                                 <button
                                     key={t.id}
@@ -122,18 +114,13 @@ const MainLayout = ({ children }) => {
                                         border: currentTheme === t.id ? '2px solid white' : '2px solid transparent',
                                         padding: 0,
                                         borderRadius: '50%',
-                                        cursor: 'pointer',
-                                        boxShadow: currentTheme === t.id ? '0 0 0 2px var(--color-accent)' : 'none'
+                                        cursor: 'pointer'
                                     }}
                                 />
                             ))}
                         </div>
-                        <div style={{ textAlign: 'center', marginTop: '5px', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                            {themes[currentTheme].name}
-                        </div>
                     </div>
 
-                    {/* User Info */}
                     <div style={{ marginBottom: '1rem', background: 'var(--color-bg)', padding: '10px', borderRadius: '8px' }}>
                         <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{profile?.full_name || 'Usuario'}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
@@ -141,31 +128,115 @@ const MainLayout = ({ children }) => {
                             {wallet.balance.toLocaleString()}
                         </div>
                     </div>
-
-                    <button
-                        onClick={handleLogout}
-                        style={{
-                            background: 'transparent',
-                            border: '1px solid var(--color-border)',
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '8px',
-                            color: 'var(--color-text)'
-                        }}
-                    >
+                    <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid var(--color-border)', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', color: 'var(--color-text)' }}>
                         <LogOut size={16} /> Cerrar Sesión
                     </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main style={{ flex: 1, padding: '2rem', overflowY: 'auto', height: '100vh', boxSizing: 'border-box' }}>
+            {/* Mobile Header (Wallet & User) */}
+            <header className="mobile-header" style={{
+                padding: '1rem',
+                borderBottom: '1px solid var(--color-border)',
+                background: 'var(--color-card)',
+                display: 'flex', // Flex by default (mobile), hidden via CSS on desktop
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                position: 'sticky',
+                top: 0,
+                zIndex: 90
+            }}>
+                <div style={{ fontWeight: 'bold' }}>JuegAIA</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {/* Theme Toggle Mobile (Circle that cylces) */}
+                    <button
+                        onClick={() => {
+                            const keys = Object.keys(themes);
+                            const nextIndex = (keys.indexOf(currentTheme) + 1) % keys.length;
+                            setCurrentTheme(keys[nextIndex]);
+                        }}
+                        style={{ padding: '5px', borderRadius: '50%', width: '30px', height: '30px', background: themes[currentTheme].colors.primary, border: '2px solid white' }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                        <Wallet size={16} />
+                        {wallet.balance.toLocaleString()}
+                    </div>
+                    <button onClick={handleLogout} style={{ background: 'transparent', padding: '5px' }}>
+                        <LogOut size={20} color="var(--color-text-muted)" />
+                    </button>
+                </div>
+            </header>
+
+            {/* Main Content */}
+            <main style={{
+                flex: 1,
+                padding: '1rem',
+                paddingBottom: '80px', // Space for bottom nav
+                overflowY: 'auto',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
                 <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
                     {children}
                 </div>
             </main>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="mobile-bottom-nav" style={{
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                width: '100%',
+                background: 'var(--color-card)',
+                borderTop: '1px solid var(--color-border)',
+                display: 'flex', // Flex by default (mobile)
+                justifyContent: 'space-around',
+                padding: '10px 0',
+                zIndex: 100,
+                boxShadow: '0 -2px 10px rgba(0,0,0,0.1)'
+            }}>
+                {navItems.map((item) => (
+                    <Link
+                        key={item.path}
+                        to={item.path}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '4px',
+                            textDecoration: 'none',
+                            color: location.pathname === item.path ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                            fontSize: '0.8rem',
+                            fontWeight: 500
+                        }}
+                    >
+                        {item.icon}
+                        {item.label}
+                    </Link>
+                ))}
+            </nav>
+
+            <style>{`
+                @media (min-width: 768px) {
+                    /* Desktop Layout */
+                    div[style*="flex-direction: column"] {
+                        flex-direction: row !important;
+                    }
+                    .desktop-sidebar {
+                        display: flex !important;
+                    }
+                    .mobile-header {
+                        display: none !important;
+                    }
+                    .mobile-bottom-nav {
+                        display: none !important;
+                    }
+                    main {
+                        padding: 2rem !important;
+                        padding-bottom: 2rem !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };
