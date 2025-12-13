@@ -91,11 +91,10 @@ export const createTicket = async (gameId, playerName, cardMatrix, pin, status =
             status: status,
             phone: phone
         }])
-        .select()
-        .single();
+        .select();
 
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
 };
 
 // Alias for saveTicket if used
@@ -131,11 +130,10 @@ export const updateTicket = async (ticketId, updates) => {
         .from('bingo_players')
         .update(updates)
         .eq('id', ticketId)
-        .select()
-        .single();
+        .select();
 
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
 };
 
 export const getGameTickets = async (gameId) => {
@@ -154,6 +152,20 @@ export const getTicketsByPhone = async (gameId, phone) => {
         .select('*')
         .eq('game_id', gameId)
         .eq('phone', phone);
+
+    if (error) throw error;
+    return data;
+};
+
+export const approveBatchTickets = async (ticketIds) => {
+    if (!ticketIds || ticketIds.length === 0) return [];
+
+    // update status for all
+    const { data, error } = await supabase
+        .from('bingo_players')
+        .update({ status: 'PAID' })
+        .in('id', ticketIds)
+        .select();
 
     if (error) throw error;
     return data;

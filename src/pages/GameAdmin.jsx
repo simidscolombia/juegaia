@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame } from '../utils/storage';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 
@@ -165,40 +165,61 @@ const GameAdmin = () => {
             </div>
 
             {/* Pending Requests Section */}
-            {players.filter(p => p.status === 'PENDING').length > 0 && (
-                <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
-                    <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({players.filter(p => p.status === 'PENDING').length})</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <tbody>
-                            {players.filter(p => p.status === 'PENDING').map(req => (
-                                <tr key={req.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                                    <td style={{ padding: '10px' }}>
-                                        <strong>{req.name}</strong><br />
-                                        <small>{req.phone}</small>
-                                    </td>
-                                    <td style={{ textAlign: 'right', padding: '10px' }}>
-                                        <button
-                                            className="primary"
-                                            onClick={async () => {
-                                                if (!confirm(`¿Aprobar cartón para ${req.name}?`)) return;
-                                                try {
-                                                    await updateTicket(req.id, { status: 'PAID' });
-                                                    // Send WhatsApp Link automatically? Optional.
-                                                    copyShareLink(req); // Auto-copy link on approval for convenience
-                                                    await loadData();
-                                                } catch (e) { alert(e.message) }
-                                            }}
-                                            style={{ background: '#F59E0B', border: 'none' }}
-                                        >
-                                            Aprobar
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
+            {/* Pending Requests Section (GROUPED) */}
+            {(() => {
+                const pending = players.filter(p => p.status === 'PENDING');
+                if (pending.length === 0) return null;
+
+                // Group by phone or name
+                const groups = {};
+                pending.forEach(p => {
+                    const key = p.phone || p.name; // Grouping key
+                    if (!groups[key]) groups[key] = { name: p.name, phone: p.phone, tickets: [] };
+                    groups[key].tickets.push(p);
+                });
+
+                return (
+                    <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
+                        <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({pending.length})</h3>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <tbody>
+                                {Object.values(groups).map((group, i) => (
+                                    <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                                        <td style={{ padding: '10px' }}>
+                                            <strong>{group.name}</strong><br />
+                                            <small>{group.phone}</small>
+                                            <div style={{ marginTop: '5px', fontSize: '0.85rem', opacity: 0.8 }}>
+                                                Solicita {group.tickets.length} cartón{group.tickets.length > 1 ? 'es' : ''}
+                                            </div>
+                                        </td>
+                                        <td style={{ textAlign: 'right', padding: '10px' }}>
+                                            <div style={{ fontWeight: 'bold', color: '#F59E0B', marginBottom: '5px' }}>
+                                                ${(group.tickets.length * 10000).toLocaleString()}
+                                            </div>
+                                            <button
+                                                className="primary"
+                                                onClick={async () => {
+                                                    if (!confirm(`¿Aprobar ${group.tickets.length} cartones para ${group.name}?`)) return;
+                                                    try {
+                                                        const ids = group.tickets.map(t => t.id);
+                                                        await approveBatchTickets(ids);
+                                                        // Auto-copy link on approval for convenience (use first ticket for data)
+                                                        copyShareLink(group.tickets[0]);
+                                                        await loadData();
+                                                    } catch (e) { alert(e.message) }
+                                                }}
+                                                style={{ background: '#F59E0B', border: 'none', width: '100%' }}
+                                            >
+                                                Aprobar Todos
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                );
+            })()}
 
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
