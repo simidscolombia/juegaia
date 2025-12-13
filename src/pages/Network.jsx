@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Share2, Coins } from 'lucide-react';
 import { getProfile } from '../utils/storage';
+import { supabase } from '../utils/supabaseClient';
 
 const Network = () => {
     const navigate = useNavigate();
@@ -10,16 +11,42 @@ const Network = () => {
     const [commissions, setCommissions] = useState([]); // This would come from an API
 
     useEffect(() => {
-        getProfile().then(p => {
-            setProfile(p);
-            // TODO: Fetch real referrals and commissions
-            // Mock data for display
-            setReferrals([
-                { id: 1, name: 'Juan Perez', date: '2025-12-10' },
-                { id: 2, name: 'Maria Gomez', date: '2025-12-11' },
-            ]);
-        });
+        loadNetworkData();
     }, []);
+
+    const loadNetworkData = async () => {
+        const user = await getProfile();
+        if (!user) return;
+        setProfile(user);
+
+        // 1. Fetch Referrals (People I invited)
+        const { data: refs } = await supabase
+            .from('profiles')
+            .select('id, full_name, created_at')
+            .eq('referred_by', user.id)
+            .order('created_at', { ascending: false });
+
+        if (refs) {
+            setReferrals(refs.map(r => ({
+                id: r.id,
+                name: r.full_name || 'Usuario sin nombre',
+                date: new Date(r.created_at).toLocaleDateString()
+            })));
+        }
+
+        // 2. Fetch Commissions (Money I earned from them)
+        const { data: comms } = await supabase
+            .from('commissions')
+            .select('amount')
+            .eq('beneficiary_id', user.id);
+
+        if (comms) {
+            setCommissions(comms); // Store all commissions if needed later
+            // Calculate total
+            // const total = comms.reduce((sum, c) => sum + Number(c.amount), 0);
+            // We can calculate total in render or state
+        }
+    };
 
     const copyLink = () => {
         const link = `${window.location.origin}/register?ref=${profile?.id}`;
@@ -51,7 +78,7 @@ const Network = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '3rem' }}>
                 <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
                     <Coins size={32} color="#fbbf24" style={{ marginBottom: '10px' }} />
-                    <h2 style={{ margin: 0 }}>$0</h2>
+                    <h2 style={{ margin: 0 }}>${commissions.reduce((sum, c) => sum + Number(c.amount), 0).toLocaleString()}</h2>
                     <p style={{ opacity: 0.7 }}>Ganancias Totales</p>
                 </div>
                 <div className="card" style={{ textAlign: 'center', padding: '1.5rem' }}>
