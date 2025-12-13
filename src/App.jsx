@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
+import BingoDashboard from './pages/BingoDashboard'
 import TVMode from './pages/TVMode'
 import PlayerView from './pages/PlayerView'
 import RaffleDashboard from './pages/RaffleDashboard'
@@ -31,6 +32,22 @@ function App() {
                     </ProtectedRoute>
                 } />
 
+                <Route path="/bingos" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <BingoDashboard />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/raffles" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <RaffleDashboard />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
                 <Route path="/manage/:gameId" element={
                     <ProtectedRoute>
                         <MainLayout>
@@ -39,13 +56,6 @@ function App() {
                     </ProtectedRoute>
                 } />
 
-                <Route path="/raffle-dashboard" element={
-                    <ProtectedRoute>
-                        <MainLayout>
-                            <RaffleDashboard />
-                        </MainLayout>
-                    </ProtectedRoute>
-                } />
 
                 <Route path="/tv/:gameId" element={<TVMode />} />
                 <Route path="/play/:gameId" element={<PlayerView />} />

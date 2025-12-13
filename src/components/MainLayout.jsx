@@ -10,7 +10,8 @@ import {
     Wallet,
     Menu,
     X,
-    Palette
+    Palette,
+    Home
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -45,8 +46,9 @@ const MainLayout = ({ children }) => {
     };
 
     const navItems = [
-        { path: '/dashboard', label: 'Bingo', icon: <LayoutDashboard size={20} /> },
-        { path: '/raffle-dashboard', label: 'Rifas', icon: <Ticket size={20} /> },
+        { path: '/dashboard', label: 'Inicio', icon: <Home size={20} /> },
+        { path: '/bingos', label: 'Bingos', icon: <LayoutDashboard size={20} /> },
+        { path: '/raffles', label: 'Rifas', icon: <Ticket size={20} /> },
     ];
 
     return (
