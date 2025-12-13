@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createGameWithWallet, getGames, saveTicket, getGameTickets, getWallet, getProfile, mockRecharge } from '../utils/storage'; // Updated imports
+import { createGameWithWallet, getGames, saveTicket, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame } from '../utils/storage'; // Updated imports
 import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
-import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut } from 'lucide-react'; // Added Icons
+import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash } from 'lucide-react'; // Added Icons
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -57,6 +57,18 @@ const Dashboard = () => {
             alert('Error: ' + err.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+
+    const handleDelete = async (game) => {
+        if (!window.confirm(`¿Seguro que quieres eliminar el bingo "${game.name}"?\nSi tiene jugadores no se podrá borrar.`)) return;
+        try {
+            await deleteGame(game.id);
+            alert('Bingo eliminado.');
+            loadData();
+        } catch (err) {
+            alert('❌ No se pudo eliminar: ' + err.message);
         }
     };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar } from 'lucide-react';
-import { createRaffle, getRaffles, getRaffleTickets, sellRaffleTicket } from '../utils/storage';
+import { createRaffle, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
 import { COMMON_LOTTERIES } from '../utils/lotteries';
 
@@ -136,6 +136,20 @@ const RaffleDashboard = () => {
         }
     };
 
+    const handleDelete = async (e, r) => {
+        e.stopPropagation(); // Prevent opening the raffle details
+        if (!window.confirm(`¿Estás SEGURO de eliminar la rifa "${r.name}"?\nEsta acción no se puede deshacer.`)) return;
+
+        try {
+            await deleteRaffle(r.id);
+            alert('Rifa eliminada correctamente.');
+            if (selectedRaffle?.id === r.id) setSelectedRaffle(null);
+            fetchAllRaffles();
+        } catch (err) {
+            alert('❌ ERROR: ' + err.message);
+        }
+    };
+
     return (
         <div style={{ padding: '1rem', height: '100vh', overflowY: 'auto', boxSizing: 'border-box' }}>
             <style>{`
@@ -174,18 +188,37 @@ const RaffleDashboard = () => {
                                 padding: '1rem', margin: '0.5rem 0', borderRadius: '10px',
                                 background: selectedRaffle?.id === r.id ? '#e94560' : 'rgba(255,255,255,0.05)',
                                 cursor: 'pointer', transition: 'all 0.2s',
-                                border: selectedRaffle?.id === r.id ? '2px solid white' : 'none'
+                                border: selectedRaffle?.id === r.id ? '2px solid white' : 'none',
+                                position: 'relative'
                             }}
                         >
-                            <div style={{ fontWeight: 'bold' }}>{r.name}</div>
-                            <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                                {r.digits} Cifras - {r.lottery_name || r.lotteryName || 'Manual'}
-                            </div>
-                            {r.draw_date && (
-                                <div style={{ fontSize: '0.75rem', color: '#ffd166', marginTop: '5px' }}>
-                                    Juega: {new Date(r.draw_date).toLocaleDateString()}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold' }}>{r.name}</div>
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                                        {r.digits} Cifras - {r.lottery_name || r.lotteryName || 'Manual'}
+                                    </div>
+                                    {r.draw_date && (
+                                        <div style={{ fontSize: '0.75rem', color: '#ffd166', marginTop: '5px' }}>
+                                            Juega: {new Date(r.draw_date).toLocaleDateString()}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                                <button
+                                    onClick={(e) => handleDelete(e, r)}
+                                    className="delete-btn"
+                                    title="Eliminar Rifa"
+                                    style={{
+                                        background: 'transparent',
+                                        color: '#ef4444',
+                                        padding: '5px',
+                                        marginLeft: '10px',
+                                        zIndex: 10
+                                    }}
+                                >
+                                    <Trash size={18} />
+                                </button>
+                            </div>
                         </div>
                     ))}
 

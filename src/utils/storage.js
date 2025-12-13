@@ -308,7 +308,53 @@ export const updateRaffle = async (raffleId, updates) => {
         .single();
 
     if (error) throw error;
+    if (error) throw error;
     return data;
+};
+
+export const deleteRaffle = async (id) => {
+    // 1. Security Check: Check for active tickets
+    const { count, error: countError } = await supabase
+        .from('tickets')
+        .select('*', { count: 'exact', head: true })
+        .eq('raffle_id', id);
+
+    if (countError) throw countError;
+
+    if (count > 0) {
+        throw new Error(`Esta rifa tiene ${count} boletas vendidas/apartadas. No se puede eliminar por seguridad.`);
+    }
+
+    // 2. Delete if safe
+    const { error } = await supabase
+        .from('raffles')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw error;
+    return true;
+};
+
+export const deleteGame = async (id) => {
+    // 1. Security Check: Check for players
+    const { count, error: countError } = await supabase
+        .from('bingo_players')
+        .select('*', { count: 'exact', head: true })
+        .eq('game_id', id);
+
+    if (countError) throw countError;
+
+    if (count > 0) {
+        throw new Error(`Este bingo tiene ${count} cartones registrados. No se puede eliminar.`);
+    }
+
+    const { error } = await supabase
+        .from('bingo_games')
+        .delete()
+        .eq('id', id);
+
+    if (error) throw error;
+    return true;
 };
 
 
