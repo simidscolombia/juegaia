@@ -144,6 +144,13 @@ const Dashboard = () => {
                             <button className="primary" onClick={() => navigate(`/tv/${game.id}`)}>
                                 <Tv size={18} style={{ marginRight: '5px' }} /> TV
                             </button>
+                            <button
+                                onClick={() => handleDelete(game)}
+                                style={{ background: 'transparent', color: '#ef4444', border: '1px solid #ef4444', padding: '10px', marginLeft: '5px', cursor: 'pointer', borderRadius: '8px' }}
+                                title="Eliminar Bingo"
+                            >
+                                <Trash size={18} />
+                            </button>
                         </div>
                     </div>
                 ))}
