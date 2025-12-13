@@ -23,8 +23,12 @@ const Dashboard = () => {
         if (transactionId) {
             setVerifying(true);
             try {
-                // 1. Verify with Wompi API
-                const response = await fetch(`https://production.wompi.co/v1/transactions/${transactionId}`);
+                // 1. Verify with Wompi API (Requires Public Key)
+                const response = await fetch(`https://production.wompi.co/v1/transactions/${transactionId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${import.meta.env.VITE_WOMPI_PUB_KEY}`
+                    }
+                });
                 const data = await response.json();
                 const transaction = data.data;
 

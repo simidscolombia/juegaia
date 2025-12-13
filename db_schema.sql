@@ -45,10 +45,11 @@ BEGIN
     VALUES (p_user_id, p_amount, p_reference, 'APPROVED', p_wompi_id);
 
     -- 2. Add Balance to User
-    UPDATE wallets
-    SET balance = balance + p_amount,
-        updated_at = now()
-    WHERE user_id = p_user_id;
+    -- 2. Add Balance to User (Upsert to ensure it exists)
+    INSERT INTO wallets (user_id, balance, updated_at)
+    VALUES (p_user_id, p_amount, now())
+    ON CONFLICT (user_id) 
+    DO UPDATE SET balance = wallets.balance + EXCLUDED.balance, updated_at = now();
 
     -- 3. MLM Distribution Loop
     -- Percentages: L1=2%, L2=2%, L3=2%, L4=4% (Total 10%)
