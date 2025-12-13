@@ -111,9 +111,21 @@ const GameAdmin = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Lista de Jugadores</h3>
-                <button className="primary" onClick={() => setShowModal(true)}>
-                    <Plus size={18} style={{ marginRight: '5px' }} /> Vender Cartón
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        onClick={() => {
+                            const link = `${window.location.origin}/bingo/${gameId}/join`;
+                            navigator.clipboard.writeText(link);
+                            alert("Link de Tienda copiado: " + link);
+                        }}
+                        style={{ background: 'var(--color-secondary)', color: 'var(--color-text)', border: '1px solid var(--color-border)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                        <LinkIcon size={18} style={{ marginRight: '5px' }} /> Copiar Link Tienda
+                    </button>
+                    <button className="primary" onClick={() => setShowModal(true)}>
+                        <Plus size={18} style={{ marginRight: '5px' }} /> Vender Cartón
+                    </button>
+                </div>
             </div>
 
             {/* Pending Requests Section */}
