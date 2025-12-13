@@ -149,8 +149,8 @@ const Dashboard = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button onClick={() => handleCreateTicket(game.id)} title="Generar Ticket de Prueba">
-                                <Ticket size={18} />
+                            <button onClick={() => navigate(`/manage/${game.id}`)} title="Administrar y Vender">
+                                <Users size={18} />
                             </button>
                             <button className="primary" onClick={() => navigate(`/tv/${game.id}`)}>
                                 <Tv size={18} style={{ marginRight: '5px' }} /> TV

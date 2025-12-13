@@ -6,6 +6,7 @@ import PlayerView from './pages/PlayerView'
 import RaffleDashboard from './pages/RaffleDashboard'
 import RaffleTV from './pages/RaffleTV'
 import RafflePublic from './pages/RafflePublic'
+import GameAdmin from './pages/GameAdmin'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
