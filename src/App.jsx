@@ -48,7 +48,7 @@ function App() {
                 } />
 
                 <Route path="/tv/:gameId" element={<TVMode />} />
-                <Route path="/play/:token" element={<PlayerView />} />
+                <Route path="/play/:gameId" element={<PlayerView />} />
 
                 {/* Raffle Routes - Public/TV no layout */}
                 <Route path="/raffle-tv/:raffleId" element={<RaffleTV />} />

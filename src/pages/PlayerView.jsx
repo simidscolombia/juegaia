@@ -1,204 +1,239 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getTicket, getGame, checkWin, updateTicket } from '../utils/storage';
-import { supabase } from '../utils/supabaseClient'; // NEW STATIC IMPORT
-import { Trophy, AlertTriangle } from 'lucide-react';
+import { getGame, getTicketsByPhone, checkWin, updateTicket } from '../utils/storage';
+import { supabase } from '../utils/supabaseClient';
+import { Trophy, Phone, Grid } from 'lucide-react';
 
 const PlayerView = () => {
-    const { token } = useParams();
-    const [ticket, setTicket] = useState(null);
+    const { gameId } = useParams(); // Now receiving gameId, not token
+
+    // State
     const [game, setGame] = useState(null);
-    const [pinInput, setPinInput] = useState('');
+    const [myTickets, setMyTickets] = useState([]);
+    const [activeTicketIndex, setActiveTicketIndex] = useState(0);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Game State from "Server" (Storage)
-    const [currentNumber, setCurrentNumber] = useState(null);
+    // Login Inputs
+    const [phoneInput, setPhoneInput] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    // Initial Load & Auth Check
+    // Initial Game Load
     useEffect(() => {
-        const loadData = async () => {
-            try {
-                // Fetch Ticket
-                const t = await getTicket(token);
-                if (t) {
-                    setTicket(t);
-                    // Fetch Game
-                    const g = await getGame(t.game_id); // Note: Supabase returns snake_case
-                    setGame(g);
-                    setCurrentNumber(g.current_number);
-                }
-            } catch (err) {
-                console.error("Error loading ticket:", err);
-            }
-        };
-        loadData();
-    }, [token]);
+        loadGame();
+    }, [gameId]);
 
-    // Live Sync Effect (Realtime)
+    // Real-time Game Sync
     useEffect(() => {
-        if (!isAuthenticated || !game) return;
-
+        if (!gameId) return;
         const channel = supabase
-            .channel(`game_player_${game.id}`)
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bingo_games', filter: `id=eq.${game.id}` }, (payload) => {
-                const updatedGame = payload.new;
-                setGame(updatedGame);
-                setCurrentNumber(updatedGame.current_number);
+            .channel(`player_game_${gameId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'bingo_games', filter: `id=eq.${gameId}` }, (payload) => {
+                setGame(payload.new);
             })
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [isAuthenticated, game?.id]); // Use game?.id to avoid deep object dependency
+        return () => { supabase.removeChannel(channel); };
+    }, [gameId]);
 
-    const handleLogin = (e) => {
-        e.preventDefault();
-        // Check PIN locally for now (Ticket loaded publically by ID, but View restricted by PIN)
-        // Ideally should verify on backend, but for MVP this is okay.
-        // We compare against ticket.pin from DB.
-        if (ticket && ticket.pin === pinInput) {
-            setIsAuthenticated(true);
-        } else {
-            alert("PIN Incorrecto");
+    const loadGame = async () => {
+        try {
+            const g = await getGame(gameId);
+            setGame(g);
+            // Check session storage for auto-login
+            const savedPhone = localStorage.getItem(`bingo_phone_${gameId}`);
+            if (savedPhone) {
+                setPhoneInput(savedPhone);
+                handleLogin(null, savedPhone);
+            }
+        } catch (error) {
+            console.error("Error loading game:", error);
+        }
+    };
+
+    const handleLogin = async (e, directPhone = null) => {
+        if (e) e.preventDefault();
+        const phoneToUse = directPhone || phoneInput;
+
+        if (!phoneToUse) return;
+        setLoading(true);
+
+        try {
+            const tickets = await getTicketsByPhone(gameId, phoneToUse);
+            if (tickets && tickets.length > 0) {
+                setMyTickets(tickets);
+                setIsAuthenticated(true);
+                localStorage.setItem(`bingo_phone_${gameId}`, phoneToUse);
+            } else {
+                if (!directPhone) alert("No encontramos cartones PAGOS con ese celular.");
+            }
+        } catch (error) {
+            alert("Error al ingresar: " + error.message);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleMark = async (cellId) => {
-        if (!isAuthenticated) return;
-
-        const newCard = ticket.card_matrix.map(cell => {
-            if (cell.id === cellId) {
-                return { ...cell, marked: !cell.marked };
-            }
+        const currentTicket = myTickets[activeTicketIndex];
+        const newCard = currentTicket.card_matrix.map(cell => {
+            if (cell.id === cellId) return { ...cell, marked: !cell.marked };
             return cell;
         });
 
-        // Optimistic Update
-        const newTicket = { ...ticket, card_matrix: newCard };
-        setTicket(newTicket);
+        // Optimistic UI Update
+        const updatedTickets = [...myTickets];
+        updatedTickets[activeTicketIndex] = { ...currentTicket, card_matrix: newCard };
+        setMyTickets(updatedTickets);
 
-        // Save to DB (Cloud Persistence)
+        // Save DB
         try {
-            await updateTicket(ticket.id, { card_matrix: newCard });
-        } catch (err) {
-            console.error("Error saving mark:", err);
-            // Optionally revert or warn
-        }
+            await updateTicket(currentTicket.id, { card_matrix: newCard });
+        } catch (e) { console.error(e); }
     };
 
     const handleBingoCall = () => {
-        // Simple client-side validation first
+        const ticket = myTickets[activeTicketIndex];
         if (checkWin(ticket.card_matrix, 'HORIZONTAL_LINE') || checkWin(ticket.card_matrix, 'VERTICAL_LINE') || checkWin(ticket.card_matrix, 'DIAGONAL') || checkWin(ticket.card_matrix, 'FULL_HOUSE')) {
-            alert("¡BINGO CANTADO! Esperando confirmación del organizador...");
-            // In real app, emit 'BINGO_CLAIM' event
+            alert("¡BINGO CANTADO! 🥳\nEl organizador revisará tu victoria.");
         } else {
-            alert("¡Cuidado! Aún no tienes Bingo válido.");
+            alert("⚠️ Aún no tienes Bingo válido.");
         }
     };
 
-    if (!ticket) return <div className="p-4 text-center">Buscando ticket...</div>;
+    if (!game) return <div className="p-4 text-center">Cargando Bingo...</div>;
 
+    // LOGIN SCREEN
     if (!isAuthenticated) {
         return (
-            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-                <h1 style={{ marginBottom: '2rem' }}>🔐 Ingreso Seguro</h1>
-                <p>Hola <strong>{ticket.playerName}</strong></p>
-                <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%', maxWidth: '300px' }}>
-                    <input
-                        type="tel"
-                        maxLength="4"
-                        placeholder="Ingresa tu PIN"
-                        value={pinInput}
-                        onChange={(e) => setPinInput(e.target.value)}
-                        style={{ padding: '1rem', fontSize: '1.5rem', textAlign: 'center', borderRadius: '8px' }}
-                    />
-                    <button type="submit" style={{ padding: '1rem', background: '#e94560', color: 'white', fontWeight: 'bold' }}>
-                        ENTRAR A JUGAR
-                    </button>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '1rem' }}>
-                        PIN de prueba: {ticket.pin}
-                    </div>
-                </form>
+            <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <h1 style={{ color: 'var(--color-primary)', margin: 0 }}>{game.name}</h1>
+                    <p style={{ opacity: 0.8 }}>Ingresa a tus cartones</p>
+                </div>
+
+                <div className="card" style={{ width: '100%', maxWidth: '350px' }}>
+                    <form onSubmit={(e) => handleLogin(e)}>
+                        <div style={{ marginBottom: '15px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                <Phone size={16} /> Tu Celular
+                            </label>
+                            <input
+                                type="tel"
+                                placeholder="Ej. 3001234567"
+                                value={phoneInput}
+                                onChange={e => setPhoneInput(e.target.value)}
+                                style={{ width: '100%', padding: '12px', fontSize: '1.2rem', textAlign: 'center', marginTop: '5px' }}
+                            />
+                        </div>
+                        <button type="submit" className="primary" style={{ width: '100%', padding: '12px' }} disabled={loading}>
+                            {loading ? 'Buscando...' : 'Entrar a Jugar'}
+                        </button>
+                    </form>
+                </div>
             </div>
         );
     }
 
+    // GAME INTERFACE
+    const activeTicket = myTickets[activeTicketIndex];
+
     return (
-        <div style={{ padding: '1rem', maxWidth: '500px', margin: '0 auto' }}>
-            {/* Header Status */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', background: '#16213e', padding: '1rem', borderRadius: '12px' }}>
+        <div style={{ padding: '10px', maxWidth: '500px', margin: '0 auto', paddingBottom: '80px' }}>
+            {/* Header */}
+            <div style={{ background: 'var(--color-secondary)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>JUGANDO</div>
-                    <div style={{ fontWeight: 'bold' }}>{game.name}</div>
+                    <h2 style={{ margin: 0, fontSize: '1.2rem' }}>{game.name}</h2>
+                    <div style={{ fontSize: '0.8rem', opacity: 0.8 }}>
+                        {myTickets.length} Cartón{myTickets.length > 1 ? 'es' : ''} Activos
+                    </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>ÚLTIMA BALOTA</div>
-                    <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#e94560' }}>
-                        {currentNumber || '--'}
+                    <small>Última Balota</small>
+                    <div style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--color-accent)', lineHeight: 1 }}>
+                        {game.current_number || '--'}
                     </div>
                 </div>
             </div>
 
-            {/* The Card */}
-            <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px',
-                background: '#0f3460', padding: '10px', borderRadius: '12px',
-                aspectRatio: '1/1'
-            }}>
-                {/* Headers */}
-                {['B', 'I', 'N', 'G', 'O'].map(l => (
-                    <div key={l} style={{ textAlign: 'center', fontWeight: '900', padding: '5px' }}>{l}</div>
-                ))}
-
-                {/* Cells */}
-                {ticket.card_matrix.map((cell) => {
-                    const isLastCalled = cell.number === currentNumber;
-                    const canMark = (game.called_numbers || []).includes(cell.number) || cell.number === 'FREE';
-                    // Plan says: Blink if number is called but not marked.
-                    const shouldBlink = isLastCalled && !cell.marked;
-
-                    return (
+            {/* TAB SELECTOR (If multiple) */}
+            {myTickets.length > 1 && (
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', marginBottom: '15px', paddingBottom: '5px' }}>
+                    {myTickets.map((t, idx) => (
                         <button
-                            key={cell.id}
-                            onClick={() => handleMark(cell.id)}
-                            className={shouldBlink ? 'blink-animation' : ''}
+                            key={t.id}
+                            onClick={() => setActiveTicketIndex(idx)}
                             style={{
-                                aspectRatio: '1/1',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                borderRadius: '50%',
-                                border: 'none',
-                                background: cell.marked ? '#e94560' : (shouldBlink ? '#e94560' : 'rgba(255,255,255,0.1)'),
-                                color: cell.marked ? 'white' : 'inherit',
-                                fontSize: cell.number === 'FREE' ? '0.6rem' : '1.2rem',
-                                fontWeight: 'bold',
-                                padding: 0
+                                flex: 1,
+                                padding: '10px',
+                                border: `2px solid ${activeTicketIndex === idx ? 'var(--color-accent)' : 'transparent'}`,
+                                background: activeTicketIndex === idx ? 'rgba(233, 69, 96, 0.1)' : 'var(--color-secondary)',
+                                borderRadius: '8px',
+                                minWidth: '80px',
+                                cursor: 'pointer',
+                                color: activeTicketIndex === idx ? 'var(--color-accent)' : 'inherit'
                             }}
                         >
-                            {cell.number}
+                            Cartón #{idx + 1}
                         </button>
-                    );
-                })}
+                    ))}
+                </div>
+            )}
+
+            {/* BINGO CARD */}
+            <div style={{ background: '#1a1a2e', padding: '10px', borderRadius: '15px', border: '1px solid var(--color-border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', padding: '0 10px' }}>
+                    <span style={{ opacity: 0.6 }}>PIN: {activeTicket.pin}</span>
+                    <span style={{ fontWeight: 'bold' }}>{activeTicket.name}</span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', aspectRatio: '1/1' }}>
+                    {/* Headers */}
+                    {['B', 'I', 'N', 'G', 'O'].map(l => (
+                        <div key={l} style={{ textAlign: 'center', fontWeight: '900', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{l}</div>
+                    ))}
+
+                    {/* Numbers */}
+                    {activeTicket.card_matrix.map(cell => {
+                        const isCalled = game.called_numbers?.includes(cell.number) || cell.number === 'FREE';
+                        const isMarked = cell.marked;
+
+                        return (
+                            <button
+                                key={cell.id}
+                                onClick={() => handleMark(cell.id)}
+                                style={{
+                                    aspectRatio: '1/1',
+                                    borderRadius: '50%',
+                                    border: 'none',
+                                    background: isMarked ? 'var(--color-primary)' : (isCalled ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255,255,255,0.05)'),
+                                    color: isMarked ? 'white' : 'inherit',
+                                    fontSize: cell.number === 'FREE' ? '0.7rem' : '1.1rem',
+                                    fontWeight: 'bold',
+                                    cursor: 'pointer',
+                                    boxShadow: isMarked ? '0 0 10px var(--color-primary)' : 'none',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {cell.number}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-                <button
-                    onClick={handleBingoCall}
-                    style={{
-                        width: '100%', padding: '1rem', fontSize: '1.2rem', fontWeight: '900',
-                        background: 'linear-gradient(45deg, #FFD700, #DAA520)',
-                        color: '#000',
-                        boxShadow: '0 4px 15px rgba(255, 215, 0, 0.3)',
-                        textTransform: 'uppercase'
-                    }}
-                >
-                    <Trophy size={20} style={{ verticalAlign: 'text-bottom', marginRight: '5px' }} />
-                    ¡Cantar Bingo!
-                </button>
-                <p style={{ fontSize: '0.8rem', opacity: 0.6, marginTop: '1rem' }}>
-                    Presiona solo si tienes una línea completa o cartón lleno.
-                </p>
-            </div>
+            {/* ACTION BUTTON */}
+            <button
+                onClick={handleBingoCall}
+                style={{
+                    position: 'fixed', bottom: '20px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'linear-gradient(45deg, #FFD700, #F59E0B)', color: 'black',
+                    padding: '15px 40px', borderRadius: '50px', fontWeight: '900', fontSize: '1.2rem',
+                    boxShadow: '0 10px 30px rgba(245, 158, 11, 0.4)', border: 'none',
+                    display: 'flex', alignItems: 'center', gap: '10px', zIndex: 100
+                }}
+            >
+                <Trophy size={24} /> ¡BINGO!
+            </button>
         </div>
     );
 };

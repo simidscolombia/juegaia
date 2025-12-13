@@ -78,8 +78,8 @@ const GameAdmin = () => {
     };
 
     const copyShareLink = (player) => {
-        const link = `${window.location.origin}/play/${gameId}?pin=${player.pin}`;
-        const msg = `🎟️ *¡Hola ${player.name}!* \n\nAquí tienes tu cartón para el Bingo *${game?.name}*.\n\n🔗 *Link:* ${link}\n🔑 *PIN:* ${player.pin}\n\n¡Mucha suerte! 🍀`;
+        const link = `${window.location.origin}/play/${gameId}`;
+        const msg = `🎟️ *¡Hola ${player.name}!* \n\nYa tus cartones están activos.\n\n🔗 *Entra aquí:* ${link}\n📱 *Ingresa con tu celular:* ${player.phone || 'Tu número registrado'}\n\n¡Mucha suerte! 🍀`;
 
         navigator.clipboard.writeText(msg);
         alert('Copiado al portapapeles. ¡Pégalo en WhatsApp!');
