@@ -8,7 +8,8 @@ const Recharge = () => {
     const [selectedAmount, setSelectedAmount] = useState(null);
     const [profile, setProfile] = useState(null);
 
-    const WOMPI_PUB_KEY = "pub_test_ilaiOTiwq8EPNZpkPbg26V3gu0hVV60q"; // Wompi Public Key
+    // Use Environment Variable for Key, fallback to a placeholder if missing
+    const WOMPI_PUB_KEY = import.meta.env.VITE_WOMPI_PUB_KEY || "pub_test_ilaiOTiwq8EPNZpkPbg26V3gu0hVV60q";
 
     useEffect(() => {
         getProfile().then(p => setProfile(p));
