@@ -178,7 +178,8 @@ export const getWallet = async () => {
     const { data, error } = await supabase
         .from('wallets')
         .select('*')
-        .select();
+        .eq('user_id', user.id)
+        .single();
 
     if (error) {
         console.error("Error fetching wallet:", error);

@@ -39,7 +39,11 @@ const Dashboard = () => {
 
                     if (error) {
                         console.error('Recharge Error:', error);
-                        if (!error.message.includes('unique constraint')) { // Ignore duplicates
+                        if (error.message.includes('unique constraint') || error.code === '23505') {
+                            // Already processed, just refresh balance
+                            alert('Pago ya registrado. Actualizando saldo...');
+                            loadData();
+                        } else {
                             alert('Error procesando la recarga: ' + error.message);
                         }
                     } else {
