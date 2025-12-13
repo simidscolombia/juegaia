@@ -195,10 +195,25 @@ export const getProfile = async () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .select();
+        .single();
 
-    if (error) return null;
-    return data?.[0] || null;
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "Row not found"
+        console.error("Profile fetch error:", error);
+    }
+
+    const profile = data || {};
+
+    // Fallback/Merge with Auth Metadata (Google Login usually puts name here)
+    if (!profile.full_name && user.user_metadata?.full_name) {
+        profile.full_name = user.user_metadata.full_name;
+    }
+    if (!profile.email) {
+        profile.email = user.email;
+    }
+    // Ensure ID is present
+    profile.id = user.id;
+
+    return profile;
 };
 
 // Secure Game Creation (Deducts Balance)
