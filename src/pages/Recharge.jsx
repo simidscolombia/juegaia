@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ArrowLeft, CreditCard } from 'lucide-react';
 import { getProfile } from '../utils/storage';
+import { supabase } from '../utils/supabaseClient';
 
 const Recharge = () => {
     const navigate = useNavigate();
@@ -24,7 +25,9 @@ const Recharge = () => {
 
     const [isWompiLoaded, setWompiLoaded] = useState(false);
 
-    const handleWompiPayment = () => {
+    const [loadingPayment, setLoadingPayment] = useState(false);
+
+    const handleWompiPayment = async () => {
         if (!selectedAmount || !profile) return;
 
         if (typeof window.WidgetCheckout === 'undefined') {
@@ -32,26 +35,38 @@ const Recharge = () => {
             return;
         }
 
+        setLoadingPayment(true);
         const reference = `RECHARGE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const amountInCents = selectedAmount.value * 100;
 
-        // Validate minimal data for Wompi
-        const customerData = {
-            email: profile.email || 'user@example.com',
-            fullName: profile.full_name || 'Usuario JuegAIA',
-            phoneNumber: profile.phone || '3000000000', // Wompi requirement fallback
-            phoneNumberPrefix: '+57',
-            legalId: profile.document_id || '123456789', // Wompi requirement fallback
-            legalIdType: 'CC'
-        };
-
         try {
-            // Create Checkout script instance
+            // 1. Get Integrity Signature from Backend
+            const { data: signature, error: sigError } = await supabase
+                .rpc('get_wompi_signature', {
+                    p_reference: reference,
+                    p_amount_in_cents: amountInCents
+                });
+
+            if (sigError) throw new Error("Error generando firma: " + sigError.message);
+            if (!signature) throw new Error("No se pudo generar la firma de seguridad.");
+
+            // 2. Prepare Data
+            const customerData = {
+                email: profile.email || 'user@example.com',
+                fullName: profile.full_name || 'Usuario JuegAIA',
+                phoneNumber: profile.phone || '3000000000',
+                phoneNumberPrefix: '+57',
+                legalId: profile.document_id || '123456789',
+                legalIdType: 'CC'
+            };
+
+            // 3. Open Widget
             const checkout = new window.WidgetCheckout({
                 currency: 'COP',
                 amountInCents: amountInCents,
                 reference: reference,
                 publicKey: WOMPI_PUB_KEY,
+                signature: { integrity: signature }, // NEW: Integrity Signature
                 redirectUrl: window.location.origin + '/dashboard',
                 customerData: customerData
             });
@@ -63,6 +78,8 @@ const Recharge = () => {
         } catch (error) {
             console.error("Wompi Error:", error);
             alert("Error iniciando Wompi: " + error.message);
+        } finally {
+            setLoadingPayment(false);
         }
     };
 
