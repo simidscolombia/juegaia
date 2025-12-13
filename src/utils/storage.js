@@ -60,11 +60,10 @@ export const getGame = async (gameId) => {
     const { data, error } = await supabase
         .from('bingo_games')
         .select('*')
-        .eq('id', gameId)
-        .single();
+        .select();
 
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
 };
 
 // Player/Ticket Management
@@ -118,11 +117,10 @@ export const getTicket = async (ticketId) => {
     const { data, error } = await supabase
         .from('bingo_players')
         .select('*')
-        .eq('id', ticketId)
-        .single();
+        .select();
 
     if (error) throw error;
-    return data;
+    return data?.[0] || null;
 };
 
 export const updateTicket = async (ticketId, updates) => {
@@ -180,14 +178,13 @@ export const getWallet = async () => {
     const { data, error } = await supabase
         .from('wallets')
         .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .select();
 
     if (error) {
         console.error("Error fetching wallet:", error);
         return { balance: 0 }; // Fallback
     }
-    return data;
+    return data?.[0] || null;
 };
 
 export const getProfile = async () => {
@@ -198,10 +195,10 @@ export const getProfile = async () => {
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .select();
 
     if (error) return null;
-    return data;
+    return data?.[0] || null;
 };
 
 // Secure Game Creation (Deducts Balance)
@@ -236,7 +233,7 @@ export const mockRecharge = async (amount) => {
         .eq('user_id', user.id)
         .single();
 
-    const currentBalance = currentWallet?.balance || 0;
+    const currentBalance = currentWallet?.[0]?.balance || 0;
     const newBalance = currentBalance + amount;
 
     const { error: updateError } = await supabase
@@ -427,8 +424,7 @@ export const reserveTicket = async (raffleId, number, clientName, phone) => {
                 status: 'RESERVED'
             }
         ])
-        .select()
-        .single();
+        .select();
 
     if (error) {
         // If error code is unique violation (23505), someone took it.

@@ -27,6 +27,28 @@ const Dashboard = () => {
                 Bienvenido a su administrador de juegos en línea
             </p>
 
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '15px', background: 'var(--color-card)', padding: '10px 20px', borderRadius: '50px', border: '1px solid var(--color-border)', marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Wallet size={18} color="var(--color-primary)" />
+                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>${wallet.balance.toLocaleString()}</span>
+                </div>
+                <button
+                    onClick={() => navigate('/recharge')}
+                    style={{
+                        background: 'var(--color-primary)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '20px',
+                        padding: '5px 15px',
+                        fontSize: '0.9rem',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    + Recargar
+                </button>
+            </div>
+
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -112,15 +134,56 @@ const Dashboard = () => {
                         Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
                     </button>
                 </div>
-            </div>
 
-            <div style={{ marginTop: '4rem', opacity: 0.6 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', background: 'var(--color-card)', padding: '10px 20px', borderRadius: '50px', border: '1px solid var(--color-border)' }}>
-                    <Wallet size={16} />
-                    <span style={{ fontWeight: 'bold' }}>Tu Saldo: ${wallet.balance.toLocaleString()}</span>
+
+                {/* Network Card */}
+                <div
+                    onClick={() => navigate('/network')}
+                    className="card"
+                    style={{
+                        cursor: 'pointer',
+                        padding: '3rem 2rem',
+                        textAlign: 'center',
+                        transition: 'transform 0.2s, border-color 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '1.5rem'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <div style={{
+                        background: 'rgba(251, 191, 36, 0.1)',
+                        padding: '20px',
+                        borderRadius: '50%',
+                        color: '#fbbf24'
+                    }}>
+                        <Ticket size={48} />
+                    </div>
+                    <div>
+                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Red</h2>
+                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Mis referidos y ganancias</p>
+                    </div>
+                    <button style={{
+                        width: '100%',
+                        marginTop: 'auto',
+                        background: 'var(--color-card)',
+                        border: '1px solid var(--color-border)',
+                        padding: '10px',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        color: 'var(--color-text)',
+                        fontWeight: 'bold',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
+                    </button>
                 </div>
             </div>
-        </div>
+
+
+        </div >
     );
 };
 

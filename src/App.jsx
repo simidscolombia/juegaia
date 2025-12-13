@@ -12,6 +12,8 @@ import BingoLobby from './pages/BingoLobby'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Recharge from './pages/Recharge'
+import Network from './pages/Network'
 import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './components/MainLayout'
 
@@ -44,6 +46,22 @@ function App() {
                     <ProtectedRoute>
                         <MainLayout>
                             <RaffleDashboard />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/recharge" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <Recharge />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
+                <Route path="/network" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <Network />
                         </MainLayout>
                     </ProtectedRoute>
                 } />
