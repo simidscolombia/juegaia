@@ -34,27 +34,35 @@ const Recharge = () => {
         const reference = `RECHARGE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const amountInCents = selectedAmount.value * 100;
 
-        // Create Checkout script instance
-        const checkout = new window.WidgetCheckout({
-            currency: 'COP',
-            amountInCents: amountInCents,
-            reference: reference,
-            publicKey: WOMPI_PUB_KEY,
-            redirectUrl: window.location.origin + '/dashboard', // Redirect back to Dashboard for now
-            customerData: {
-                email: profile.email,
-                fullName: profile.full_name,
-                phoneNumber: profile.phone,
-                phoneNumberPrefix: '+57',
-                legalId: profile.document_id,
-                legalIdType: 'CC'
-            }
-        });
+        // Validate minimal data for Wompi
+        const customerData = {
+            email: profile.email || 'user@example.com',
+            fullName: profile.full_name || 'Usuario JuegAIA',
+            phoneNumber: profile.phone || '3000000000', // Wompi requirement fallback
+            phoneNumberPrefix: '+57',
+            legalId: profile.document_id || '123456789', // Wompi requirement fallback
+            legalIdType: 'CC'
+        };
 
-        checkout.open(function (result) {
-            const transaction = result.transaction;
-            console.log('Transaction Result:', transaction);
-        });
+        try {
+            // Create Checkout script instance
+            const checkout = new window.WidgetCheckout({
+                currency: 'COP',
+                amountInCents: amountInCents,
+                reference: reference,
+                publicKey: WOMPI_PUB_KEY,
+                redirectUrl: window.location.origin + '/dashboard',
+                customerData: customerData
+            });
+
+            checkout.open(function (result) {
+                const transaction = result.transaction;
+                console.log('Transaction Result:', transaction);
+            });
+        } catch (error) {
+            console.error("Wompi Error:", error);
+            alert("Error iniciando Wompi: " + error.message);
+        }
     };
 
     // Load Wompi Script dynamically
