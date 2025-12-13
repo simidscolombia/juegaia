@@ -100,171 +100,144 @@ const GameAdmin = () => {
                         <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{game.name}</h1>
                         <p style={{ margin: '5px 0 0', opacity: 0.7 }}>Panel de Administración</p>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-                            <button
-                                onClick={() => {
-                                    const link = `${window.location.origin}/bingo/${gameId}/join`;
-                                    const msg = `🎉 *¡Gran Bingo Virtual ${game.name}!* 🎱\n\n💰 Premios increíbles y mucha diversión.\n👇 *Compra tus cartones aquí:*\n${link}\n\n🚀 _Organizado con JuegAIA.com - Crea tu propio bingo gratis._`;
-                                    const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
-                                    window.open(url, '_blank');
-                                }}
-                                className="text-accent"
-                                style={{
-                                    background: '#25D366',
-                                    border: 'none',
-                                    color: 'white',
-                                    padding: '8px 15px',
-                                    borderRadius: '20px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    fontWeight: 'bold',
-                                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
-                                }}
-                            >
-                                <Share2 size={18} style={{ marginRight: '5px' }} /> Compartir en WhatsApp
-                            </button>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ textAlign: 'right' }}>
-                                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-text)' }}>
-                                        {players.length}
-                                    </span>
-                                    <span style={{ fontSize: '0.8rem', marginLeft: '5px' }}>Jugadores</span>
-                                </div>
-                            </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-accent)' }}>
+                            {players.length}
                         </div>
+                        <div style={{ fontSize: '0.8rem' }}>Jugadores</div>
                     </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <h3>Lista de Jugadores</h3>
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            <button
-                                onClick={() => {
-                                    const link = `${window.location.origin}/bingo/${gameId}/join`;
-                                    navigator.clipboard.writeText(link);
-                                    alert("Link de Tienda copiado: " + link);
-                                }}
-                                style={{ background: 'var(--color-secondary)', color: 'var(--color-text)', border: '1px solid var(--color-border)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                            >
-                                <LinkIcon size={18} style={{ marginRight: '5px' }} /> Copiar Link Tienda
-                            </button>
-                            <button className="primary" onClick={() => setShowModal(true)}>
-                                <Plus size={18} style={{ marginRight: '5px' }} /> Vender Cartón
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Pending Requests Section */}
-                    {players.filter(p => p.status === 'PENDING').length > 0 && (
-                        <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
-                            <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({players.filter(p => p.status === 'PENDING').length})</h3>
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <tbody>
-                                    {players.filter(p => p.status === 'PENDING').map(req => (
-                                        <tr key={req.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                                            <td style={{ padding: '10px' }}>
-                                                <strong>{req.name}</strong><br />
-                                                <small>{req.phone}</small>
-                                            </td>
-                                            <td style={{ textAlign: 'right', padding: '10px' }}>
-                                                <button
-                                                    className="primary"
-                                                    onClick={async () => {
-                                                        if (!confirm(`¿Aprobar cartón para ${req.name}?`)) return;
-                                                        try {
-                                                            await updateTicket(req.id, { status: 'PAID' });
-                                                            // Send WhatsApp Link automatically? Optional.
-                                                            copyShareLink(req); // Auto-copy link on approval for convenience
-                                                            await loadData();
-                                                        } catch (e) { alert(e.message) }
-                                                    }}
-                                                    style={{ background: '#F59E0B', border: 'none' }}
-                                                >
-                                                    Aprobar
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-
-                    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ background: 'var(--color-secondary)', textAlign: 'left' }}>
-                                    <th style={{ padding: '15px' }}>Nombre</th>
-                                    <th style={{ padding: '15px' }}>PIN</th>
-                                    <th style={{ padding: '15px', textAlign: 'right' }}>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {players.filter(p => p.status !== 'PENDING').map(player => (
-                                    <tr key={player.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                        <td style={{ padding: '15px' }}>
-                                            <div style={{ fontWeight: 'bold' }}>{player.name}</div>
-                                            <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Pagado</div>
-                                        </td>
-                                        <td style={{ padding: '15px', fontFamily: 'monospace' }}>{player.pin}</td>
-                                        <td style={{ padding: '15px', textAlign: 'right', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                            <button
-                                                onClick={() => copyShareLink(player)}
-                                                style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
-                                                title="Copiar para WhatsApp"
-                                            >
-                                                <Share2 size={16} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                                {players.length === 0 && (
-                                    <tr>
-                                        <td colSpan={3} style={{ padding: '30px', textAlign: 'center', opacity: 0.5 }}>
-                                            No hay jugadores registrados.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Modal Vender Cartón */}
-                    {showModal && (
-                        <div style={{
-                            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            zIndex: 1000
-                        }}>
-                            <div className="card" style={{ width: '90%', maxWidth: '400px' }}>
-                                <h3 style={{ marginTop: 0 }}>Nuevo Jugador</h3>
-                                <form onSubmit={handleCreateTicket}>
-                                    <div style={{ marginBottom: '15px' }}>
-                                        <label style={{ display: 'block', marginBottom: '5px' }}>Nombre del Cliente</label>
-                                        <input
-                                            autoFocus
-                                            type="text"
-                                            placeholder="Ej. Tía Marta"
-                                            value={newPlayerName}
-                                            onChange={e => setNewPlayerName(e.target.value)}
-                                            style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                        <button type="button" onClick={() => setShowModal(false)} style={{ background: 'transparent', border: '1px solid #ccc', color: 'var(--color-text)' }}>
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" className="primary">
-                                            Generar Cartón
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    )}
                 </div>
-                );
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h3>Lista de Jugadores</h3>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button
+                        onClick={() => {
+                            const link = `${window.location.origin}/bingo/${gameId}/join`;
+                            navigator.clipboard.writeText(link);
+                            alert("Link de Tienda copiado: " + link);
+                        }}
+                        style={{ background: 'var(--color-secondary)', color: 'var(--color-text)', border: '1px solid var(--color-border)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                        <LinkIcon size={18} style={{ marginRight: '5px' }} /> Copiar Link Tienda
+                    </button>
+                    <button className="primary" onClick={() => setShowModal(true)}>
+                        <Plus size={18} style={{ marginRight: '5px' }} /> Vender Cartón
+                    </button>
+                </div>
+            </div>
+
+            {/* Pending Requests Section */}
+            {players.filter(p => p.status === 'PENDING').length > 0 && (
+                <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
+                    <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({players.filter(p => p.status === 'PENDING').length})</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <tbody>
+                            {players.filter(p => p.status === 'PENDING').map(req => (
+                                <tr key={req.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                                    <td style={{ padding: '10px' }}>
+                                        <strong>{req.name}</strong><br />
+                                        <small>{req.phone}</small>
+                                    </td>
+                                    <td style={{ textAlign: 'right', padding: '10px' }}>
+                                        <button
+                                            className="primary"
+                                            onClick={async () => {
+                                                if (!confirm(`¿Aprobar cartón para ${req.name}?`)) return;
+                                                try {
+                                                    await updateTicket(req.id, { status: 'PAID' });
+                                                    // Send WhatsApp Link automatically? Optional.
+                                                    copyShareLink(req); // Auto-copy link on approval for convenience
+                                                    await loadData();
+                                                } catch (e) { alert(e.message) }
+                                            }}
+                                            style={{ background: '#F59E0B', border: 'none' }}
+                                        >
+                                            Aprobar
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
+            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: 'var(--color-secondary)', textAlign: 'left' }}>
+                            <th style={{ padding: '15px' }}>Nombre</th>
+                            <th style={{ padding: '15px' }}>PIN</th>
+                            <th style={{ padding: '15px', textAlign: 'right' }}>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {players.filter(p => p.status !== 'PENDING').map(player => (
+                            <tr key={player.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                <td style={{ padding: '15px' }}>
+                                    <div style={{ fontWeight: 'bold' }}>{player.name}</div>
+                                    <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Pagado</div>
+                                </td>
+                                <td style={{ padding: '15px', fontFamily: 'monospace' }}>{player.pin}</td>
+                                <td style={{ padding: '15px', textAlign: 'right', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                    <button
+                                        onClick={() => copyShareLink(player)}
+                                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                                        title="Copiar para WhatsApp"
+                                    >
+                                        <Share2 size={16} />
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {players.length === 0 && (
+                            <tr>
+                                <td colSpan={3} style={{ padding: '30px', textAlign: 'center', opacity: 0.5 }}>
+                                    No hay jugadores registrados.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Modal Vender Cartón */}
+            {showModal && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                    background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                    zIndex: 1000
+                }}>
+                    <div className="card" style={{ width: '90%', maxWidth: '400px' }}>
+                        <h3 style={{ marginTop: 0 }}>Nuevo Jugador</h3>
+                        <form onSubmit={handleCreateTicket}>
+                            <div style={{ marginBottom: '15px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px' }}>Nombre del Cliente</label>
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Ej. Tía Marta"
+                                    value={newPlayerName}
+                                    onChange={e => setNewPlayerName(e.target.value)}
+                                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                />
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                <button type="button" onClick={() => setShowModal(false)} style={{ background: 'transparent', border: '1px solid #ccc', color: 'var(--color-text)' }}>
+                                    Cancelar
+                                </button>
+                                <button type="submit" className="primary">
+                                    Generar Cartón
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
-                export default GameAdmin;
+export default GameAdmin;

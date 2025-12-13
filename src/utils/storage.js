@@ -147,6 +147,17 @@ export const getGameTickets = async (gameId) => {
     return data;
 };
 
+export const getTicketsByPhone = async (gameId, phone) => {
+    const { data, error } = await supabase
+        .from('bingo_players')
+        .select('*')
+        .eq('game_id', gameId)
+        .eq('phone', phone);
+
+    if (error) throw error;
+    return data;
+};
+
 // --- WALLET & ECONOMY ---
 
 export const getWallet = async () => {
