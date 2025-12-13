@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createGame, createGameWithWallet, getGames, saveTicket, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame } from '../utils/storage'; // Updated imports
 import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
-import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash } from 'lucide-react'; // Added Icons
+import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2 } from 'lucide-react'; // Added Icons
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -151,10 +151,11 @@ const Dashboard = () => {
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button onClick={() => {
                                 const link = `${window.location.origin}/bingo/${game.id}/join`;
-                                navigator.clipboard.writeText(link);
-                                alert("Link copiado: " + link);
-                            }} title="Copiar Link de Tienda">
-                                <Copy size={18} />
+                                const msg = `🎉 *¡Gran Bingo Virtual ${game.name}!* 🎱\n\n💰 Premios increíbles y mucha diversión.\n👇 *Compra tus cartones aquí:*\n${link}\n\n🚀 _Organizado con JuegAIA.com - Crea tu propio bingo gratis._`;
+                                const url = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+                                window.open(url, '_blank');
+                            }} title="Compartir en WhatsApp" style={{ color: '#25D366', borderColor: '#25D366' }}>
+                                <Share2 size={18} />
                             </button>
                             <button onClick={() => navigate(`/manage/${game.id}`)} title="Administrar y Vender">
                                 <Users size={18} />
