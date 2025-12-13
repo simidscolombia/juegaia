@@ -60,6 +60,19 @@ const Dashboard = () => {
         }
     };
 
+    const handleRecharge = async () => {
+        setLoading(true);
+        try {
+            await mockRecharge(50000);
+            alert('¡Recarga exitosa! (+50,000 Coins)');
+            await loadData();
+        } catch (error) {
+            alert('Error recargando: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
 
     const handleDelete = async (game) => {
         if (!window.confirm(`¿Seguro que quieres eliminar el bingo "${game.name}"?\nSi tiene jugadores no se podrá borrar.`)) return;
@@ -98,9 +111,23 @@ const Dashboard = () => {
 
             {/* Create Game Card */}
             <div className="card" style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
                     <h3 style={{ margin: 0 }}>Crear Nuevo Evento</h3>
-                    <span className="text-accent" style={{ fontSize: '0.9rem' }}>Costo: 10,000 Coins</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span className="text-accent" style={{ fontSize: '0.9rem', color: wallet.balance < 10000 ? '#ef4444' : 'var(--color-accent)' }}>
+                            Costo: 10,000 Coins
+                        </span>
+                        {wallet.balance < 10000 && (
+                            <button
+                                onClick={handleRecharge}
+                                disabled={loading}
+                                style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'var(--color-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
+                            >
+                                <Wallet size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                                Recargar (Demo)
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <form onSubmit={handleCreateGame} style={{ display: 'flex', gap: '1rem' }}>
