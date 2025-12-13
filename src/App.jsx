@@ -7,6 +7,7 @@ import RaffleDashboard from './pages/RaffleDashboard'
 import RaffleTV from './pages/RaffleTV'
 import RafflePublic from './pages/RafflePublic'
 import GameAdmin from './pages/GameAdmin'
+import BingoLobby from './pages/BingoLobby'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -52,6 +53,9 @@ function App() {
                 {/* Raffle Routes - Public/TV no layout */}
                 <Route path="/raffle-tv/:raffleId" element={<RaffleTV />} />
                 <Route path="/raffle/:raffleId" element={<RafflePublic />} />
+
+                {/* Public Bingo Lobby */}
+                <Route path="/bingo/:gameId/join" element={<BingoLobby />} />
             </Routes>
         </div>
     )

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket } from '../utils/storage';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 
@@ -116,6 +116,42 @@ const GameAdmin = () => {
                 </button>
             </div>
 
+            {/* Pending Requests Section */}
+            {players.filter(p => p.status === 'PENDING').length > 0 && (
+                <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
+                    <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({players.filter(p => p.status === 'PENDING').length})</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <tbody>
+                            {players.filter(p => p.status === 'PENDING').map(req => (
+                                <tr key={req.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                                    <td style={{ padding: '10px' }}>
+                                        <strong>{req.name}</strong><br />
+                                        <small>{req.phone}</small>
+                                    </td>
+                                    <td style={{ textAlign: 'right', padding: '10px' }}>
+                                        <button
+                                            className="primary"
+                                            onClick={async () => {
+                                                if (!confirm(`¿Aprobar cartón para ${req.name}?`)) return;
+                                                try {
+                                                    await updateTicket(req.id, { status: 'PAID' });
+                                                    // Send WhatsApp Link automatically? Optional.
+                                                    copyShareLink(req); // Auto-copy link on approval for convenience
+                                                    await loadData();
+                                                } catch (e) { alert(e.message) }
+                                            }}
+                                            style={{ background: '#F59E0B', border: 'none' }}
+                                        >
+                                            Aprobar
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
@@ -126,7 +162,7 @@ const GameAdmin = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {players.map(player => (
+                        {players.filter(p => p.status !== 'PENDING').map(player => (
                             <tr key={player.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                                 <td style={{ padding: '15px' }}>
                                     <div style={{ fontWeight: 'bold' }}>{player.name}</div>

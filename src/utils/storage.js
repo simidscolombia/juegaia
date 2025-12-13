@@ -67,7 +67,7 @@ export const getGame = async (gameId) => {
 };
 
 // Player/Ticket Management
-export const createTicket = async (gameId, playerName, cardMatrix, pin) => {
+export const createTicket = async (gameId, playerName, cardMatrix, pin, status = 'PAID', phone = '') => {
     // Note: cardMatrix should be passed in. If not, generate it here?
     // The previous code had a "todo" for generation. 
     // We will assume the UI generates it and passes it, or we import logic here.
@@ -84,7 +84,11 @@ export const createTicket = async (gameId, playerName, cardMatrix, pin) => {
             game_id: gameId,
             name: playerName,
             card_matrix: cardMatrix,
-            pin: pin
+            pin: pin,
+            // Assuming the DB has these columns. If not, this might fail or ignore them.
+            // We adding them to support the Storefront feature.
+            status: status,
+            phone: phone
         }])
         .select()
         .single();
@@ -123,7 +127,7 @@ export const getTicket = async (ticketId) => {
 
 export const updateTicket = async (ticketId, updates) => {
     const { data, error } = await supabase
-        .from('bingo_tickets')
+        .from('bingo_players')
         .update(updates)
         .eq('id', ticketId)
         .select()
