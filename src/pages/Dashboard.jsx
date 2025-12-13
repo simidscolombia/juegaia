@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, getWallet } from '../utils/storage';
+import { supabase } from '../utils/supabaseClient';
 import { LayoutDashboard, Ticket, ArrowRight, Wallet } from 'lucide-react';
 
 const Dashboard = () => {
@@ -8,9 +9,55 @@ const Dashboard = () => {
     const [profile, setProfile] = useState(null);
     const [wallet, setWallet] = useState({ balance: 0 });
 
+    const [verifying, setVerifying] = useState(false);
+
     useEffect(() => {
         loadData();
+        checkTransaction();
     }, []);
+
+    const checkTransaction = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const transactionId = params.get('id');
+
+        if (transactionId) {
+            setVerifying(true);
+            try {
+                // 1. Verify with Wompi API
+                const response = await fetch(`https://production.wompi.co/v1/transactions/${transactionId}`);
+                const data = await response.json();
+                const transaction = data.data;
+
+                if (transaction.status === 'APPROVED') {
+                    // 2. Process internal recharge (Idempotent)
+                    const { data: rpcData, error } = await supabase.rpc('process_recharge_with_mlm', {
+                        p_user_id: profile?.id || (await supabase.auth.getUser()).data.user?.id, // Ensure user ID
+                        p_amount: transaction.amount_in_cents / 100,
+                        p_reference: transaction.reference,
+                        p_wompi_id: transaction.id
+                    });
+
+                    if (error) {
+                        console.error('Recharge Error:', error);
+                        if (!error.message.includes('unique constraint')) { // Ignore duplicates
+                            alert('Error procesando la recarga: ' + error.message);
+                        }
+                    } else {
+                        alert('¡Recarga Exitosa! Tu saldo ha sido actualizado.');
+                        loadData(); // Refresh balance
+                    }
+                } else {
+                    alert(`Transacción ${transaction.status}. No se cobró.`);
+                }
+            } catch (err) {
+                console.error('Verification Error:', err);
+            } finally {
+                setVerifying(false);
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+    };
 
     const loadData = async () => {
         const [p, w] = await Promise.all([getProfile(), getWallet()]);
