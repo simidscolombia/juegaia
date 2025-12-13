@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createGameWithWallet, getGames, saveTicket, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame } from '../utils/storage'; // Updated imports
+import { createGame, createGameWithWallet, getGames, saveTicket, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame } from '../utils/storage'; // Updated imports
 import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
 import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash } from 'lucide-react'; // Added Icons
@@ -38,18 +38,12 @@ const Dashboard = () => {
         e.preventDefault();
         if (!newGameName.trim()) return;
 
-        // Client-side check
-        if (wallet.balance < 10000) {
-            alert("No tienes saldo suficiente (10,000 Coins) para crear un Bingo.");
-            return;
-        }
-
         setLoading(true);
         try {
-            const result = await createGameWithWallet(newGameName);
-            if (result.success) {
-                alert(`¡Juego creado! Nuevo saldo: ${result.new_balance}`);
-                setWallet(prev => ({ ...prev, balance: result.new_balance }));
+            // Bypass Cost: Use direct createGame instead of createGameWithWallet
+            const result = await createGame(newGameName);
+            if (result) {
+                alert(`¡Juego creado exisotamente!`);
                 await loadData();
             }
             setNewGameName('');
@@ -114,19 +108,9 @@ const Dashboard = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
                     <h3 style={{ margin: 0 }}>Crear Nuevo Evento</h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span className="text-accent" style={{ fontSize: '0.9rem', color: wallet.balance < 10000 ? '#ef4444' : 'var(--color-accent)' }}>
-                            Costo: 10,000 Coins
+                        <span className="text-accent" style={{ fontSize: '0.9rem', color: 'var(--color-accent)' }}>
+                            Gratis (Modo Prueba)
                         </span>
-                        {wallet.balance < 10000 && (
-                            <button
-                                onClick={handleRecharge}
-                                disabled={loading}
-                                style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'var(--color-primary)', border: 'none', borderRadius: '4px', cursor: 'pointer', color: 'white' }}
-                            >
-                                <Wallet size={14} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
-                                Recargar (Demo)
-                            </button>
-                        )}
                     </div>
                 </div>
 
@@ -138,7 +122,7 @@ const Dashboard = () => {
                         onChange={(e) => setNewGameName(e.target.value)}
                         disabled={loading}
                     />
-                    <button type="submit" className="primary" disabled={loading || wallet.balance < 10000}>
+                    <button type="submit" className="primary" disabled={loading}>
                         <Plus size={18} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
                         {loading ? 'Creando...' : 'Crear'}
                     </button>
