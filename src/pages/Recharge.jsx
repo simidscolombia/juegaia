@@ -21,14 +21,21 @@ const Recharge = () => {
         { value: 100000, label: '$100.000 COP' },
     ];
 
+    const [isWompiLoaded, setWompiLoaded] = useState(false);
+
     const handleWompiPayment = () => {
         if (!selectedAmount || !profile) return;
+
+        if (typeof window.WidgetCheckout === 'undefined') {
+            alert("Error: El widget de pagos no cargó correctamente. Recarga la página.");
+            return;
+        }
 
         const reference = `RECHARGE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
         const amountInCents = selectedAmount.value * 100;
 
         // Create Checkout script instance
-        const checkout = new WidgetCheckout({
+        const checkout = new window.WidgetCheckout({
             currency: 'COP',
             amountInCents: amountInCents,
             reference: reference,
@@ -47,8 +54,6 @@ const Recharge = () => {
         checkout.open(function (result) {
             const transaction = result.transaction;
             console.log('Transaction Result:', transaction);
-            // In a real app, we would verify the transaction status on the backend here
-            // For now, Wompi redirects, so this callback might not fire if redirect occurs.
         });
     };
 
@@ -57,6 +62,7 @@ const Recharge = () => {
         const script = document.createElement('script');
         script.src = 'https://checkout.wompi.co/widget.js';
         script.async = true;
+        script.onload = () => setWompiLoaded(true);
         document.body.appendChild(script);
         return () => {
             document.body.removeChild(script);
