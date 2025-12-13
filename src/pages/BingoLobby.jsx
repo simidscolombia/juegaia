@@ -74,14 +74,19 @@ const BingoLobby = () => {
                     <p style={{ opacity: 0.8 }}>Para activar tus cartones, realiza el pago y envía el comprobante al administrador.</p>
                     <div style={{ background: 'var(--color-bg)', padding: '10px', borderRadius: '8px', margin: '15px 0' }}>
                         <strong>Nequi / Daviplata</strong><br />
-                        300 123 4567
+                        {game.admin_whatsapp ? game.admin_whatsapp : 'Consulta al Admin'}
                     </div>
-                    <button
-                        className="primary"
-                        onClick={() => window.location.href = `https://wa.me/573001234567?text=Hola, acabo de pedir ${formData.quantity} cartones para el bingo ${game.name}. Mi nombre es ${formData.name}.`}
-                    >
-                        Reportar Pago en WhatsApp
-                    </button>
+                    {game.admin_whatsapp && (
+                        <button
+                            className="primary"
+                            onClick={() => window.location.href = `https://wa.me/${game.admin_whatsapp}?text=Hola, acabo de pedir ${formData.quantity} cartones para el bingo ${game.name}. Mi nombre es ${formData.name}.`}
+                        >
+                            Reportar Pago en WhatsApp
+                        </button>
+                    )}
+                    {!game.admin_whatsapp && (
+                        <p style={{ color: '#F59E0B' }}>El admin no ha configurado WhatsApp. Contactalo directamente.</p>
+                    )}
                 </div>
             </div>
         );

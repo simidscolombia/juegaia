@@ -43,6 +43,7 @@ export const updateGame = async (gameId, updates) => {
     if (updates.currentNumber !== undefined) dbUpdates.current_number = updates.currentNumber;
     if (updates.calledNumbers !== undefined) dbUpdates.called_numbers = updates.calledNumbers;
     if (updates.lastCallTime !== undefined) dbUpdates.last_call_time = updates.lastCallTime;
+    if (updates.adminWhatsapp !== undefined) dbUpdates.admin_whatsapp = updates.adminWhatsapp;
 
     const { data, error } = await supabase
         .from('bingo_games')

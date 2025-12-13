@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket } from '../utils/storage';
-import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft } from 'lucide-react';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame } from '../utils/storage';
+import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 
 const GameAdmin = () => {
@@ -13,6 +13,8 @@ const GameAdmin = () => {
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [adminWhatsapp, setAdminWhatsapp] = useState('');
+    const [savingSettings, setSavingSettings] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -26,6 +28,7 @@ const GameAdmin = () => {
                 getGameTickets(gameId)
             ]);
             setGame(g);
+            setAdminWhatsapp(g.admin_whatsapp || '');
             setPlayers(p || []);
         } catch (error) {
             console.error(error);
@@ -100,6 +103,39 @@ const GameAdmin = () => {
                         <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{game.name}</h1>
                         <p style={{ margin: '5px 0 0', opacity: 0.7 }}>Panel de Administración</p>
                     </div>
+                </div>
+
+                <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--color-border)' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px', fontSize: '0.9rem' }}>
+                        <Settings size={16} /> WhatsApp para Comprobantes
+                    </label>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <input
+                            type="text"
+                            placeholder="Ej. 573001234567"
+                            value={adminWhatsapp}
+                            onChange={(e) => setAdminWhatsapp(e.target.value)}
+                            style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)' }}
+                        />
+                        <button
+                            onClick={async () => {
+                                setSavingSettings(true);
+                                try {
+                                    await updateGame(gameId, { adminWhatsapp });
+                                    alert('Configuración guardada');
+                                } catch (e) {
+                                    alert('Error guardando: ' + e.message);
+                                } finally { setSavingSettings(false); }
+                            }}
+                            disabled={savingSettings}
+                            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: '4px', padding: '0 15px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                        >
+                            <Save size={16} /> {savingSettings ? '...' : 'Guardar'}
+                        </button>
+                    </div>
+                    <small style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
+                        A este número se enviarán los comprobantes de pago de los jugadores.
+                    </small>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-accent)' }}>
                             {players.length}
