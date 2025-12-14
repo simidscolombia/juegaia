@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets } from '../utils/storage';
-import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save } from 'lucide-react';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer } from '../utils/storage';
+import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save, Play, RefreshCw, StopCircle } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
+import { supabase } from '../utils/supabaseClient';
 
 const GameAdmin = () => {
     const { gameId } = useParams();
@@ -16,6 +17,10 @@ const GameAdmin = () => {
     const [adminWhatsapp, setAdminWhatsapp] = useState('');
     const [savingSettings, setSavingSettings] = useState(false);
 
+    // Game Control State
+    const [isDrawing, setIsDrawing] = useState(false);
+    const [lastCall, setLastCall] = useState(null);
+
     useEffect(() => {
         loadData();
     }, [gameId]);
@@ -28,6 +33,9 @@ const GameAdmin = () => {
                 getGameTickets(gameId)
             ]);
             setGame(g);
+            if (g && g.called_numbers && g.called_numbers.length > 0) {
+                setLastCall(g.called_numbers[g.called_numbers.length - 1]);
+            }
             setAdminWhatsapp(g.admin_whatsapp || '');
             setPlayers(p || []);
         } catch (error) {
@@ -35,6 +43,17 @@ const GameAdmin = () => {
             alert('Error cargando datos del juego');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeletePlayer = async (playerId) => {
+        if (!confirm('¿Eliminar este cartón? El jugador ya no podrá entrar.')) return;
+        try {
+            await deleteBingoPlayer(playerId);
+            alert('Jugador eliminado.');
+            loadData();
+        } catch (error) {
+            alert('Error eliminando: ' + error.message);
         }
     };
 
@@ -57,26 +76,41 @@ const GameAdmin = () => {
         }
     };
 
-    const handleDeletePlayer = async (playerId) => {
-        if (!confirm('¿Eliminar este cartón? El jugador ya no podrá entrar.')) return;
+    const drawBall = async () => {
+        if (!game || isDrawing) return;
+        setIsDrawing(true);
+
         try {
-            // function to delete/release ticket needs to be robust, using releaseTicket assuming it deletes by ID or similar
-            // actually storage.js releaseTicket takes (raffleId, number), wait. 
-            // We need a delete player function. Let's assume we can delete from 'bingo_players' by ID directly via new storage function or raw supabase if needed.
-            // Looking at storage.js, we don't have explicit deletePlayerById. 
-            // I will use deleteTicket equivalent. 
-            // Actually, let's just use the supabase client directly here or add a helper?
-            // Existing `releaseTicket` is for Raffles.
-            // I'll create a quick helper inside storage.js later, but for now let's try to mock it or adding it to storage.js first is safer.
-            // WAIT - I need to check storage.js for delete capability for bingo players.
-            // "deleteGame" deletes the game and checks for players. 
-            // I should update storage.js to include `deleteBingoPlayer(id)`.
-            // For now, I will comment this out or use a placeholder generic delete if available.
-            // Ah, I can import `allowDelete` or similar? No.
-            // I will implement the UI and then fix storage.js.
-            alert("Función de eliminar jugador pendiente de añadir en storage.js");
+            // 1. Calculate available numbers
+            const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+            const called = game.called_numbers || [];
+            const available = allNumbers.filter(n => !called.includes(n));
+
+            if (available.length === 0) {
+                alert("¡Juego Terminado! Ya salieron todas las balotas.");
+                setIsDrawing(false);
+                return;
+            }
+
+            // 2. Pick random
+            const nextBall = available[Math.floor(Math.random() * available.length)];
+            const newCalled = [...called, nextBall];
+
+            // 3. Update DB
+            await updateGame(gameId, {
+                calledNumbers: newCalled,
+                currentNumber: nextBall,
+                lastCallTime: new Date().toISOString()
+            });
+
+            // 4. Update Local
+            setLastCall(nextBall);
+            await loadData(); // Refresh full state
+
         } catch (error) {
-            // ...
+            alert('Error sacando balota: ' + error.message);
+        } finally {
+            setIsDrawing(false);
         }
     };
 
@@ -103,6 +137,46 @@ const GameAdmin = () => {
                         <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{game.name}</h1>
                         <p style={{ margin: '5px 0 0', opacity: 0.7 }}>Panel de Administración</p>
                     </div>
+                </div>
+
+                {/* GAME CONTROLS - REMOTE */}
+                <div style={{ marginTop: '20px', padding: '15px', background: '#1e293b', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
+                    <h2 style={{ margin: '0 0 15px 0', fontSize: '1.2rem', opacity: 0.9 }}>Control Remoto de Balotera</h2>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px', marginBottom: '15px' }}>
+                        <div style={{
+                            width: '80px', height: '80px', borderRadius: '50%',
+                            background: lastCall ? 'white' : 'rgba(255,255,255,0.1)',
+                            color: lastCall ? '#000' : 'white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '2.5rem', fontWeight: 'bold'
+                        }}>
+                            {lastCall || '--'}
+                        </div>
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Última Balota</div>
+                            <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>
+                                {(game.called_numbers || []).length} / 75
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={drawBall}
+                        disabled={isDrawing}
+                        className="primary"
+                        style={{
+                            width: '100%', padding: '15px', fontSize: '1.2rem',
+                            background: isDrawing ? '#475569' : '#e11d48',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.3)', marginBottom: '10px'
+                        }}
+                    >
+                        {isDrawing ? 'Mezclando...' : 'SACAR BALOTA'}
+                    </button>
+
+                    <small style={{ display: 'block', opacity: 0.6 }}>
+                        Esto actualizará la pantalla de TV automáticamente.
+                    </small>
                 </div>
 
                 <div style={{ marginTop: '15px', paddingTop: '15px', borderTop: '1px solid var(--color-border)' }}>
@@ -224,7 +298,7 @@ const GameAdmin = () => {
             {/* Active Players Section (Grouped) */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                 <div style={{ padding: '15px', background: 'var(--color-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0 }}>Clientes Activos</h3>
+                    <h3 style={{ margin: '0 0 10px 0' }}>Clientes Activos</h3>
                     <span style={{ fontSize: '0.9rem', opacity: 0.8 }}>Agrupados por Teléfono/Nombre</span>
                 </div>
 

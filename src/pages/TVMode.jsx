@@ -70,8 +70,9 @@ const TVMode = () => {
                         const newLastCall = newGameData.called_numbers[newGameData.called_numbers.length - 1];
                         setLastCall(newLastCall);
 
-                        // Speak if it's a new number (optional, might duplicate if local, but TV is usually passive)
-                        // logic to check if it's actually new compared to current state could be added here
+                        // Speak if it's a new number (Remote Control Reaction)
+                        const letter = getLetter(newLastCall);
+                        speakNumber(newLastCall, letter);
                     }
                 }
             )

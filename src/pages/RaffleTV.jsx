@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getRaffle, getRaffleTickets } from '../utils/storage';
+import { getRaffle, getRaffleTickets, saveRaffleWinner } from '../utils/storage';
 import { Trophy, Sparkles } from 'lucide-react';
 
 const RaffleTV = () => {
@@ -62,6 +62,7 @@ const RaffleTV = () => {
                 if (winningTicket) {
                     setWinner(winningTicket);
                     setShowConfetti(true);
+                    saveRaffleWinner(raffleId, finalNumber).catch(console.error); // Persist!
                     speakText(`¡El ganador es el número ${finalNumber}! ${winningTicket.buyerName}`);
                 } else {
                     speakText(`Número ${finalNumber}. Sin dueño.`);

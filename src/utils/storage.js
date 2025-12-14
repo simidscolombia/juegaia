@@ -600,6 +600,20 @@ export const submitPaymentProof = async (raffleId, ticketNumber, file) => {
 export const sellRaffleTicket = markTicketPaid;
 
 
+export const saveRaffleWinner = async (raffleId, number) => {
+    const { data, error } = await supabase
+        .from('raffles')
+        .update({
+            winner_number: Number(number),
+            status: 'CLOSED'
+        })
+        .eq('id', raffleId)
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
 // --- BINGO LOGIC UTILITIES (Merged) ---
 
 // Column ranges
@@ -680,5 +694,16 @@ export const checkWin = (cardCells, currentPattern = 'FULL_HOUSE') => {
         if ([0, 1, 2, 3, 4].every(i => isMarked(i, 4 - i))) return true;
     }
     return false;
+};
+
+export const deleteBingoPlayer = async (playerId) => {
+    // Uses the generic ticket deletion or specific table deletion
+    const { error } = await supabase
+        .from('bingo_players')
+        .delete()
+        .eq('id', playerId);
+
+    if (error) throw error;
+    return true;
 };
 
