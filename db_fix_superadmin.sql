@@ -9,7 +9,7 @@ RETURNS BOOLEAN AS $$
 BEGIN
   -- Hardcoded security for debugging/rescue.
   -- Recursion-proof: Doesn't query tables, just checks the JWT claims.
-  RETURN (auth.jwt() ->> 'email') = 'elkin.patarroyo@gmail.com';
+  RETURN (auth.jwt() ->> 'email') = 'elkindainelcastillo@gmail.com';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
