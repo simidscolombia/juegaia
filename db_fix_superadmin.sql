@@ -7,11 +7,9 @@
 CREATE OR REPLACE FUNCTION is_admin() 
 RETURNS BOOLEAN AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM profiles 
-    WHERE id = auth.uid() 
-    AND role = 'admin'
-  );
+  -- Hardcoded security for debugging/rescue.
+  -- Recursion-proof: Doesn't query tables, just checks the JWT claims.
+  RETURN (auth.jwt() ->> 'email') = 'elkin.patarroyo@gmail.com';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
