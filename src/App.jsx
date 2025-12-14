@@ -68,6 +68,14 @@ function App() {
                     </ProtectedRoute>
                 } />
 
+                <Route path="/superadmin" element={
+                    <ProtectedRoute>
+                        <MainLayout>
+                            <SuperAdminPanel />
+                        </MainLayout>
+                    </ProtectedRoute>
+                } />
+
                 {/* Player Specific Routes */}
                 <Route path="/my-lobby" element={
                     <ProtectedRoute>
