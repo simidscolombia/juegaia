@@ -10,6 +10,7 @@ const TVMode = () => {
     const [ballSequence, setBallSequence] = useState([]);
     const [isSpinning, setIsSpinning] = useState(false);
     const [lastCall, setLastCall] = useState(null);
+    const lastCallRef = useRef(null); // Ref to track lastCall in closures
 
     // Auto Play State
     const [autoPlay, setAutoPlay] = useState(false);
@@ -65,14 +66,25 @@ const TVMode = () => {
                     const newGameData = payload.new;
                     setGame(newGameData);
 
-                    // Update last call animation if new number added
                     if (newGameData.called_numbers && newGameData.called_numbers.length > 0) {
                         const newLastCall = newGameData.called_numbers[newGameData.called_numbers.length - 1];
-                        setLastCall(newLastCall);
 
-                        // Speak if it's a new number (Remote Control Reaction)
-                        const letter = getLetter(newLastCall);
-                        speakNumber(newLastCall, letter);
+                        // If it's a NEW number we haven't shown yet (Correctly check against Ref)
+                        if (newLastCall !== lastCallRef.current) {
+                            // 1. Start Animation
+                            setIsSpinning(true);
+
+                            // 2. Wait for spin (Sync with CSS animation time)
+                            setTimeout(() => {
+                                setIsSpinning(false);
+                                setLastCall(newLastCall);
+                                lastCallRef.current = newLastCall; // Update Ref
+
+                                // 3. Speak
+                                const letter = getLetter(newLastCall);
+                                speakNumber(newLastCall, letter);
+                            }, 2500);
+                        }
                     }
                 }
             )
