@@ -84,9 +84,22 @@ const BingoLobby = () => {
                             Reportar Pago en WhatsApp
                         </button>
                     )}
-                    {!game.admin_whatsapp && (
-                        <p style={{ color: '#F59E0B' }}>El admin no ha configurado WhatsApp. Contactalo directamente.</p>
-                    )}
+                </div>
+
+                {/* Upsell Card */}
+                <div style={{ marginTop: '20px', background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', borderRadius: '15px', padding: '20px', color: 'black' }}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>🎁 ¡Gana Dinero con JuegAIA!</h3>
+                    <p style={{ margin: '0 0 15px 0' }}>Regístrate GRATIS para administrar tus cartones, compartirlos con tu familia y ganar comisiones invitando amigos.</p>
+                    <button
+                        onClick={() => window.location.href = '/register'}
+                        style={{
+                            background: 'white', color: 'black', border: 'none', padding: '12px 20px',
+                            borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', width: '100%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px'
+                        }}
+                    >
+                        Crear Mi Cuenta <Check size={16} />
+                    </button>
                 </div>
             </div>
         );

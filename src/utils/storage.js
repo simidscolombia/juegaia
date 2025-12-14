@@ -60,10 +60,14 @@ export const getGame = async (gameId) => {
     const { data, error } = await supabase
         .from('bingo_games')
         .select('*')
-        .select();
+        .eq('id', gameId)
+        .single();
 
-    if (error) throw error;
-    return data?.[0] || null;
+    if (error) {
+        console.error("Error fetching game:", error);
+        return null;
+    }
+    return data;
 };
 
 // Player/Ticket Management
