@@ -103,9 +103,10 @@ const Login = () => {
             </div>
 
             <div className="card" style={{
-                width: '100%', maxWidth: '480px', padding: 0, overflow: 'hidden',
+                width: '100%', maxWidth: '420px', padding: 0, overflow: 'hidden',
                 background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(20px)',
-                border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+                border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+                margin: '10px'
             }}>
                 {/* Tabs Header */}
                 <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

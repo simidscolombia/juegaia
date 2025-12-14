@@ -404,39 +404,39 @@ const ClientGroupRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
 
     return (
         <div style={{ borderBottom: '1px solid var(--color-border)', padding: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div style={{
                         width: '40px', height: '40px', borderRadius: '50%',
                         background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold'
+                        fontSize: '1.2rem', fontWeight: 'bold', flexShrink: 0
                     }}>
                         {group.tickets.length}
                     </div>
-                    <div>
-                        <div style={{ fontWeight: 'bold' }}>{group.name}</div>
+                    <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>{group.name}</div>
                         <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{group.phone || 'Sin teléfono'}</div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
                     <button
                         onClick={shareAll}
-                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                     >
-                        <Share2 size={16} /> Enviar Todo
+                        <Share2 size={18} /> <span style={{ display: 'none', sm: 'inline' }}>Enviar</span>
                     </button>
                     <button
                         onClick={onDeleteGroup}
-                        style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                         title="Eliminar Cliente y Cartones"
                     >
-                        <Trash size={16} />
+                        <Trash size={18} />
                     </button>
                     <button
                         onClick={() => setExpanded(!expanded)}
-                        style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '10px', borderRadius: '8px', cursor: 'pointer' }}
                     >
-                        {expanded ? 'Ocultar' : 'Ver Cartones'}
+                        {expanded ? 'Ocultar' : 'Ver'}
                     </button>
                 </div>
             </div>
