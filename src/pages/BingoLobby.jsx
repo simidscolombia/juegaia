@@ -96,10 +96,6 @@ const BingoLobby = () => {
                             className="primary"
                             onClick={() => {
                                 let phone = game.admin_whatsapp.replace(/\D/g, ''); // Remove non-digits
-                                // Basic heuristic for Colombia: If 10 digits and starts with 3, add 57
-                                if (phone.length === 10 && phone.startsWith('3')) {
-                                    phone = '57' + phone;
-                                }
                                 window.location.href = `https://wa.me/${phone}?text=Hola, acabo de pedir ${formData.quantity} cartones para el bingo ${game.name}. Mi nombre es ${formData.name}.`;
                             }}
                         >

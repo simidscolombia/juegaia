@@ -200,7 +200,7 @@ const GameAdmin = () => {
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <input
                             type="text"
-                            placeholder="Ej. 573001234567"
+                            placeholder="Ej. 573001234567 (Con Código País)"
                             value={adminWhatsapp}
                             onChange={(e) => setAdminWhatsapp(e.target.value)}
                             style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)' }}
@@ -222,7 +222,7 @@ const GameAdmin = () => {
                         </button>
                     </div>
                     <small style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
-                        A este número se enviarán los comprobantes de pago de los jugadores.
+                        IMPORTANTE: Debes incluir el código del país (ej: 57 para Colombia) para que funcione mundialmente.
                     </small>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-accent)' }}>
