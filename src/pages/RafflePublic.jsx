@@ -10,6 +10,7 @@ const RafflePublic = () => {
     const [selectedNum, setSelectedNum] = useState(null);
     const [reserveName, setReserveName] = useState('');
     const [reservePhone, setReservePhone] = useState('');
+    const [reserveDate, setReserveDate] = useState('');
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
@@ -39,11 +40,26 @@ const RafflePublic = () => {
 
     const handleReserve = async (e) => {
         e.preventDefault();
+
+        // 12-Hour Rule Validation
+        if (raffle.draw_date) {
+            if (!reserveDate) return alert("Debes comprometerte con una fecha de pago.");
+
+            const drawTime = new Date(raffle.draw_date).getTime();
+            const promiseTime = new Date(reserveDate).getTime();
+            const twelveHours = 12 * 60 * 60 * 1000;
+
+            if (promiseTime > (drawTime - twelveHours)) {
+                return alert("⚠️ REGLA: El pago debe realizarse al menos 12 HORAS ANTES del sorteo.\nPor favor selecciona una fecha/hora anterior.");
+            }
+        }
+
         try {
-            await reserveTicket(raffleId, selectedNum, reserveName, reservePhone);
+            await reserveTicket(raffleId, selectedNum, reserveName, reservePhone, reserveDate);
             setSelectedNum(null);
             setReserveName('');
             setReservePhone('');
+            setReserveDate('');
             // Refetch
             const t = await getRaffleTickets(raffleId);
             setTickets(t);
@@ -283,6 +299,24 @@ const RafflePublic = () => {
                                             style={{ width: '100%', padding: '12px', border: '2px solid #dfe6e9', borderRadius: '10px', fontSize: '1rem' }}
                                         />
                                     </div>
+
+                                    {/* Payment Promise Date */}
+                                    {raffle.draw_date && (
+                                        <div style={{ marginBottom: '1.5rem', background: '#ffeaa7', padding: '10px', borderRadius: '10px' }}>
+                                            <label style={{ display: 'block', fontSize: '0.8rem', color: '#d35400', marginBottom: '5px', fontWeight: 'bold' }}>
+                                                🕒 ¿Cuándo vas a pagar?
+                                            </label>
+                                            <p style={{ margin: '0 0 5px 0', fontSize: '0.75rem', color: '#d35400' }}>
+                                                Debes pagar antes de las 12 horas previas al sorteo.
+                                            </p>
+                                            <input
+                                                type="datetime-local"
+                                                value={reserveDate} onChange={e => setReserveDate(e.target.value)}
+                                                required
+                                                style={{ width: '100%', padding: '12px', border: '2px solid #fdcb6e', borderRadius: '10px', fontSize: '1rem' }}
+                                            />
+                                        </div>
+                                    )}
 
                                     <button type="submit" style={{ width: '100%', padding: '12px', border: 'none', background: '#0984e3', color: 'white', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' }}>Apartar Puesto</button>
                                 </form>

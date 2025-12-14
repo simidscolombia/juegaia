@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar } from 'lucide-react';
-import { createRaffle, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle } from '../utils/storage';
+import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
 import { COMMON_LOTTERIES } from '../utils/lotteries';
+import RechargeModal from '../components/RechargeModal';
 
 const RaffleDashboard = () => {
     const navigate = useNavigate();
@@ -16,15 +17,24 @@ const RaffleDashboard = () => {
     });
     const [showCreate, setShowCreate] = useState(false);
     const [generatedCopy, setGeneratedCopy] = useState('');
+    const [showRecharge, setShowRecharge] = useState(false);
 
     // Ticket Sale State
     const [saleForm, setSaleForm] = useState({ number: '', name: '', paymentDate: new Date().toISOString().split('T')[0] });
     const [tickets, setTickets] = useState([]);
+    const [wallet, setWallet] = useState({ balance: 0 });
+    const [prices, setPrices] = useState({ raffle_price: 10000 });
 
     const fetchAllRaffles = async () => {
         try {
-            const data = await getRaffles();
-            setRaffles(data);
+            const [rafflesData, walletData, settingsData] = await Promise.all([
+                getRaffles(),
+                getWallet(),
+                getSystemSettings()
+            ]);
+            setRaffles(rafflesData);
+            if (walletData) setWallet(walletData);
+            if (settingsData && settingsData.raffle_price) setPrices(prev => ({ ...prev, ...settingsData }));
         } catch (e) {
             console.error(e);
         }
@@ -60,11 +70,32 @@ const RaffleDashboard = () => {
 
     const handleCreate = async (e) => {
         e.preventDefault();
+
+        const cost = Number(prices.raffle_price);
+        if (wallet.balance < cost) {
+            // Open Modal instead of navigating
+            if (window.confirm(`Saldo insuficiente ($${wallet.balance}).\nNecesitas $${cost} Coins.\n\n¿Quieres recargar aquí mismo?`)) {
+                setShowRecharge(true);
+            }
+            return;
+        }
+
+        if (!window.confirm(`Crear esta Rifa costará $${cost} Coins.\n¿Deseas continuar?`)) return;
+
         try {
-            await createRaffle(form.name, form.min, form.max, form.price, form.lotteryName, form.digits, form.image, form.reservationMinutes, form.drawDate, form.paymentInfo);
+            // Updated to use Paid Service
+            const config = {
+                min: form.min, max: form.max, price: form.price,
+                lottery: form.lotteryName, digits: form.digits,
+                image: form.image, minutes: form.reservationMinutes,
+                drawDate: form.drawDate, paymentInfo: form.paymentInfo
+            };
+
+            await createGameService('RAFFLE', form.name, config);
             await fetchAllRaffles();
             setShowCreate(false);
             setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Sinuano Noche', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
+            alert(`¡Rifa creada! Se descontaron $${cost} Coins.`);
         } catch (err) {
             alert('Error creando rifa: ' + err.message);
         }
@@ -72,10 +103,19 @@ const RaffleDashboard = () => {
 
     const handleMagicImage = () => {
         if (!form.name) return alert('Escribe el nombre de la rifa primero');
-        // Simple heuristic for demo: use loremflickr with keywords
-        const keywords = form.name.split(' ').join(',');
-        const magicUrl = `https://loremflickr.com/800/600/${keywords}/all`;
+        // Heuristic: Remove common words to get better keywords
+        const cleanName = form.name.replace(/(rifa|gran|espectacular|sorteo|premio|ganar)/gi, '').trim();
+        const keywords = cleanName.split(' ').join(',');
+        // Add random param to avoid cache and allow regeneration
+        const magicUrl = `https://loremflickr.com/800/600/${keywords}/all?random=${Date.now()}`;
         setForm({ ...form, image: magicUrl });
+    };
+
+    const refreshImage = () => {
+        if (!form.image) return;
+        // Verify if it's a dynamic url
+        const baseUrl = form.image.split('?')[0];
+        setForm({ ...form, image: `${baseUrl}?random=${Date.now()}` });
     };
 
     const handleAICopy = () => {
@@ -223,92 +263,195 @@ const RaffleDashboard = () => {
                     ))}
 
                     {showCreate && (
-                        <form onSubmit={handleCreate} style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.3)', borderRadius: '10px' }}>
-                            <h4 style={{ margin: '0 0 10px 0' }}>Nueva Rifa</h4>
-
-                            {/* Digits Select */}
-                            <select
-                                value={form.digits}
-                                onChange={e => handleDigitsChange(e.target.value)}
-                                style={{ width: '100%', marginBottom: '10px', padding: '8px', borderRadius: '5px' }}
-                            >
-                                <option value={2}>2 Cifras (00-99)</option>
-                                <option value={3}>3 Cifras (000-999)</option>
-                                <option value={4}>4 Cifras (0000-9999)</option>
-                            </select>
-
-                            <input placeholder="Nombre Rifa / Premio" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required style={{ width: '100%', marginBottom: '5px' }} />
-
-                            {/* Lottery with Dropdown */}
-                            <div style={{ marginBottom: '5px' }}>
-                                <label style={{ fontSize: '0.8rem', color: '#ccc' }}>Lotería / Sorteo</label>
-                                <select
-                                    value={form.lotteryName}
-                                    onChange={e => setForm({ ...form, lotteryName: e.target.value })}
-                                    style={{ width: '100%', padding: '8px', borderRadius: '5px' }}
-                                >
-                                    {COMMON_LOTTERIES.map(l => <option key={l} value={l}>{l}</option>)}
-                                    <option value="Manual">Otra / Manual</option>
-                                </select>
-                            </div>
-                            {form.lotteryName === 'Manual' && (
-                                <input placeholder="Escribe nombre de lotería" value={form.lotteryName} onChange={e => setForm({ ...form, lotteryName: e.target.value })} style={{ width: '100%', marginBottom: '5px' }} />
-                            )}
-
-                            {/* Payment Info */}
-                            <div style={{ marginBottom: '5px' }}>
-                                <label style={{ fontSize: '0.8rem', color: '#ccc' }}>Métodos de Pago (Nequi/Daviplata)</label>
-                                <textarea
-                                    value={form.paymentInfo}
-                                    onChange={e => setForm({ ...form, paymentInfo: e.target.value })}
-                                    placeholder="Ej: Nequi 3001234567 - Titular..."
-                                    style={{ width: '100%', padding: '8px', borderRadius: '5px', height: '60px' }}
-                                />
-                            </div>
-
-                            {/* Draw Date & Time */}
-                            <div style={{ marginBottom: '5px' }}>
-                                <label style={{ fontSize: '0.8rem', color: '#ccc' }}>Fecha de Juego</label>
-                                <input
-                                    type="datetime-local"
-                                    value={form.drawDate}
-                                    onChange={e => setForm({ ...form, drawDate: e.target.value })}
-                                    required
-                                    style={{ width: '100%', padding: '8px', borderRadius: '5px' }}
-                                />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
-                                <input type="number" placeholder="Precio ($)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} style={{ flex: 1 }} />
-                                <input type="number" placeholder="Reserva (Min)" value={form.reservationMinutes} onChange={e => setForm({ ...form, reservationMinutes: e.target.value })} style={{ flex: 1 }} title="Tiempo reservation" />
-                            </div>
-
-                            {/* Image Section */}
-                            <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
-                                <input placeholder="URL Imagen" value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} style={{ flex: 1 }} />
-                                <button type="button" onClick={handleMagicImage} style={{ background: '#6c5ce7', width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Buscar imagen mágica">
-                                    <Wand2 size={16} />
-                                </button>
-                            </div>
-                            {form.image && <img src={form.image} alt="Preview" style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '5px', marginBottom: '5px' }} />}
-
-                            {/* AI Copy Section */}
-                            <div style={{ background: '#e94560', padding: '10px', marginTop: '10px', borderRadius: '5px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}><Wand2 size={14} /> IA Copywriter</span>
-                                    <button type="button" onClick={handleAICopy} style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'white', color: 'black' }}>Generar</button>
+                        <div className="card" style={{ marginTop: '1rem', background: '#1a1a2e', border: '1px solid #16213e' }}>
+                            <h4 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #ffffff1a', paddingBottom: '10px' }}>Nueva Rifa</h4>
+                            <form onSubmit={handleCreate}>
+                                {/* Digits Select */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Cifras</label>
+                                    <select
+                                        value={form.digits}
+                                        onChange={e => handleDigitsChange(e.target.value)}
+                                        style={{
+                                            width: '100%', padding: '10px', borderRadius: '8px',
+                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                        }}
+                                    >
+                                        <option value={2}>2 Cifras (00-99)</option>
+                                        <option value={3}>3 Cifras (000-999)</option>
+                                        <option value={4}>4 Cifras (0000-9999)</option>
+                                    </select>
                                 </div>
-                                {generatedCopy && (
-                                    <textarea
-                                        readOnly
-                                        value={generatedCopy}
-                                        style={{ width: '100%', height: '60px', marginTop: '5px', fontSize: '0.8rem', color: 'black' }}
-                                    />
-                                )}
-                            </div>
 
-                            <button type="submit" style={{ width: '100%', marginTop: '10px', background: '#06d6a0' }}>Crear Rifa</button>
-                        </form>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Nombre</label>
+                                    <input
+                                        placeholder="Ej. Rifa iPhone 15"
+                                        value={form.name}
+                                        onChange={e => setForm({ ...form, name: e.target.value })}
+                                        required
+                                        style={{
+                                            width: '100%', padding: '10px', borderRadius: '8px',
+                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Lottery with Dropdown */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Lotería / Sorteo</label>
+                                    <select
+                                        value={form.lotteryName}
+                                        onChange={e => setForm({ ...form, lotteryName: e.target.value })}
+                                        style={{
+                                            width: '100%', padding: '10px', borderRadius: '8px',
+                                            background: '#0f3460', border: '1px solid #533483', color: 'white',
+                                            marginBottom: form.lotteryName === 'Manual' ? '10px' : '0'
+                                        }}
+                                    >
+                                        {COMMON_LOTTERIES.map(l => <option key={l} value={l}>{l}</option>)}
+                                        <option value="Manual">Otra / Manual</option>
+                                    </select>
+                                    {form.lotteryName === 'Manual' && (
+                                        <input
+                                            placeholder="Escribe nombre de lotería"
+                                            value={form.manualLottery} // Changing to separate state if needed, but reusing lotteryName string for simplicity might bug if not careful. 
+                                            onChange={e => setForm({ ...form, lotteryName: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '10px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                    )}
+                                </div>
+
+                                {/* Draw Date & Time */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Fecha de Juego</label>
+                                    <input
+                                        type="datetime-local"
+                                        value={form.drawDate}
+                                        onChange={e => setForm({ ...form, drawDate: e.target.value })}
+                                        required
+                                        style={{
+                                            width: '100%', padding: '10px', borderRadius: '8px',
+                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Precio</label>
+                                        <input
+                                            type="number"
+                                            placeholder="$"
+                                            value={form.price}
+                                            onChange={e => setForm({ ...form, price: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '10px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Reserva (Min)</label>
+                                        <input
+                                            type="number"
+                                            placeholder="Minutos"
+                                            value={form.reservationMinutes}
+                                            onChange={e => setForm({ ...form, reservationMinutes: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '10px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Image Section */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Imagen del Premio</label>
+                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                        <input
+                                            placeholder="URL Imagen"
+                                            value={form.image}
+                                            onChange={e => setForm({ ...form, image: e.target.value })}
+                                            style={{
+                                                flex: 1, padding: '10px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                        <button type="button" onClick={handleMagicImage} style={{ background: '#e94560', color: 'white', border: 'none', borderRadius: '8px', width: '40px', cursor: 'pointer' }} title="Generar con IA">
+                                            <Wand2 size={18} />
+                                        </button>
+                                    </div>
+                                    {form.image && (
+                                        <div style={{ marginTop: '10px', position: 'relative' }}>
+                                            <img src={form.image} alt="Preview" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #533483' }} />
+                                            <button
+                                                type="button"
+                                                onClick={refreshImage}
+                                                style={{
+                                                    position: 'absolute', bottom: '8px', right: '8px',
+                                                    background: 'rgba(0,0,0,0.8)', color: 'white',
+                                                    border: '1px solid white', borderRadius: '20px', padding: '5px 12px',
+                                                    cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'
+                                                }}
+                                            >
+                                                🔄 Cambiar
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Payment Info */}
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Datos para Pagos (Nequi/Davi...)</label>
+                                    <textarea
+                                        value={form.paymentInfo}
+                                        onChange={e => setForm({ ...form, paymentInfo: e.target.value })}
+                                        placeholder="Ej: Nequi 3001234567..."
+                                        style={{
+                                            width: '100%', padding: '10px', borderRadius: '8px',
+                                            background: '#0f3460', border: '1px solid #533483', color: 'white',
+                                            height: '80px', fontFamily: 'inherit'
+                                        }}
+                                    />
+                                </div>
+
+                                {/* AI Copy Section - Improved UI */}
+                                <div style={{ background: 'rgba(233, 69, 96, 0.1)', border: '1px solid #e94560', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                        <span style={{ fontWeight: 'bold', fontSize: '0.9rem', color: '#e94560', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                            <Wand2 size={14} /> IA Copywriter
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={handleAICopy}
+                                            style={{ padding: '6px 12px', fontSize: '0.8rem', background: '#e94560', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer' }}
+                                        >
+                                            Generar Texto
+                                        </button>
+                                    </div>
+                                    {generatedCopy && (
+                                        <textarea
+                                            readOnly
+                                            value={generatedCopy}
+                                            style={{
+                                                width: '100%', height: '80px', fontSize: '0.9rem',
+                                                background: 'transparent', border: 'none', color: '#e0e0e0',
+                                                resize: 'none'
+                                            }}
+                                        />
+                                    )}
+                                </div>
+
+                                <button type="submit" style={{ width: '100%', padding: '12px', background: '#06d6a0', color: '#0f3460', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
+                                    Confirmar y Crear
+                                </button>
+                            </form>
+                        </div>
                     )}
                 </div>
 
@@ -399,7 +542,9 @@ const RaffleDashboard = () => {
                                             <tr style={{ borderBottom: '1px solid #ffffff33' }}>
                                                 <th style={{ padding: '5px' }}>#</th>
                                                 <th>Nombre</th>
-                                                <th>Fecha Pago</th>
+                                                <th>Estado</th>
+                                                <th>Fecha Pago / Promesa</th>
+                                                <th>Comprobante</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -407,8 +552,29 @@ const RaffleDashboard = () => {
                                                 <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                     <td style={{ padding: '8px', color: '#ffd166', fontWeight: 'bold' }}>{t.number}</td>
                                                     <td>{t.buyer_name || t.buyerName}</td>
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem',
+                                                            background: t.status === 'PAID' ? '#06d6a0' : '#ffd166',
+                                                            color: '#000'
+                                                        }}>
+                                                            {t.status}
+                                                        </span>
+                                                    </td>
                                                     <td style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                                                        {t.payment_date ? new Date(t.payment_date).toLocaleDateString() : 'N/A'}
+                                                        {t.payment_date
+                                                            ? new Date(t.payment_date).toLocaleDateString()
+                                                            : t.payment_promise_date
+                                                                ? <span style={{ color: '#fab1a0' }}>Promesa: {new Date(t.payment_promise_date).toLocaleString()}</span>
+                                                                : 'N/A'
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        {t.payment_proof_url ? (
+                                                            <a href={t.payment_proof_url} target="_blank" rel="noopener noreferrer" style={{ color: '#74b9ff', textDecoration: 'underline', fontSize: '0.8rem' }}>
+                                                                Ver Foto
+                                                            </a>
+                                                        ) : '-'}
                                                     </td>
                                                 </tr>
                                             ))}
@@ -424,7 +590,16 @@ const RaffleDashboard = () => {
                     </div>
                 )}
             </div>
-        </div>
+
+
+            <RechargeModal
+                isOpen={showRecharge}
+                onClose={() => setShowRecharge(false)}
+                onSuccess={() => {
+                    fetchAllRaffles();
+                }}
+            />
+        </div >
     );
 };
 

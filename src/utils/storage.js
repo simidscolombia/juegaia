@@ -500,7 +500,7 @@ export const getRaffleTickets = async (raffleId) => {
     return data;
 };
 
-export const reserveTicket = async (raffleId, number, clientName, phone) => {
+export const reserveTicket = async (raffleId, number, clientName, phone, promiseDate = null) => {
     // 1. Check if available (Optimistic check, DB will enforce unique constraint anyway)
     // For cloud, we try to insert. If it fails due to unique constraint, it's taken.
 
@@ -516,7 +516,8 @@ export const reserveTicket = async (raffleId, number, clientName, phone) => {
                 number: Number(number),
                 buyer_name: clientName,
                 phone: phone,
-                status: 'RESERVED'
+                status: 'RESERVED',
+                payment_promise_date: promiseDate
             }
         ])
         .select();
@@ -564,9 +565,35 @@ export const releaseTicket = async (raffleId, number) => {
 };
 
 export const submitPaymentProof = async (raffleId, ticketNumber, file) => {
-    // Placeholder for Phase 2: Payment Proof Upload
-    // const { data, error } = await supabase.storage.from('proofs').upload(...)
-    return true;
+    // 1. Upload File
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${raffleId}_${ticketNumber}_${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    // Ensure bucket exists or handle error (we assume 'raffle-proofs' exists)
+    const { error: uploadError } = await supabase.storage
+        .from('raffle-proofs')
+        .upload(filePath, file);
+
+    if (uploadError) throw new Error('Error subiendo imagen: ' + uploadError.message);
+
+    // 2. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+        .from('raffle-proofs')
+        .getPublicUrl(filePath);
+
+    // 3. Update Ticket
+    const { data, error } = await supabase
+        .from('tickets')
+        .update({
+            payment_proof_url: publicUrl,
+            // Optional: We can change status or keep it as RESERVED but with proof
+        })
+        .match({ raffle_id: raffleId, number: Number(ticketNumber) })
+        .select();
+
+    if (error) throw error;
+    return publicUrl;
 };
 
 // Alias for compatibility if used elsewhere, but ideally use markTicketPaid
