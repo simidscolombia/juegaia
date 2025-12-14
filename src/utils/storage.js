@@ -254,6 +254,56 @@ export const getSystemSettings = async () => {
     return settings;
 };
 
+export const adminUpdateSettings = async (settings) => {
+    // Expects object { key: value }
+    const updates = Object.entries(settings).map(([key, value]) => ({
+        key,
+        value: String(value)
+    }));
+
+    const { error } = await supabase
+        .from('system_settings')
+        .upsert(updates);
+
+    if (error) throw error;
+    return true;
+};
+
+// --- SUPER ADMIN USER MANAGEMENT ---
+
+export const getAllProfiles = async () => {
+    // Join with Wallets to see balance
+    const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+            *,
+            wallets ( balance )
+        `)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Flatten structure for easier UI consumption
+    return data.map(p => ({
+        ...p,
+        balance: p.wallets?.balance || 0
+    }));
+};
+
+export const adminManualRecharge = async (userId, amount, reference = 'ADMIN_MANUAL') => {
+    // Uses the same RPC but initiated by Admin
+    // We mock a "wompi_id" to indicate it was manual
+    const { data, error } = await supabase.rpc('process_recharge_with_mlm', {
+        p_user_id: userId,
+        p_amount: amount,
+        p_reference: `MANUAL-${Date.now()}`,
+        p_wompi_id: 'ADMIN-PANEL'
+    });
+
+    if (error) throw error;
+    return data;
+};
+
 // Legacy Wallet Creation (Deprecated for SaaS RPC but kept for ref if needed)
 export const createGameWithWallet = async (name) => {
     console.warn("createGameWithWallet is deprecated. Use createGameService");
