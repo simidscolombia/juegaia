@@ -204,6 +204,18 @@ const Login = () => {
                                     ¿Aún no tienes ticket? Contacta a tu organizador.
                                 </p>
                             </div>
+
+                            <div style={{ margin: '1.5rem 0', textAlign: 'center', opacity: 0.3, borderBottom: '1px solid #fff', lineHeight: '0.1em' }}>
+                                <span style={{ background: '#1e293b', padding: '0 10px' }}>O</span>
+                            </div>
+
+                            <button type="button" onClick={handleGoogleLogin} style={{
+                                width: '100%', background: 'white', color: '#333', padding: '14px', borderRadius: '10px',
+                                fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                            }}>
+                                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20" />
+                                Gestionar mi Cuenta (Google)
+                            </button>
                         </form>
                     )}
 
