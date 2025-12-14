@@ -266,7 +266,7 @@ const Login = () => {
                                 fontWeight: 'bold', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
                             }}>
                                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width="20" />
-                                Soy Cliente (Google)
+                                Continuar con Google
                             </button>
 
                             <div style={{ marginTop: '2rem', textAlign: 'center', color: '#fff', fontSize: '0.9rem' }}>
