@@ -270,7 +270,9 @@ const Dashboard = () => {
                         Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
                     </button>
                 </div>
-                {/* Super Admin Card (Only/Admin) */}
+                {/* Super Admin Card (Only/Admin) - Simplified for Debugging */}
+                {/* Super Admin Card (Only/Admin) - Simplified for Debugging */
+                /*
                 {profile?.role === 'admin' && (
                     <div
                         onClick={() => navigate('/superadmin')}
@@ -279,44 +281,17 @@ const Dashboard = () => {
                             cursor: 'pointer',
                             padding: '3rem 2rem',
                             textAlign: 'center',
-                            transition: 'transform 0.2s, border-color 0.2s',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '1.5rem',
-                            border: '2px solid #F59E0B' // Gold Border
+                            border: '2px solid #F59E0B',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem'
                         }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                     >
-                        <div style={{
-                            background: 'rgba(245, 158, 11, 0.1)',
-                            padding: '20px',
-                            borderRadius: '50%',
-                            color: '#F59E0B'
-                        }}>
-                            <Settings size={48} />
-                        </div>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Super Admin</h2>
-                            <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Precios y Usuarios Globales</p>
-                        </div>
-                        <button style={{
-                            width: '100%',
-                            marginTop: 'auto',
-                            background: '#F59E0B',
-                            color: 'black',
-                            border: 'none',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            Gestionar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
+                        <h2 style={{ margin: 0, color: '#F59E0B' }}>Super Admin</h2>
+                        <button className="primary" style={{ background: '#F59E0B', color: 'black' }}>
+                            Gestionar Panel
                         </button>
                     </div>
                 )}
+                */}
             </div>
         </div >
     );
