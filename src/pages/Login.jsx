@@ -3,6 +3,7 @@ import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, KeyRound, Phone, Smartphone, ArrowRight, UserCheck, ShieldCheck } from 'lucide-react';
 import { verifyGamePin } from '../utils/storage';
+import { countryCodes } from '../utils/countryCodes';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -15,6 +16,7 @@ const Login = () => {
     const [error, setError] = useState(null);
 
     // Player (Fast Access) State
+    const [countryCode, setCountryCode] = useState('57');
     const [playerPhone, setPlayerPhone] = useState('');
     const [gamePin, setGamePin] = useState('');
     const [checkingPin, setCheckingPin] = useState(false);
@@ -159,18 +161,33 @@ const Login = () => {
 
                             <div style={{ position: 'relative', marginBottom: '15px' }}>
                                 <Smartphone size={18} style={{ position: 'absolute', left: '15px', top: '14px', color: '#9ca3af' }} />
-                                <input
-                                    type="tel"
-                                    placeholder="Tu Número de Celular"
-                                    value={playerPhone}
-                                    onChange={e => setPlayerPhone(e.target.value)}
-                                    required
-                                    style={{
-                                        width: '100%', padding: '14px 14px 14px 45px', borderRadius: '10px',
-                                        border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)',
-                                        color: 'white', fontSize: '1rem', outline: 'none'
-                                    }}
-                                />
+                                <div style={{ display: 'flex', gap: '5px' }}>
+                                    <select
+                                        value={countryCode}
+                                        onChange={(e) => setCountryCode(e.target.value)}
+                                        style={{
+                                            padding: '14px 5px', borderRadius: '10px',
+                                            border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)',
+                                            color: 'white', fontSize: '1rem', outline: 'none', maxWidth: '90px'
+                                        }}
+                                    >
+                                        {countryCodes.map(c => (
+                                            <option key={c.code} value={c.code} style={{ color: 'black' }}>{c.flag} +{c.code}</option>
+                                        ))}
+                                    </select>
+                                    <input
+                                        type="tel"
+                                        placeholder="Número de Celular"
+                                        value={playerPhone}
+                                        onChange={e => setPlayerPhone(e.target.value.replace(/\D/g, ''))}
+                                        required
+                                        style={{
+                                            flex: 1, padding: '14px', borderRadius: '10px',
+                                            border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.3)',
+                                            color: 'white', fontSize: '1rem', outline: 'none'
+                                        }}
+                                    />
+                                </div>
                             </div>
 
                             <div style={{ position: 'relative', marginBottom: '25px' }}>
