@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Users, Settings, DollarSign, Search } from 'lucide-react';
-import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile } from '../utils/storage';
+import { ArrowLeft, Save, Users, Settings, DollarSign, Search, Trash2, Gamepad2 } from 'lucide-react';
+import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser } from '../utils/storage';
 
 const SuperAdminPanel = () => {
     const navigate = useNavigate();
@@ -12,6 +12,7 @@ const SuperAdminPanel = () => {
     // Data State
     const [settings, setSettings] = useState({ bingo_price: '', raffle_price: '' });
     const [users, setUsers] = useState([]);
+    const [games, setGames] = useState([]); // New state for games
     const [filter, setFilter] = useState('');
 
     useEffect(() => {
@@ -31,12 +32,14 @@ const SuperAdminPanel = () => {
     const loadData = async () => {
         setLoading(true);
         try {
-            const [s, u] = await Promise.all([
+            const [s, u, g] = await Promise.all([
                 getSystemSettings(),
-                getAllProfiles()
+                getAllProfiles(),
+                getAllAllGames()
             ]);
             setSettings(prev => ({ ...prev, ...s }));
             setUsers(u || []);
+            setGames(g || []);
         } catch (error) {
             console.error(error);
         } finally {
@@ -64,6 +67,28 @@ const SuperAdminPanel = () => {
             await adminManualRecharge(user.id, amount);
             alert(`¡Recarga de $${amount} exitosa!`);
             loadData(); // Refresh list to see new balance
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    };
+
+    const handleDeleteGame = async (gameId, type) => {
+        if (!confirm(`¿Estás seguro de ELIMINAR este juego? ¡No se puede deshacer!`)) return;
+        try {
+            await adminDeleteGame(gameId, type);
+            alert('Juego eliminado');
+            loadData();
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    };
+
+    const handleDeleteUser = async (userId) => {
+        if (!confirm(`⚠️ PELIGRO ⚠️\n¿Eliminar este usuario y TODOS sus datos?\nEsto borrará sus bingos, rifas y tickets.`)) return;
+        try {
+            await adminDeleteUser(userId);
+            alert('Usuario eliminado');
+            loadData();
         } catch (error) {
             alert('Error: ' + error.message);
         }
@@ -98,6 +123,18 @@ const SuperAdminPanel = () => {
                     }}
                 >
                     <Users size={16} style={{ marginBottom: '-3px', marginRight: '5px' }} /> Usuarios ({users.length})
+                </button>
+                <button
+                    onClick={() => setActiveTab('games')}
+                    style={{
+                        background: 'none', border: 'none',
+                        padding: '10px 20px',
+                        borderBottom: activeTab === 'games' ? '3px solid var(--color-primary)' : 'none',
+                        fontWeight: activeTab === 'games' ? 'bold' : 'normal',
+                        cursor: 'pointer', color: 'var(--color-text)'
+                    }}
+                >
+                    <Gamepad2 size={16} style={{ marginBottom: '-3px', marginRight: '5px' }} /> Juegos ({games.length})
                 </button>
                 <button
                     onClick={() => setActiveTab('settings')}
@@ -157,7 +194,7 @@ const SuperAdminPanel = () => {
                                         <td style={{ padding: '10px', fontWeight: 'bold', color: '#10B981' }}>
                                             ${user.balance?.toLocaleString()}
                                         </td>
-                                        <td style={{ padding: '10px' }}>
+                                        <td style={{ padding: '10px', display: 'flex', gap: '5px' }}>
                                             <button
                                                 onClick={() => handleRechargeUser(user)}
                                                 style={{
@@ -168,9 +205,81 @@ const SuperAdminPanel = () => {
                                             >
                                                 <DollarSign size={14} /> Recargar
                                             </button>
+                                            <button
+                                                onClick={() => handleDeleteUser(user.id)}
+                                                style={{
+                                                    background: '#ef4444', border: 'none', color: 'white',
+                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px'
+                                                }}
+                                                title="Eliminar Usuario"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'games' && (
+                <div>
+                    <h3 style={{ marginTop: 0 }}>Gestión de Juegos</h3>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
+                                    <th style={{ padding: '10px' }}>Juego</th>
+                                    <th style={{ padding: '10px' }}>Dueño</th>
+                                    <th style={{ padding: '10px' }}>Tipo</th>
+                                    <th style={{ padding: '10px' }}>Estado</th>
+                                    <th style={{ padding: '10px' }}>Creado</th>
+                                    <th style={{ padding: '10px' }}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {games.map(game => (
+                                    <tr key={game.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                        <td style={{ padding: '10px', fontWeight: 'bold' }}>{game.name}</td>
+                                        <td style={{ padding: '10px' }}>
+                                            {game.owner?.full_name || 'Desconocido'}<br />
+                                            <small style={{ opacity: 0.7 }}>{game.owner?.email}</small>
+                                        </td>
+                                        <td style={{ padding: '10px' }}>
+                                            <span style={{
+                                                background: game.type === 'BINGO' ? '#8b5cf6' : '#ec4899',
+                                                color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem'
+                                            }}>
+                                                {game.type}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '10px', fontSize: '0.9rem' }}>{game.status}</td>
+                                        <td style={{ padding: '10px', fontSize: '0.8rem' }}>
+                                            {new Date(game.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td style={{ padding: '10px' }}>
+                                            <button
+                                                onClick={() => handleDeleteGame(game.id, game.type)}
+                                                style={{
+                                                    background: '#ef4444', border: 'none', color: 'white',
+                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px',
+                                                    display: 'flex', alignItems: 'center', gap: '5px'
+                                                }}
+                                            >
+                                                <Trash2 size={14} /> Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {games.length === 0 && (
+                                    <tr>
+                                        <td colSpan="6" style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>
+                                            No hay juegos creados aún.
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

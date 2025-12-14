@@ -123,10 +123,11 @@ export const getTicket = async (ticketId) => {
     const { data, error } = await supabase
         .from('bingo_players')
         .select('*')
-        .select();
+        .eq('id', ticketId) // Added missing .eq('id', ticketId)
+        .single(); // Added missing .single()
 
     if (error) throw error;
-    return data?.[0] || null;
+    return data || null; // Changed to data || null as single() returns object or null
 };
 
 export const updateTicket = async (ticketId, updates) => {
@@ -600,19 +601,7 @@ export const submitPaymentProof = async (raffleId, ticketNumber, file) => {
 export const sellRaffleTicket = markTicketPaid;
 
 
-export const saveRaffleWinner = async (raffleId, number) => {
-    const { data, error } = await supabase
-        .from('raffles')
-        .update({
-            winner_number: Number(number),
-            status: 'CLOSED'
-        })
-        .eq('id', raffleId)
-        .select()
-        .single();
-    if (error) throw error;
-    return data;
-};
+
 
 // --- BINGO LOGIC UTILITIES (Merged) ---
 
@@ -707,3 +696,115 @@ export const deleteBingoPlayer = async (playerId) => {
     return true;
 };
 
+export const saveRaffleWinner = async (raffleId, winnerNumber) => {
+    // 1. Find the ticket that has this number
+    const { data: ticket, error: tErr } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('raffle_id', raffleId)
+        .eq('number', winnerNumber)
+        .single();
+
+    // It's possible no one bought it, so ticket might be null.
+    // However, we still save the number.
+
+    const updates = {
+        winner_number: winnerNumber,
+        status: 'CLOSED'
+    };
+
+    if (ticket) {
+        updates.winner_ticket_id = ticket.id;
+    }
+
+    const { error } = await supabase.from('raffles').update(updates).eq('id', raffleId);
+    if (error) throw error;
+};
+
+// --- SUPER ADMIN FUNCTIONS ---
+
+export const getAllAllGames = async () => {
+    // Fetch ALL bingos and raffles without user filter
+    const { data: bingos, error: bErr } = await supabase
+        .from('bingo_games')
+        .select('*, profiles(email, full_name)')
+        .order('created_at', { ascending: false });
+
+    if (bErr) throw bErr;
+
+    const { data: raffles, error: rErr } = await supabase
+        .from('raffles')
+        .select('*, profiles(email, full_name)')
+        .order('created_at', { ascending: false });
+
+    if (rErr) throw rErr;
+
+    // Normalize and combine
+    const allBingos = bingos.map(b => ({ ...b, type: 'BINGO', owner: b.profiles }));
+    const allRaffles = raffles.map(r => ({ ...r, type: 'RIFA', owner: r.profiles }));
+
+    return [...allBingos, ...allRaffles].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+};
+
+export const adminDeleteGame = async (gameId, type) => {
+    const table = type === 'BINGO' ? 'bingo_games' : 'raffles';
+    const { error } = await supabase.from(table).delete().eq('id', gameId);
+    if (error) throw error;
+};
+
+export const adminDeleteUser = async (userId) => {
+    // Delete user from auth (requires Service Role usually, but if RLS allows delete on public.profiles, trigger will handle auth)
+    const { error } = await supabase.from('profiles').delete().eq('id', userId);
+    if (error) throw error;
+};
+
+
+export const verifyGamePin = async (phone, pin) => {
+    // 1. Search in Bingo Players
+    const { data: bingoData, error: bingoError } = await supabase
+        .from('bingo_players')
+        .select('*, bingo_games(name)')
+        .eq('pin', pin)
+        // We might want to check phone too for security, or just PIN if PIN is unique enough.
+        // Let's enforce Phone match if provided for extra security
+        .ilike('phone', `%${phone.trim()}%`) // Using partial match or precise match
+        .single();
+
+    if (bingoData) {
+        return {
+            type: 'BINGO',
+            gameId: bingoData.game_id,
+            ticketId: bingoData.id,
+            data: bingoData
+        };
+    }
+
+    // 2. Search in Raffle Tickets (Assuming Raffles might use 'number' as PIN or we add a PIN column later)
+    // For now, let's assume Raffles don't have a generated "PIN" like bingos (which have 4 digit pin).
+    // Raffles usually use Ticket Number.
+    // IF we want to unify, we might need to add a 'pin' column to raffle tickets or reuse 'id'/'number'.
+    // Let's assume for this feature, we are primarily targeting BINGO which explicitly has PINs.
+    // If you want Raffles, we'd check ID or Number + Phone.
+
+    // Check Raffle by Number + Phone
+    // Pin acts as "Ticket Number" for raffles in this simpler context? 
+    // Or we strictly say "Pin is for Bingos". 
+    // Let's try to match Raffle Number.
+    const { data: raffleData, error: raffleError } = await supabase
+        .from('tickets')
+        .select('*, raffles(name)')
+        .eq('number', pin) // Assuming PIN input is the Ticket Number
+        .ilike('phone', `%${phone.trim()}%`)
+        .single();
+
+    if (raffleData) {
+        return {
+            type: 'RAFFLE',
+            gameId: raffleData.raffle_id,
+            ticketId: raffleData.id,
+            data: raffleData
+        };
+    }
+
+    throw new Error('No se encontró ningún ticket/cartón con ese PIN y Celular.');
+};
