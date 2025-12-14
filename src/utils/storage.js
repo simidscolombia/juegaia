@@ -223,18 +223,41 @@ export const getProfile = async () => {
     return profile;
 };
 
-// Secure Game Creation (Deducts Balance)
-export const createGameWithWallet = async (name) => {
-    const COST = 10000; // Hardcoded cost per game for now
-
+// Secure Game Creation (Deducts Balance) - SaaS Version
+export const createGameService = async (serviceType, name, config = {}) => {
+    // serviceType: 'BINGO' or 'RAFFLE'
     const { data, error } = await supabase
-        .rpc('create_game_with_wallet', {
-            game_name: name,
-            cost: COST
+        .rpc('create_game_service', {
+            p_service_type: serviceType,
+            p_name: name,
+            p_config: config
         });
 
     if (error) throw error;
-    return data; // Returns { success: true, game_id: ..., new_balance: ... }
+    if (!data.success) throw new Error(data.error);
+
+    return data; // { success: true, game_id: ... }
+};
+
+export const getSystemSettings = async () => {
+    const { data, error } = await supabase
+        .from('system_settings')
+        .select('*');
+
+    if (error) return {};
+
+    // Convert array to object { key: value }
+    const settings = {};
+    data.forEach(item => {
+        settings[item.key] = item.value;
+    });
+    return settings;
+};
+
+// Legacy Wallet Creation (Deprecated for SaaS RPC but kept for ref if needed)
+export const createGameWithWallet = async (name) => {
+    console.warn("createGameWithWallet is deprecated. Use createGameService");
+    return createGameService('BINGO', name);
 };
 
 // Admin Mock Recharge (For Demo)
