@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save, Play, RefreshCw, StopCircle } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
+import { countryCodes } from '../utils/countryCodes';
 import { supabase } from '../utils/supabaseClient';
 
 const GameAdmin = () => {
@@ -14,7 +15,11 @@ const GameAdmin = () => {
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [adminWhatsapp, setAdminWhatsapp] = useState('');
+
+    // WhatsApp State
+    const [countryCode, setCountryCode] = useState('57');
+    const [localPhone, setLocalPhone] = useState('');
+
     const [savingSettings, setSavingSettings] = useState(false);
 
     // Game Control State
@@ -36,7 +41,17 @@ const GameAdmin = () => {
             if (g && g.called_numbers && g.called_numbers.length > 0) {
                 setLastCall(g.called_numbers[g.called_numbers.length - 1]);
             }
-            setAdminWhatsapp(g.admin_whatsapp || '');
+            if (g.admin_whatsapp) {
+                // Try to find matching country code
+                const sortedCodes = [...countryCodes].sort((a, b) => b.code.length - a.code.length);
+                const match = sortedCodes.find(c => g.admin_whatsapp.startsWith(c.code));
+                if (match) {
+                    setCountryCode(match.code);
+                    setLocalPhone(g.admin_whatsapp.slice(match.code.length));
+                } else {
+                    setLocalPhone(g.admin_whatsapp); // Fallback
+                }
+            }
             setPlayers(p || []);
         } catch (error) {
             console.error(error);
@@ -198,18 +213,30 @@ const GameAdmin = () => {
                         <Settings size={16} /> WhatsApp para Comprobantes
                     </label>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <input
-                            type="text"
-                            placeholder="Ej. 573001234567 (Con Código País)"
-                            value={adminWhatsapp}
-                            onChange={(e) => setAdminWhatsapp(e.target.value)}
-                            style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)' }}
-                        />
+                        <div style={{ display: 'flex', gap: '5px', flex: 1 }}>
+                            <select
+                                value={countryCode}
+                                onChange={(e) => setCountryCode(e.target.value)}
+                                style={{ padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)', maxWidth: '80px' }}
+                            >
+                                {countryCodes.map(c => (
+                                    <option key={c.code} value={c.code}>{c.flag} +{c.code}</option>
+                                ))}
+                            </select>
+                            <input
+                                type="text"
+                                placeholder="3001234567"
+                                value={localPhone}
+                                onChange={(e) => setLocalPhone(e.target.value.replace(/\D/g, ''))}
+                                style={{ flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)' }}
+                            />
+                        </div>
                         <button
                             onClick={async () => {
                                 setSavingSettings(true);
                                 try {
-                                    await updateGame(gameId, { adminWhatsapp });
+                                    const fullNumber = countryCode + localPhone;
+                                    await updateGame(gameId, { adminWhatsapp: fullNumber });
                                     alert('Configuración guardada');
                                 } catch (e) {
                                     alert('Error guardando: ' + e.message);
@@ -222,7 +249,7 @@ const GameAdmin = () => {
                         </button>
                     </div>
                     <small style={{ opacity: 0.6, fontSize: '0.75rem', marginTop: '5px', display: 'block' }}>
-                        IMPORTANTE: Debes incluir el código del país (ej: 57 para Colombia) para que funcione mundialmente.
+                        Selecciona tu país y número. A este WhatsApp llegarán los comprobantes.
                     </small>
                     <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--color-accent)' }}>
