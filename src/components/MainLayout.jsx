@@ -54,24 +54,24 @@ const MainLayout = ({ children }) => {
     return (
         <div style={{
             display: 'flex',
-            minHeight: '100vh',
+            height: '100vh', // Fixed height
+            overflow: 'hidden', // Prevent body scroll
             background: 'var(--color-bg)',
             color: 'var(--color-text)',
-            flexDirection: 'column' // Default to column for mobile
+            flexDirection: 'column'
         }}>
 
-            {/* Desktop Sidebar (Hidden on Mobile) */}
+            {/* Desktop Sidebar */}
             <aside className="desktop-sidebar" style={{
                 width: '260px',
                 background: 'var(--color-card)',
                 borderRight: '1px solid var(--color-border)',
-                display: 'none', // Hidden by default (mobile), shown via CSS media query
+                display: 'none',
                 flexDirection: 'column',
-                position: 'sticky',
-                top: 0,
-                height: '100vh'
+                height: '100%', // Full height of container
+                overflowY: 'auto' // Independent scroll
             }}>
-                <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--color-border)' }}>
+                <div style={{ padding: '2rem 1.5rem', borderBottom: '1px solid var(--color-border)', flexShrink: 0 }}>
                     <h1 style={{ margin: 0, fontSize: '1.5rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>JuegAIA</h1>
                     <p style={{ margin: '5px 0 0 0', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Admin Panel</p>
                 </div>
@@ -100,7 +100,7 @@ const MainLayout = ({ children }) => {
                     ))}
                 </nav>
 
-                <div style={{ padding: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
+                <div style={{ padding: '1.5rem', borderTop: '1px solid var(--color-border)', flexShrink: 0 }}>
                     {/* Theme Selector */}
                     <div style={{ marginBottom: '1.5rem' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
@@ -136,21 +136,18 @@ const MainLayout = ({ children }) => {
                 </div>
             </aside>
 
-            {/* Mobile Header (Wallet & User) */}
+            {/* Mobile Header */}
             <header className="mobile-header" style={{
                 padding: '1rem',
                 borderBottom: '1px solid var(--color-border)',
                 background: 'var(--color-card)',
-                display: 'flex', // Flex by default (mobile), hidden via CSS on desktop
+                display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                position: 'sticky',
-                top: 0,
-                zIndex: 90
+                flexShrink: 0 // Don't shrink
             }}>
                 <div style={{ fontWeight: 'bold' }}>JuegAIA</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {/* Theme Toggle Mobile (Circle that cylces) */}
                     <button
                         onClick={() => {
                             const keys = Object.keys(themes);
@@ -173,8 +170,8 @@ const MainLayout = ({ children }) => {
             <main style={{
                 flex: 1,
                 padding: '1rem',
-                paddingBottom: '80px', // Space for bottom nav
-                overflowY: 'auto',
+                paddingBottom: '80px',
+                overflowY: 'auto', // Scroll ONLY here
                 width: '100%',
                 boxSizing: 'border-box'
             }}>
@@ -191,7 +188,7 @@ const MainLayout = ({ children }) => {
                 width: '100%',
                 background: 'var(--color-card)',
                 borderTop: '1px solid var(--color-border)',
-                display: 'flex', // Flex by default (mobile)
+                display: 'flex',
                 justifyContent: 'space-around',
                 padding: '10px 0',
                 zIndex: 100,

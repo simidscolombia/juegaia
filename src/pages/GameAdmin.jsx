@@ -46,14 +46,28 @@ const GameAdmin = () => {
         }
     };
 
-    const handleDeletePlayer = async (playerId) => {
-        if (!confirm('¿Eliminar este cartón? El jugador ya no podrá entrar.')) return;
+    const deleteTicket = async (ticketId) => {
+        if (!confirm('¿Eliminar este cartón? Esta acción no se puede deshacer.')) return;
         try {
-            await deleteBingoPlayer(playerId);
-            alert('Jugador eliminado.');
+            await deleteBingoPlayer(ticketId);
+            alert('Cartón eliminado.');
             loadData();
         } catch (error) {
             alert('Error eliminando: ' + error.message);
+        }
+    };
+
+    const deleteGroup = async (group) => {
+        if (!confirm(`¿Estás seguro de ELIMINAR TODOS los ${group.tickets.length} cartones de ${group.name}?`)) return;
+
+        try {
+            for (const ticket of group.tickets) {
+                await deleteBingoPlayer(ticket.id);
+            }
+            alert('Grupo eliminado correctamente.');
+            loadData();
+        } catch (error) {
+            alert('Error eliminando grupo: ' + error.message);
         }
     };
 
@@ -323,7 +337,13 @@ const GameAdmin = () => {
                     return (
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             {Object.values(grouped).map((group, i) => (
-                                <ClientGroupRow key={i} group={group} gameId={gameId} />
+                                <ClientGroupRow
+                                    key={i}
+                                    group={group}
+                                    gameId={gameId}
+                                    onDeleteGroup={() => deleteGroup(group)}
+                                    onDeleteTicket={deleteTicket}
+                                />
                             ))}
                         </div>
                     );
@@ -367,14 +387,13 @@ const GameAdmin = () => {
     );
 };
 
-const ClientGroupRow = ({ group, gameId }) => {
+const ClientGroupRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
     const [expanded, setExpanded] = useState(false);
 
     const shareAll = () => {
         const links = group.tickets.map((t, i) => `🎟️ *Cartón ${t.pin}*: ${window.location.origin}/play/${gameId}?card=${t.id}`).join('\n');
         const msg = `👋 *¡Hola ${group.name}!* \n\nAquí están tus ${group.tickets.length} cartones para el Bingo:\n\n${links}\n\n¡Buena suerte! 🍀`;
 
-        // Use Native Share if mobile, otherwise copy
         if (navigator.share) {
             navigator.share({ title: 'Tus Cartones', text: msg }).catch(console.error);
         } else {
@@ -407,6 +426,13 @@ const ClientGroupRow = ({ group, gameId }) => {
                         <Share2 size={16} /> Enviar Todo
                     </button>
                     <button
+                        onClick={onDeleteGroup}
+                        style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        title="Eliminar Cliente y Cartones"
+                    >
+                        <Trash size={16} />
+                    </button>
+                    <button
                         onClick={() => setExpanded(!expanded)}
                         style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '8px', borderRadius: '4px', cursor: 'pointer' }}
                     >
@@ -423,17 +449,26 @@ const ClientGroupRow = ({ group, gameId }) => {
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                         }}>
                             <span style={{ fontFamily: 'monospace' }}>PIN: <strong>{ticket.pin}</strong></span>
-                            <button
-                                onClick={() => {
-                                    const link = `${window.location.origin}/play/${gameId}?card=${ticket.id}`;
-                                    const msg = `🎟️ *Tu Cartón ${ticket.pin}*: ${link}`;
-                                    if (navigator.share) navigator.share({ text: msg });
-                                    else { navigator.clipboard.writeText(msg); alert('Copiado!'); }
-                                }}
-                                style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}
-                            >
-                                Compartir Individual
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button
+                                    onClick={() => {
+                                        const link = `${window.location.origin}/play/${gameId}?card=${ticket.id}`;
+                                        const msg = `🎟️ *Tu Cartón ${ticket.pin}*: ${link}`;
+                                        if (navigator.share) navigator.share({ text: msg });
+                                        else { navigator.clipboard.writeText(msg); alert('Copiado!'); }
+                                    }}
+                                    style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}
+                                >
+                                    Compartir
+                                </button>
+                                <button
+                                    onClick={() => onDeleteTicket(ticket.id)}
+                                    style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                                    title="Eliminar Cartón"
+                                >
+                                    <Trash size={14} />
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
