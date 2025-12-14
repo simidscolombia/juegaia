@@ -29,19 +29,48 @@ const SuperAdminPanel = () => {
         setCurrentUser(p);
     };
 
+    const [errorMsg, setErrorMsg] = useState(null);
+
     const loadData = async () => {
         setLoading(true);
+        setErrorMsg(null);
         try {
-            const [s, u, g] = await Promise.all([
+            // Use allSettled to allow partial loading
+            const results = await Promise.allSettled([
                 getSystemSettings(),
                 getAllProfiles(),
                 getAllAllGames()
             ]);
-            setSettings(prev => ({ ...prev, ...s }));
-            setUsers(u || []);
-            setGames(g || []);
+
+            const [settingsRes, usersRes, gamesRes] = results;
+
+            // Log for debugging (user can check console if directed, but we'll show UI error too)
+            console.log("SuperAdmin Load Results:", results);
+
+            if (settingsRes.status === 'fulfilled') {
+                setSettings(prev => ({ ...prev, ...settingsRes.value }));
+            } else {
+                console.error("Settings failed:", settingsRes.reason);
+                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Settings: " + settingsRes.reason.message);
+            }
+
+            if (usersRes.status === 'fulfilled') {
+                setUsers(usersRes.value || []);
+            } else {
+                console.error("Users failed:", usersRes.reason);
+                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Users: " + usersRes.reason.message);
+            }
+
+            if (gamesRes.status === 'fulfilled') {
+                setGames(gamesRes.value || []);
+            } else {
+                console.error("Games failed:", gamesRes.reason);
+                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Games: " + gamesRes.reason.message);
+            }
+
         } catch (error) {
             console.error(error);
+            setErrorMsg("Critical Error: " + error.message);
         } finally {
             setLoading(false);
         }
@@ -109,6 +138,14 @@ const SuperAdminPanel = () => {
                 <h1 style={{ margin: 0 }}>Super Admin</h1>
                 <div style={{ width: '100px' }}></div> {/* Spacer */}
             </div>
+
+            {/* Debug/Error Alert */}
+            {errorMsg && (
+                <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', color: '#fca5a5', padding: '15px', borderRadius: '8px', marginBottom: '20px', whiteSpace: 'pre-wrap' }}>
+                    <strong>⚠️ Error Cargando Datos:</strong><br />
+                    {errorMsg}
+                </div>
+            )}
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--color-border)' }}>
