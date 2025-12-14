@@ -71,9 +71,35 @@ const Recharge = () => {
                 customerData: customerData
             });
 
-            checkout.open(function (result) {
+            checkout.open(async function (result) {
                 const transaction = result.transaction;
                 console.log('Transaction Result:', transaction);
+
+                if (transaction.status === 'APPROVED') {
+                    // Critical: Credit the wallet
+                    try {
+                        const { data, error } = await supabase.rpc('process_recharge_with_mlm', {
+                            p_user_id: profile.id,
+                            p_amount: amountInCents / 100, // Convert back to standard units
+                            p_reference: transaction.reference,
+                            p_wompi_id: transaction.id
+                        });
+
+                        if (error) {
+                            console.error("Error crediting wallet:", error);
+                            alert("Pago aprobado en Wompi pero hubo un error acreditando el saldo. Contacta soporte.");
+                        } else {
+                            alert(`¡Pago Exitoso! Se han recargado $${amountInCents / 100} Coins.`);
+                            navigate('/dashboard');
+                        }
+                    } catch (err) {
+                        console.error("Credit Error:", err);
+                    }
+                } else if (transaction.status === 'DECLINED') {
+                    alert("El pago fue rechazado por el banco.");
+                } else if (transaction.status === 'ERROR') {
+                    alert("Ocurrió un error procesando el pago.");
+                }
             });
         } catch (error) {
             console.error("Wompi Error:", error);
