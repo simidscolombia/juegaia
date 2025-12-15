@@ -88,11 +88,15 @@ const RafflePublic = () => {
         }
 
         try {
-            await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null);
+            // Capture the reservation result (which now includes the generated PIN)
+            const result = await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null);
+
+            // Extract PIN (it's the same for the whole batch)
+            const generatedPin = result && result.length > 0 ? result[0].pin : '????';
 
             setSelectedNums([]);
             setReserveName('');
-            setReservePhone('');
+            // setReservePhone(''); // Keep for modal context
             setReserveDate('');
             setShowModal(false);
 
@@ -104,9 +108,9 @@ const RafflePublic = () => {
             setSuccessData({
                 phone: reservePhone,
                 count: selectedNums.length,
-                tickets: selectedNums
+                tickets: selectedNums,
+                pin: generatedPin // Pass the actual PIN from DB
             });
-            // Don't clear phone yet so we can show it, but clear selection
         } catch (err) {
             alert(err.message);
         }
@@ -334,23 +338,22 @@ const RafflePublic = () => {
                                 <span>{successData.phone}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <strong>Tu PIN de Acceso:</strong>
-                                <span style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: '#0984e3' }}>
-                                    {successData.phone.slice(-4)}
+                                <strong>Tu PIN de Seguridad:</strong>
+                                <span style={{ fontFamily: 'monospace', fontSize: '1.4rem', color: '#d63031', fontWeight: 'bold' }}>
+                                    {successData.pin}
                                 </span>
                             </div>
                             <p style={{ fontSize: '0.8rem', color: '#b2bec3', margin: '10px 0 0 0' }}>
-                                *Usa los últimos 4 dígitos de tu celular para entrar siempre.
+                                *Guarda este código único para ingresar a gestionar tus boletas.
                             </p>
                         </div>
 
                         <button
                             onClick={() => {
-                                // Auto-Login Logic with new PIN rule
-                                const pin = successData.phone.slice(-4);
+                                // Auto-Login Logic with Derived PIN
                                 localStorage.setItem('juegaia_guest', JSON.stringify({
                                     phone: successData.phone,
-                                    pin: pin,
+                                    pin: successData.pin,
                                     lastGame: raffleId
                                 }));
                                 navigate('/lobby');
