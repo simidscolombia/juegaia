@@ -3,7 +3,9 @@ import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, KeyRound, Phone, Smartphone, ArrowRight, UserCheck, ShieldCheck } from 'lucide-react';
 import { verifyGamePin } from '../utils/storage';
+import { verifyGamePin } from '../utils/storage';
 import { countryCodes } from '../utils/countryCodes';
+import simidsLogo from '../assets/simids-logo.jpg';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -313,6 +315,18 @@ const Login = () => {
                     to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
+
+            {/* Branding Footer */}
+            <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.8 }}>
+                <img
+                    src={simidsLogo}
+                    alt="SIMIDS Logo"
+                    style={{ height: '24px', marginBottom: '5px', borderRadius: '4px' }}
+                />
+                <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
+                    POWERED BY <strong>SIMIDS-IA</strong>
+                </div>
+            </div>
         </div>
     );
 };

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { User, Mail, Lock, Phone as PhoneIcon, MapPin, Users } from 'lucide-react';
+import simidsLogo from '../assets/simids-logo.jpg';
 
 const Register = () => {
     const navigate = useNavigate();
@@ -103,6 +104,18 @@ const Register = () => {
 
                 <div style={{ marginTop: '1.5rem', textAlign: 'center', color: '#fff', fontSize: '0.9rem' }}>
                     ¿Ya tienes cuenta? <Link to="/login" style={{ color: '#e94560' }}>Inicia Sesión</Link>
+                </div>
+
+                {/* Branding Footer */}
+                <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.8 }}>
+                    <img
+                        src={simidsLogo}
+                        alt="SIMIDS Logo"
+                        style={{ height: '24px', marginBottom: '5px', borderRadius: '4px' }}
+                    />
+                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px' }}>
+                        POWERED BY <strong>SIMIDS-IA</strong>
+                    </div>
                 </div>
             </div>
         </div>
