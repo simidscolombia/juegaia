@@ -3,7 +3,6 @@ import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, KeyRound, Phone, Smartphone, ArrowRight, UserCheck, ShieldCheck } from 'lucide-react';
 import { verifyGamePin } from '../utils/storage';
-import { verifyGamePin } from '../utils/storage';
 import { countryCodes } from '../utils/countryCodes';
 import simidsLogo from '../assets/simids-logo.jpg';
 
