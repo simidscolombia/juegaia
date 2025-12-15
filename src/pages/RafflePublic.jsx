@@ -192,7 +192,7 @@ const RafflePublic = () => {
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
                 }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
+                    <div style={{ background: 'white', color: '#2d3436', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <h2 style={{ margin: 0 }}>Confirmar Reserva</h2>
                             <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
@@ -241,8 +241,8 @@ const RafflePublic = () => {
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 101,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
                 }}>
-                    <div style={{ background: 'white', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center' }}>
-                        <button onClick={() => setViewingTicket(null)} style={{ float: 'right', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                    <div style={{ background: 'white', color: '#2d3436', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center' }}>
+                        <button onClick={() => setViewingTicket(null)} style={{ float: 'right', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#2d3436' }}>&times;</button>
 
                         <h2 style={{ marginTop: 0 }}>Boleta #{viewingTicket}</h2>
 
