@@ -769,37 +769,17 @@ export const adminDeleteGame = async (gameId, type) => {
 };
 
 export const adminDeleteUser = async (userId) => {
-    // MANUAL CASCADE DELETE
+    // SECURE FULL DELETE via RPC (Deletes Auth + Data)
+    const { error } = await supabase.rpc('delete_user_full', {
+        target_user_id: userId
+    });
 
-    // 1. Delete Wallet
-    const { error: wErr } = await supabase.from('wallets').delete().eq('user_id', userId);
-    if (wErr) console.warn("Wallet delete warning (might not exist):", wErr);
-
-    // 2. Delete created Bingos (and their players via generic delete)
-    // We fetch them first to delete efficiently or just let database cascade if configured?
-    // Safer to just delete the games if we leverage the adminDeleteGame logic:
-
-    // Fetch user games
-    const { data: bingos } = await supabase.from('bingo_games').select('id').eq('owner_id', userId);
-    if (bingos && bingos.length > 0) {
-        for (const b of bingos) {
-            await adminDeleteGame(b.id, 'BINGO');
-        }
+    if (error) {
+        console.error("Delete Error:", error);
+        throw new Error("Error eliminando usuario: " + error.message);
     }
 
-    // Fetch user raffles
-    const { data: raffles } = await supabase.from('raffles').select('id').eq('owner_id', userId);
-    if (raffles && raffles.length > 0) {
-        for (const r of raffles) {
-            await adminDeleteGame(r.id, 'RAFFLE');
-        }
-    }
-
-    // 3. Delete Profile (This serves as the 'User Account' in our app logic)
-    // Note: This does NOT delete from auth.users (Supabase limitation from client). 
-    // The user will remain in Auth but have no data. Ideally an Edge Function handles full cleanup.
-    const { error } = await supabase.from('profiles').delete().eq('id', userId);
-    if (error) throw error;
+    return true;
 };
 
 
