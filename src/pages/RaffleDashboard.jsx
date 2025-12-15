@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar } from 'lucide-react';
-import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings } from '../utils/storage';
+import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
 import { COMMON_LOTTERIES } from '../utils/lotteries';
 import RechargeModal from '../components/RechargeModal';
@@ -565,68 +565,40 @@ const RaffleDashboard = () => {
                                 </form>
                             </div>
 
-                            {/* Table Container */}
+                            {/* Table Container - NOW GROUPED */}
                             <div style={{ flex: '2 1 400px', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column' }}>
                                 <h4 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#ffd166' }}>
-                                    <Users size={20} /> Listado de Compradores ({tickets.length})
+                                    <Users size={20} /> Compradores ({tickets.length})
                                 </h4>
 
-                                <div style={{ overflowX: 'auto', flex: 1, borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ overflowY: 'auto', maxHeight: '500px', paddingRight: '5px' }}>
                                     {tickets.length === 0 ? (
                                         <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>No hay ventas registradas aún.</div>
                                     ) : (
-                                        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '500px' }}>
-                                            <thead style={{ background: 'rgba(0,0,0,0.3)' }}>
-                                                <tr>
-                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}># BOLETA</th>
-                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>CLIENTE</th>
-                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>ESTADO</th>
-                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>FECHA / PROMESA</th>
-                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>EVIDENCIA</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {tickets.map((t, i) => (
-                                                    <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
-                                                        <td style={{ padding: '12px 15px', color: '#ffd166', fontWeight: 'bold', fontSize: '1.2rem' }}>
-                                                            {t.number.toString().padStart(selectedRaffle.digits || 3, '0')}
-                                                        </td>
-                                                        <td style={{ padding: '12px 15px', fontWeight: '500' }}>{t.buyer_name || t.buyerName}</td>
-                                                        <td style={{ padding: '12px 15px' }}>
-                                                            <span style={{
-                                                                padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold',
-                                                                background: t.status === 'PAID' ? 'rgba(6, 214, 160, 0.2)' : 'rgba(255, 209, 102, 0.2)',
-                                                                color: t.status === 'PAID' ? '#06d6a0' : '#ffd166',
-                                                                border: t.status === 'PAID' ? '1px solid #06d6a0' : '1px solid #ffd166'
-                                                            }}>
-                                                                {t.status === 'PAID' ? 'PAGADO' : 'RESERVADO'}
-                                                            </span>
-                                                        </td>
-                                                        <td style={{ padding: '12px 15px', fontSize: '0.85rem', opacity: 0.8 }}>
-                                                            {t.payment_date
-                                                                ? <span style={{ color: '#06d6a0' }}>{new Date(t.payment_date).toLocaleDateString()}</span>
-                                                                : t.payment_promise_date
-                                                                    ? <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                                        <span style={{ color: '#fab1a0', fontSize: '0.75rem' }}>Promesa:</span>
-                                                                        <span>{new Date(t.payment_promise_date).toLocaleDateString()}</span>
-                                                                    </div>
-                                                                    : '-'
-                                                            }
-                                                        </td>
-                                                        <td style={{ padding: '12px 15px' }}>
-                                                            {t.payment_proof_url ? (
-                                                                <a href={t.payment_proof_url} target="_blank" rel="noopener noreferrer" style={{
-                                                                    color: '#74b9ff', textDecoration: 'none', fontSize: '0.8rem',
-                                                                    border: '1px solid #74b9ff', padding: '2px 8px', borderRadius: '4px'
-                                                                }}>
-                                                                    Ver Foto
-                                                                </a>
-                                                            ) : <span style={{ opacity: 0.3 }}>-</span>}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                        <BuyerGroupsList
+                                            tickets={tickets}
+                                            raffleDigits={selectedRaffle.digits}
+                                            onUpdateStatus={async (id, status) => {
+                                                try {
+                                                    await updateTicketStatus(id, status);
+                                                    const t = await getRaffleTickets(selectedRaffle.id); // Refresh
+                                                    setTickets(t);
+                                                } catch (e) { alert(e.message) }
+                                            }}
+                                            onDelete={async (id) => {
+                                                if (!confirm('¿Eliminar boleta?')) return;
+                                                try {
+                                                    // Assuming we have a delete function or logic (reusing deleteBingoPlayer/deleteTicket logic if generic, or creating one. 
+                                                    // Wait, we have `releaseTicket` for Raffles (by number). We need by ID or Number.
+                                                    // Using releaseTicket(raffleId, number)
+                                                    const ticket = tickets.find(t => t.id === id);
+                                                    if (ticket) await releaseTicket(selectedRaffle.id, ticket.number);
+
+                                                    const t = await getRaffleTickets(selectedRaffle.id);
+                                                    setTickets(t);
+                                                } catch (e) { alert(e.message) }
+                                            }}
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -648,6 +620,132 @@ const RaffleDashboard = () => {
                 }}
             />
         </div >
+    );
+};
+
+import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
+import { generateMagicCopy } from '../utils/aiWriter';
+import { COMMON_LOTTERIES } from '../utils/lotteries';
+import RechargeModal from '../components/RechargeModal';
+import { ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react';
+
+const RaffleDashboard = () => {
+    // ... (rest of the component logic) ...
+    // (This block is just to ensure imports are present, but the tool requires context. 
+    // I will target the END of the file to append the new components, and top for existing)
+    // Actually, I'll just append the components at the bottom of the file in a separate call 
+    // and rely on existing imports or update them properly.
+    // Let's do imports first.)
+    // ...
+};
+
+// --- New Sub-Components ---
+
+const BuyerGroupsList = ({ tickets, raffleDigits, onUpdateStatus, onDelete }) => {
+    // Group tickets
+    const groups = tickets.reduce((acc, t) => {
+        const key = (t.phone || t.buyer_name || 'Sin Nombre').trim();
+        if (!acc[key]) acc[key] = { name: t.buyer_name || 'Anónimo', phone: t.phone, tickets: [] };
+        acc[key].tickets.push(t);
+        return acc;
+    }, {});
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {Object.values(groups).map((group, i) => (
+                <BuyerGroup key={i} group={group} raffleDigits={raffleDigits} onUpdateStatus={onUpdateStatus} onDelete={onDelete} />
+            ))}
+        </div>
+    );
+};
+
+const BuyerGroup = ({ group, raffleDigits, onUpdateStatus, onDelete }) => {
+    const [expanded, setExpanded] = useState(false);
+    const paidCount = group.tickets.filter(t => t.status === 'PAID').length;
+    const isAllPaid = paidCount === group.tickets.length;
+
+    return (
+        <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+            {/* Header */}
+            <div
+                onClick={() => setExpanded(!expanded)}
+                style={{
+                    padding: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: expanded ? 'rgba(255,255,255,0.08)' : 'transparent'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: '40px', height: '40px', borderRadius: '50%', background: isAllPaid ? '#06d6a0' : '#ffd166',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0f3460'
+                    }}>
+                        {group.tickets.length}
+                    </div>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>{group.name}</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{group.phone || 'Sin Teléfono'}</div>
+                    </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
+                    {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </div>
+            </div>
+
+            {/* Expanded Content */}
+            {expanded && (
+                <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                        <thead>
+                            <tr style={{ color: '#a0a0a0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                <th style={{ padding: '8px', textAlign: 'left' }}>#</th>
+                                <th style={{ padding: '8px', textAlign: 'left' }}>PIN</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Estado</th>
+                                <th style={{ padding: '8px', textAlign: 'center' }}>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {group.tickets.map(t => (
+                                <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <td style={{ padding: '8px', fontWeight: 'bold', fontSize: '1.1rem', color: '#ffd166' }}>
+                                        {t.number.toString().padStart(raffleDigits || 3, '0')}
+                                    </td>
+                                    <td style={{ padding: '8px', fontFamily: 'monospace' }}>
+                                        {t.pin || '----'}
+                                    </td>
+                                    <td style={{ padding: '8px', textAlign: 'center' }}>
+                                        <span style={{
+                                            padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem',
+                                            background: t.status === 'PAID' ? 'rgba(6,214,160,0.2)' : 'rgba(255,209,102,0.2)',
+                                            color: t.status === 'PAID' ? '#06d6a0' : '#ffd166'
+                                        }}>
+                                            {t.status === 'PAID' ? 'PAGADO' : 'RESERVADO'}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '8px', textAlign: 'center', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                        {t.status !== 'PAID' && (
+                                            <button
+                                                onClick={() => onUpdateStatus(t.id, 'PAID')}
+                                                style={{ border: 'none', background: '#06d6a0', color: '#0f3460', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                                title="Marcar como Pagado"
+                                            >
+                                                <CheckCircle size={14} /> Activar
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => onDelete(t.id)}
+                                            style={{ border: 'none', background: 'rgba(239,68,68,0.2)', color: '#ef4444', borderRadius: '5px', padding: '5px', cursor: 'pointer' }}
+                                            title="Eliminar Boleta"
+                                        >
+                                            <Trash size={16} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
     );
 };
 
