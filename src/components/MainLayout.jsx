@@ -133,6 +133,18 @@ const MainLayout = ({ children }) => {
                     <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid var(--color-border)', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', color: 'var(--color-text)' }}>
                         <LogOut size={16} /> Cerrar Sesión
                     </button>
+
+                    {/* Branding Footer */}
+                    <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.8 }}>
+                        <img
+                            src="/src/assets/simids-logo.jpg"
+                            alt="SIMIDS Logo"
+                            style={{ height: '30px', marginBottom: '5px' }}
+                        />
+                        <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>
+                            POWERED BY <strong>SIMIDS-IA</strong>
+                        </div>
+                    </div>
                 </div>
             </aside>
 

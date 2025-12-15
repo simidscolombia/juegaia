@@ -67,6 +67,19 @@ export const THEMES = {
             textMuted: '#64748b', // Slate-500
             border: '#e2e8f0'   // Slate-200
         }
+    },
+    pastel: {
+        id: 'pastel',
+        name: 'Pastel Dream',
+        colors: {
+            bg: '#fdf4ff',      // Fuschia-50 (Very light pink)
+            card: '#ffffff',    // White
+            primary: '#d8b4fe', // Purple-300 (Soft Lavender)
+            accent: '#fb7185',  // Rose-400
+            text: '#4c1d95',    // Violet-900
+            textMuted: '#86198f', // Magenta-800
+            border: '#f0abfc'   // Fuschia-300
+        }
     }
 };
 
