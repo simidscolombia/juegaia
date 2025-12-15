@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar } from 'lucide-react';
+import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
 import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
 import { COMMON_LOTTERIES } from '../utils/lotteries';
@@ -274,7 +274,7 @@ const RaffleDashboard = () => {
                                         onChange={e => handleDigitsChange(e.target.value)}
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
-                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                         }}
                                     >
                                         <option value={2}>2 Cifras (00-99)</option>
@@ -292,7 +292,7 @@ const RaffleDashboard = () => {
                                         required
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
-                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                         }}
                                     />
                                 </div>
@@ -305,7 +305,7 @@ const RaffleDashboard = () => {
                                         onChange={e => setForm({ ...form, lotteryName: e.target.value })}
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
-                                            background: '#0f3460', border: '1px solid #533483', color: 'white',
+                                            background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)',
                                             marginBottom: form.lotteryName === 'Manual' ? '10px' : '0'
                                         }}
                                     >
@@ -319,7 +319,7 @@ const RaffleDashboard = () => {
                                             onChange={e => setForm({ ...form, lotteryName: e.target.value })}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                     )}
@@ -335,7 +335,7 @@ const RaffleDashboard = () => {
                                         required
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
-                                            background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                         }}
                                     />
                                 </div>
@@ -350,7 +350,7 @@ const RaffleDashboard = () => {
                                             onChange={e => setForm({ ...form, price: e.target.value })}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                     </div>
@@ -363,7 +363,7 @@ const RaffleDashboard = () => {
                                             onChange={e => setForm({ ...form, reservationMinutes: e.target.value })}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                     </div>
@@ -379,7 +379,7 @@ const RaffleDashboard = () => {
                                             onChange={e => setForm({ ...form, image: e.target.value })}
                                             style={{
                                                 flex: 1, padding: '10px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                         <button type="button" onClick={handleMagicImage} style={{ background: '#e94560', color: 'white', border: 'none', borderRadius: '8px', width: '40px', cursor: 'pointer' }} title="Generar con IA">
@@ -414,7 +414,7 @@ const RaffleDashboard = () => {
                                         placeholder="Ej: Nequi 3001234567..."
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
-                                            background: '#0f3460', border: '1px solid #533483', color: 'white',
+                                            background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)',
                                             height: '80px', fontFamily: 'inherit'
                                         }}
                                     />
@@ -519,7 +519,7 @@ const RaffleDashboard = () => {
                                             max={selectedRaffle.max_number || selectedRaffle.max}
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white', fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center'
                                             }}
                                         />
                                     </div>
@@ -534,7 +534,7 @@ const RaffleDashboard = () => {
                                             required
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                     </div>
@@ -549,7 +549,7 @@ const RaffleDashboard = () => {
                                             max={selectedRaffle.draw_date ? selectedRaffle.draw_date.split('T')[0] : undefined}
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '8px',
-                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
                                             }}
                                         />
                                     </div>
@@ -651,38 +651,38 @@ const BuyerGroup = ({ group, raffleDigits, onUpdateStatus, onDelete }) => {
     const isAllPaid = paidCount === group.tickets.length;
 
     return (
-        <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--color-card)', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
             {/* Header */}
             <div
                 onClick={() => setExpanded(!expanded)}
                 style={{
                     padding: '15px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: expanded ? 'rgba(255,255,255,0.08)' : 'transparent'
+                    background: expanded ? 'var(--color-bg)' : 'transparent'
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
-                        width: '40px', height: '40px', borderRadius: '50%', background: isAllPaid ? '#06d6a0' : '#ffd166',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#0f3460'
+                        width: '40px', height: '40px', borderRadius: '50%', background: isAllPaid ? 'var(--color-primary)' : 'var(--color-accent)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: '#fff'
                     }}>
                         {group.tickets.length}
                     </div>
                     <div>
-                        <div style={{ fontWeight: 'bold' }}>{group.name}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{group.phone || 'Sin Teléfono'}</div>
+                        <div style={{ fontWeight: 'bold', color: 'var(--color-text)' }}>{group.name}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>{group.phone || 'Sin Teléfono'}</div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--color-text-muted)' }}>
                     {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                 </div>
             </div>
 
             {/* Expanded Content */}
             {expanded && (
-                <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ padding: '10px', borderTop: '1px solid var(--color-border)' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                         <thead>
-                            <tr style={{ color: '#a0a0a0', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                            <tr style={{ color: 'var(--color-text-muted)', borderBottom: '1px solid var(--color-border)' }}>
                                 <th style={{ padding: '8px', textAlign: 'left' }}>#</th>
                                 <th style={{ padding: '8px', textAlign: 'left' }}>PIN</th>
                                 <th style={{ padding: '8px', textAlign: 'center' }}>Estado</th>
@@ -691,18 +691,19 @@ const BuyerGroup = ({ group, raffleDigits, onUpdateStatus, onDelete }) => {
                         </thead>
                         <tbody>
                             {group.tickets.map(t => (
-                                <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <td style={{ padding: '8px', fontWeight: 'bold', fontSize: '1.1rem', color: '#ffd166' }}>
+                                <tr key={t.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                                    <td style={{ padding: '8px', fontWeight: 'bold', fontSize: '1.1rem', color: 'var(--color-primary)' }}>
                                         {t.number.toString().padStart(raffleDigits || 3, '0')}
                                     </td>
-                                    <td style={{ padding: '8px', fontFamily: 'monospace' }}>
+                                    <td style={{ padding: '8px', fontFamily: 'monospace', color: 'var(--color-text)' }}>
                                         {t.pin || '----'}
                                     </td>
                                     <td style={{ padding: '8px', textAlign: 'center' }}>
                                         <span style={{
                                             padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem',
-                                            background: t.status === 'PAID' ? 'rgba(6,214,160,0.2)' : 'rgba(255,209,102,0.2)',
-                                            color: t.status === 'PAID' ? '#06d6a0' : '#ffd166'
+                                            background: t.status === 'PAID' ? 'var(--color-primary)' : 'var(--color-bg)',
+                                            color: t.status === 'PAID' ? '#fff' : 'var(--color-accent)',
+                                            border: t.status === 'PAID' ? 'none' : '1px solid var(--color-accent)'
                                         }}>
                                             {t.status === 'PAID' ? 'PAGADO' : 'RESERVADO'}
                                         </span>
@@ -711,7 +712,7 @@ const BuyerGroup = ({ group, raffleDigits, onUpdateStatus, onDelete }) => {
                                         {t.status !== 'PAID' && (
                                             <button
                                                 onClick={() => onUpdateStatus(t.id, 'PAID')}
-                                                style={{ border: 'none', background: '#06d6a0', color: '#0f3460', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                                style={{ border: 'none', background: 'var(--color-primary)', color: '#fff', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                                                 title="Marcar como Pagado"
                                             >
                                                 <CheckCircle size={14} /> Activar
@@ -719,7 +720,7 @@ const BuyerGroup = ({ group, raffleDigits, onUpdateStatus, onDelete }) => {
                                         )}
                                         <button
                                             onClick={() => onDelete(t.id)}
-                                            style={{ border: 'none', background: 'rgba(239,68,68,0.2)', color: '#ef4444', borderRadius: '5px', padding: '5px', cursor: 'pointer' }}
+                                            style={{ border: 'none', background: 'transparent', color: '#ef4444', borderRadius: '5px', padding: '5px', cursor: 'pointer' }}
                                             title="Eliminar Boleta"
                                         >
                                             <Trash size={16} />
