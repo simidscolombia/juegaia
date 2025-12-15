@@ -73,11 +73,33 @@ const Dashboard = () => {
         if (w) setWallet(w);
     };
 
+    const copyLink = () => {
+        const link = `${window.location.origin}/register?ref=${profile?.referral_code}`;
+        navigator.clipboard.writeText(link);
+        alert('Enlace de referido copiado!');
+    };
+
     return (
         <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
                 Hola, {profile?.full_name || 'Admin'} 👋
             </h1>
+
+            {/* Quick Referral Badge */}
+            <div
+                onClick={copyLink}
+                style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '8px',
+                    background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '20px',
+                    fontSize: '0.9rem', cursor: 'pointer', marginBottom: '1rem', border: '1px solid var(--color-border)'
+                }}
+                title="Click para copiar enlace"
+            >
+                <span style={{ opacity: 0.7 }}>Mi Código:</span>
+                <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{profile?.referral_code || '...'}</span>
+                <Ticket size={14} style={{ opacity: 0.7 }} />
+            </div>
+
             <p style={{ opacity: 0.7, marginBottom: '3rem', fontSize: '1.2rem' }}>
                 Bienvenido a su administrador de juegos en línea
             </p>
