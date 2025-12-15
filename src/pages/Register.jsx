@@ -49,31 +49,16 @@ const Register = () => {
             return;
         }
 
-        // 2. Wait a moment for Trigger to create Profile, or Update it manually
-        // We update the profile with the extra details
-        if (authData.user) {
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .update({
-                    document_id: formData.documentId,
-                    phone: formData.phone,
-                    referred_by: formData.referralCode || null
-                })
-                .eq('id', authData.user.id);
-
-            if (profileError) {
-                console.error("Profile update error:", profileError);
-            }
-
-            // Check if session is null (Email confirmation required)
-            if (!authData.session) {
-                alert("¡Registro casi listo! Por favor revisa tu correo para activar la cuenta.");
-                navigate('/login');
-            } else {
-                alert("¡Registro Exitoso! Bienvenido a JuegAIA.");
-                navigate('/dashboard');
-            }
+        // 2. Trigger handles Profile creation automatically.
+        // Check if session is null (Email confirmation required)
+        if (!authData.session) {
+            alert("¡Registro casi listo! Por favor revisa tu correo para activar la cuenta.");
+            navigate('/login');
+        } else {
+            alert("¡Registro Exitoso! Bienvenido a JuegAIA.");
+            navigate('/dashboard');
         }
+
         setLoading(false);
     };
 
