@@ -569,6 +569,17 @@ export const releaseTicket = async (raffleId, number) => {
     if (error) throw error;
 };
 
+export const updateTicketStatus = async (ticketId, newStatus) => {
+    const { data, error } = await supabase
+        .from('tickets')
+        .update({ status: newStatus, payment_date: newStatus === 'PAID' ? new Date().toISOString() : null })
+        .eq('id', ticketId)
+        .select();
+
+    if (error) throw error;
+    return data;
+};
+
 export const submitPaymentProof = async (raffleId, ticketNumber, file) => {
     // 1. Upload File
     const fileExt = file.name.split('.').pop();
