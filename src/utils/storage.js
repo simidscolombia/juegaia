@@ -511,6 +511,9 @@ export const reserveTicket = async (raffleId, numbers, clientName, phone, promis
     // Support single number or array
     const numsToCheck = Array.isArray(numbers) ? numbers : [numbers];
 
+    // Generate a SINGLE Random PIN for this batch reservation
+    const batchPin = Math.floor(1000 + Math.random() * 9000).toString();
+
     // Prepare rows
     const rows = numsToCheck.map(num => ({
         raffle_id: raffleId,
@@ -518,7 +521,8 @@ export const reserveTicket = async (raffleId, numbers, clientName, phone, promis
         buyer_name: clientName,
         phone: phone,
         status: 'RESERVED',
-        payment_promise_date: promiseDate || null // Ensure empty string becomes null
+        payment_promise_date: promiseDate || null,
+        pin: batchPin // Store the generated PIN
     }));
 
     const { data, error } = await supabase
