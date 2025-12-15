@@ -49,7 +49,7 @@ const Network = () => {
     };
 
     const copyLink = () => {
-        const link = `${window.location.origin}/register?ref=${profile?.id}`;
+        const link = `${window.location.origin}/register?ref=${profile?.referral_code}`;
         navigator.clipboard.writeText(link);
         alert('Enlace de referido copiado!');
     };
@@ -95,7 +95,7 @@ const Network = () => {
                     background: 'rgba(0,0,0,0.2)', padding: '10px 20px', borderRadius: '8px',
                     display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '100%', overflowX: 'auto'
                 }}>
-                    <code style={{ color: 'var(--color-primary)' }}>{window.location.origin}/register?ref={profile?.id}</code>
+                    <code style={{ color: 'var(--color-primary)' }}>{window.location.origin}/register?ref={profile?.referral_code}</code>
                 </div>
                 <button
                     onClick={copyLink}
