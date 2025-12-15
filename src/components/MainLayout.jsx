@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { getWallet, getProfile } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
+import simidsLogo from '../assets/simids-logo.jpg';
 import {
     LayoutDashboard,
     Ticket,
@@ -137,7 +138,7 @@ const MainLayout = ({ children }) => {
                     {/* Branding Footer */}
                     <div style={{ marginTop: '2rem', textAlign: 'center', opacity: 0.8 }}>
                         <img
-                            src="/src/assets/simids-logo.jpg"
+                            src={simidsLogo}
                             alt="SIMIDS Logo"
                             style={{ height: '30px', marginBottom: '5px' }}
                         />

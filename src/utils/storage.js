@@ -302,6 +302,12 @@ export const adminManualRecharge = async (userId, amount, reference = 'ADMIN_MAN
     });
 
     if (error) throw error;
+
+    // Critical: Check logical success returned by RPC
+    if (data && !data.success) {
+        throw new Error(data.error || 'Error procesando recarga (Logic Failed)');
+    }
+
     return data;
 };
 
