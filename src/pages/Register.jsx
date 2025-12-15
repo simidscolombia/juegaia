@@ -36,8 +36,9 @@ const Register = () => {
             options: {
                 data: {
                     full_name: formData.fullName,
-                    // We will update the other fields in the 'profiles' table via trigger or manual insert
-                    // Trigger handles creation, but we need to update phone/document/referral
+                    document_id: formData.documentId,
+                    phone: formData.phone,
+                    referral_code: formData.referralCode // Passed to trigger
                 }
             }
         });

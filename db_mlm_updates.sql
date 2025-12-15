@@ -65,6 +65,8 @@ BEGIN
         id, 
         email, 
         full_name, 
+        phone,
+        document_id,
         role, 
         referral_code, 
         referred_by
@@ -73,6 +75,8 @@ BEGIN
         new.id, 
         new.email, 
         new.raw_user_meta_data->>'full_name', 
+        new.raw_user_meta_data->>'phone',
+        new.raw_user_meta_data->>'document_id',
         'player', -- Default role
         generate_unique_referral_code(), -- Generate THEIR code immediately
         v_referrer_id -- Assign the parent
