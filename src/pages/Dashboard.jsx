@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, getWallet } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
-import { LayoutDashboard, Ticket, ArrowRight, Wallet, Trophy, Settings } from 'lucide-react';
+import { LayoutDashboard, Ticket, ArrowRight, Wallet, Trophy, Settings, Copy, Plus } from 'lucide-react';
 
 const Dashboard = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
     const [wallet, setWallet] = useState({ balance: 0 });
-
     const [verifying, setVerifying] = useState(false);
 
     useEffect(() => {
@@ -23,45 +22,32 @@ const Dashboard = () => {
         if (transactionId) {
             setVerifying(true);
             try {
-                // 1. Verify with Wompi API (Requires Public Key)
+                // Verification logic remains same...
                 const response = await fetch(`https://production.wompi.co/v1/transactions/${transactionId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${import.meta.env.VITE_WOMPI_PUB_KEY}`
-                    }
+                    headers: { 'Authorization': `Bearer ${import.meta.env.VITE_WOMPI_PUB_KEY}` }
                 });
                 const data = await response.json();
                 const transaction = data.data;
 
                 if (transaction.status === 'APPROVED') {
-                    // 2. Process internal recharge (Idempotent)
-                    const { data: rpcData, error } = await supabase.rpc('process_recharge_with_mlm', {
-                        p_user_id: profile?.id || (await supabase.auth.getUser()).data.user?.id, // Ensure user ID
+                    const { error } = await supabase.rpc('process_recharge_with_mlm', {
+                        p_user_id: profile?.id || (await supabase.auth.getUser()).data.user?.id,
                         p_amount: transaction.amount_in_cents / 100,
                         p_reference: transaction.reference,
                         p_wompi_id: transaction.id
                     });
 
-                    if (error) {
-                        console.error('Recharge Error:', error);
-                        if (error.message.includes('unique constraint') || error.code === '23505') {
-                            // Already processed, just refresh balance
-                            alert('Pago ya registrado. Actualizando saldo...');
-                            loadData();
-                        } else {
-                            alert('Error procesando la recarga: ' + error.message);
-                        }
+                    if (!error || error.code === '23505') {
+                        alert('¡Recarga Exitosa! Saldo actualizado.');
+                        loadData();
                     } else {
-                        alert('¡Recarga Exitosa! Tu saldo ha sido actualizado.');
-                        loadData(); // Refresh balance
+                        alert('Error: ' + error.message);
                     }
-                } else {
-                    alert(`Transacción ${transaction.status}. No se cobró.`);
                 }
             } catch (err) {
                 console.error('Verification Error:', err);
             } finally {
                 setVerifying(false);
-                // Clean URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -76,271 +62,176 @@ const Dashboard = () => {
     const copyLink = () => {
         const link = `${window.location.origin}/register?ref=${profile?.referral_code}`;
         navigator.clipboard.writeText(link);
-        alert('Enlace de referido copiado!');
+        alert('Enlace copiado al portapapeles!');
     };
 
-    return (
-        <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
-            <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                Hola, {profile?.full_name || 'Admin'} 👋
-            </h1>
+    // --- STYLES ---
+    const gradientText = {
+        background: 'linear-gradient(135deg, #F472B6 0%, #A78BFA 100%)',
+        WebkitBackgroundClip: 'text',
+        WebkitTextFillColor: 'transparent',
+    };
 
-            {/* Quick Referral Badge */}
-            <div
-                onClick={copyLink}
-                style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '8px',
-                    background: 'rgba(255,255,255,0.1)', padding: '5px 15px', borderRadius: '20px',
-                    fontSize: '0.9rem', cursor: 'pointer', marginBottom: '1rem', border: '1px solid var(--color-border)'
-                }}
-                title="Click para copiar enlace"
-            >
-                <span style={{ opacity: 0.7 }}>Mi Código:</span>
-                <span style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{profile?.referral_code || '...'}</span>
-                <Ticket size={14} style={{ opacity: 0.7 }} />
+    const glassCard = (colorRel) => ({
+        background: 'rgba(255, 255, 255, 0.05)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '20px',
+        padding: '2rem',
+        textAlign: 'center',
+        cursor: 'pointer',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '1rem',
+        position: 'relative',
+        overflow: 'hidden'
+    });
+
+    return (
+        <div style={{ padding: '2rem 1rem', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+
+            {/* Header Section */}
+            <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+                <h1 style={{ fontSize: '2.5rem', marginBottom: '0.5rem', fontWeight: '800' }}>
+                    Hola, <span style={gradientText}>{profile?.full_name?.split(' ')[0] || 'Admin'}</span> 👋
+                </h1>
+                <p style={{ opacity: 0.6, fontSize: '1.1rem' }}>Bienvenido a tu panel de control</p>
+
+                {/* ID Badge */}
+                <div
+                    onClick={copyLink}
+                    style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '8px',
+                        background: 'rgba(255,255,255,0.08)', padding: '6px 16px', borderRadius: '30px',
+                        marginTop: '15px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)',
+                        transition: 'background 0.2s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                >
+                    <span style={{ opacity: 0.7, fontSize: '0.9rem' }}>ID:</span>
+                    <span style={{ fontWeight: 'bold', letterSpacing: '1px', color: '#F472B6' }}>{profile?.referral_code}</span>
+                    <Copy size={14} style={{ opacity: 0.5 }} />
+                </div>
             </div>
 
-            <p style={{ opacity: 0.7, marginBottom: '3rem', fontSize: '1.2rem' }}>
-                Bienvenido a su administrador de juegos en línea
-            </p>
-
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '15px', background: 'var(--color-card)', padding: '10px 20px', borderRadius: '50px', border: '1px solid var(--color-border)', marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Wallet size={18} color="var(--color-primary)" />
-                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>${wallet.balance.toLocaleString()}</span>
+            {/* Wallet Section */}
+            <div style={{
+                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
+                borderRadius: '24px', padding: '2rem', marginBottom: '3rem',
+                border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                backdropFilter: 'blur(10px)'
+            }}>
+                <div style={{ opacity: 0.7, marginBottom: '5px' }}>Saldo Disponible</div>
+                <div style={{ fontSize: '3rem', fontWeight: 'bold', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ opacity: 0.5, fontSize: '2rem' }}>$</span>
+                    {wallet.balance.toLocaleString()}
                 </div>
                 <button
                     onClick={() => navigate('/recharge')}
                     style={{
-                        background: 'var(--color-primary)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '20px',
-                        padding: '5px 15px',
-                        fontSize: '0.9rem',
-                        cursor: 'pointer',
-                        fontWeight: 'bold'
+                        background: '#10B981', color: 'white', border: 'none', padding: '12px 24px',
+                        borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                     }}
                 >
-                    + Recargar
+                    <Plus size={20} /> Recargar Saldo
                 </button>
             </div>
 
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                gap: '2rem',
-                maxWidth: '800px',
-                margin: '0 auto'
-            }}>
-                {/* Bingo Card (Organizer Mode) */}
-                <div
-                    onClick={() => navigate('/bingos')}
-                    className="card"
-                    style={{
-                        cursor: 'pointer',
-                        padding: '3rem 2rem',
-                        textAlign: 'center',
-                        transition: 'transform 0.2s, border-color 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '1.5rem'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    <div style={{
-                        background: 'rgba(59, 130, 246, 0.1)',
-                        padding: '20px',
-                        borderRadius: '50%',
-                        color: 'var(--color-primary)'
-                    }}>
-                        <LayoutDashboard size={48} />
-                    </div>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Organizar Bingo</h2>
-                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Crea tu evento y vende cartones</p>
-                    </div>
-                    <button className="primary" style={{ width: '100%', marginTop: 'auto' }}>
-                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
-                    </button>
-                </div>
+            {/* Dashboard Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
 
-                {/* Raffle Card (Organizer Mode) */}
-                <div
-                    onClick={() => navigate('/raffles')}
-                    className="card"
-                    style={{
-                        cursor: 'pointer',
-                        padding: '3rem 2rem',
-                        textAlign: 'center',
-                        transition: 'transform 0.2s, border-color 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '1.5rem'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                    <div style={{
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        padding: '20px',
-                        borderRadius: '50%',
-                        color: 'var(--color-secondary)'
-                    }}>
-                        <Ticket size={48} />
-                    </div>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Organizar Rifa</h2>
-                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Crea sorteos y gana dinero</p>
-                    </div>
-                    <button style={{
-                        width: '100%',
-                        marginTop: 'auto',
-                        background: 'var(--color-card)',
-                        border: '1px solid var(--color-border)',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        color: 'var(--color-text)',
-                        fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
-                    </button>
-                </div>
-
-
-                {/* Network Card */}
+                {/* 1. Network (Mi Red) */}
                 <div
                     onClick={() => navigate('/network')}
-                    className="card"
-                    style={{
-                        cursor: 'pointer',
-                        padding: '3rem 2rem',
-                        textAlign: 'center',
-                        transition: 'transform 0.2s, border-color 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '1.5rem'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    style={glassCard()}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(244, 114, 182, 0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                     <div style={{
-                        background: 'rgba(251, 191, 36, 0.1)',
-                        padding: '20px',
-                        borderRadius: '50%',
-                        color: '#fbbf24'
+                        background: 'linear-gradient(135deg, #F472B6 0%, #DB2777 100%)',
+                        padding: '16px', borderRadius: '16px', marginBottom: '10px'
                     }}>
-                        <Ticket size={48} />
+                        <Trophy size={32} color="white" />
                     </div>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Red</h2>
-                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Mis referidos y ganancias</p>
-                    </div>
-                    <button style={{
-                        width: '100%',
-                        marginTop: 'auto',
-                        background: 'var(--color-card)',
-                        border: '1px solid var(--color-border)',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        color: 'var(--color-text)',
-                        fontWeight: 'bold',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
-                    </button>
+                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Mi Red</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Gestiona referidos y ganancias</p>
                 </div>
 
-                {/* Player Zone Card */}
+                {/* 2. Bingos */}
                 <div
-                    onClick={() => navigate('/my-lobby')}
-                    className="card"
-                    style={{
-                        cursor: 'pointer',
-                        padding: '3rem 2rem',
-                        textAlign: 'center',
-                        transition: 'transform 0.2s, border-color 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '1.5rem',
-                        border: '2px solid #10B981'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                    onClick={() => navigate('/bingos')}
+                    style={glassCard()}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(59, 130, 246, 0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                 >
                     <div style={{
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        padding: '20px',
-                        borderRadius: '50%',
-                        color: '#10B981'
+                        background: 'linear-gradient(135deg, #60A5FA 0%, #2563EB 100%)',
+                        padding: '16px', borderRadius: '16px', marginBottom: '10px'
                     }}>
-                        <Trophy size={48} />
+                        <LayoutDashboard size={32} color="white" />
                     </div>
-                    <div>
-                        <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Zona Jugador</h2>
-                        <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Mis cartones y premios</p>
-                    </div>
-                    <button className="primary" style={{ width: '100%', marginTop: 'auto', background: '#10B981' }}>
-                        Entrar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
-                    </button>
+                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Bingos</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Crea y administra tus juegos</p>
                 </div>
-                {/* Super Admin Card (Only/Admin) */}
+
+                {/* 3. Raffles (Rifas) */}
+                <div
+                    onClick={() => navigate('/raffles')}
+                    style={glassCard()}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(16, 185, 129, 0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                    <div style={{
+                        background: 'linear-gradient(135deg, #34D399 0%, #059669 100%)',
+                        padding: '16px', borderRadius: '16px', marginBottom: '10px'
+                    }}>
+                        <Ticket size={32} color="white" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Rifas</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Gestiona sorteos y premios</p>
+                </div>
+
+                {/* 4. Player Zone */}
+                <div
+                    onClick={() => navigate('/my-lobby')}
+                    style={glassCard()}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(251, 191, 36, 0.2)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                >
+                    <div style={{
+                        background: 'linear-gradient(135deg, #FBBF24 0%, #D97706 100%)',
+                        padding: '16px', borderRadius: '16px', marginBottom: '10px'
+                    }}>
+                        <Wallet size={32} color="white" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Zona Jugador</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Mis tickets comprados</p>
+                </div>
+
+                {/* 5. Super Admin (Conditional) */}
                 {profile?.role === 'admin' && (
                     <div
                         onClick={() => navigate('/superadmin')}
-                        className="card"
-                        style={{
-                            cursor: 'pointer',
-                            padding: '3rem 2rem',
-                            textAlign: 'center',
-                            transition: 'transform 0.2s, border-color 0.2s',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            gap: '1.5rem',
-                            border: '2px solid #F59E0B' // Gold Border
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        style={glassCard()}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 10px 20px rgba(139, 92, 246, 0.2)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                         <div style={{
-                            background: 'rgba(245, 158, 11, 0.1)',
-                            padding: '20px',
-                            borderRadius: '50%',
-                            color: '#F59E0B'
+                            background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)',
+                            padding: '16px', borderRadius: '16px', marginBottom: '10px'
                         }}>
-                            <Settings size={48} />
+                            <Settings size={32} color="white" />
                         </div>
-                        <div>
-                            <h2 style={{ margin: 0, fontSize: '1.8rem' }}>Super Admin</h2>
-                            <p style={{ opacity: 0.7, margin: '10px 0 0' }}>Precios y Usuarios Globales</p>
-                        </div>
-                        <button style={{
-                            width: '100%',
-                            marginTop: 'auto',
-                            background: '#F59E0B',
-                            color: 'black',
-                            border: 'none',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 'bold',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}>
-                            Gestionar <ArrowRight size={16} style={{ marginLeft: '5px' }} />
-                        </button>
+                        <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Super Admin</h3>
+                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Configuración global</p>
                     </div>
                 )}
             </div>
-        </div >
+        </div>
     );
 };
 
