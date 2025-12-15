@@ -507,33 +507,27 @@ export const getRaffleTickets = async (raffleId) => {
     return data;
 };
 
-export const reserveTicket = async (raffleId, number, clientName, phone, promiseDate = null) => {
-    // 1. Check if available (Optimistic check, DB will enforce unique constraint anyway)
-    // For cloud, we try to insert. If it fails due to unique constraint, it's taken.
+export const reserveTicket = async (raffleId, numbers, clientName, phone, promiseDate = null) => {
+    // Support single number or array
+    const numsToCheck = Array.isArray(numbers) ? numbers : [numbers];
 
-    // Also check reservation time logic logic could be backend, but for MVP we do client validation or just insert.
-    // If ticket exists and is EXPIRED (logic needed), we should delete it or update it?
-    // Supabase generic approach: Try insert.
+    // Prepare rows
+    const rows = numsToCheck.map(num => ({
+        raffle_id: raffleId,
+        number: Number(num),
+        buyer_name: clientName,
+        phone: phone,
+        status: 'RESERVED',
+        payment_promise_date: promiseDate || null // Ensure empty string becomes null
+    }));
 
     const { data, error } = await supabase
         .from('tickets')
-        .insert([
-            {
-                raffle_id: raffleId,
-                number: Number(number),
-                buyer_name: clientName,
-                phone: phone,
-                status: 'RESERVED',
-                payment_promise_date: promiseDate
-            }
-        ])
+        .insert(rows)
         .select();
 
     if (error) {
-        // If error code is unique violation (23505), someone took it.
-        // Or we could implement logic: fetch ticket, check if expired, if so delete and claim.
-        // For simplicity Phase 14 MVP: If error, it's busy.
-        if (error.code === '23505') throw new Error('El número ya fue apartado por otra persona.');
+        if (error.code === '23505') throw new Error('Uno o más números ya fueron apartados por otra persona.');
         throw error;
     }
     return data;
