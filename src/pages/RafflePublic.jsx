@@ -88,11 +88,14 @@ const RafflePublic = () => {
         }
 
         try {
-            // Capture the reservation result (which now includes the generated PIN)
-            const result = await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null);
+            // Generate PIN locally to ensure we have it for the UI regardless of DB return
+            const localPin = Math.floor(1000 + Math.random() * 9000).toString();
 
-            // Extract PIN (it's the same for the whole batch)
-            const generatedPin = result && result.length > 0 ? result[0].pin : '????';
+            // Pass localPin to reserveTicket
+            await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null, localPin);
+
+            // Use the localPin directly
+            const generatedPin = localPin;
 
             setSelectedNums([]);
             setReserveName('');
