@@ -194,11 +194,11 @@ const RafflePublic = () => {
                 }}>
                     <div style={{ background: 'white', color: '#2d3436', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <h2 style={{ margin: 0 }}>Confirmar Reserva</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+                            <h2 style={{ margin: 0, color: '#2d3436' }}>Confirmar Reserva</h2>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#2d3436' }}>&times;</button>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem', background: '#f1f2f6', padding: '10px', borderRadius: '10px' }}>
+                        <div style={{ marginBottom: '1.5rem', background: '#f1f2f6', padding: '10px', borderRadius: '10px', color: '#2d3436' }}>
                             <strong>Boletas:</strong> {selectedNums.join(', ')}
                             <br />
                             <strong>Total a Pagar:</strong> <span style={{ color: '#00b894' }}>${(selectedNums.length * price).toLocaleString()}</span>
@@ -244,7 +244,7 @@ const RafflePublic = () => {
                     <div style={{ background: 'white', color: '#2d3436', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center' }}>
                         <button onClick={() => setViewingTicket(null)} style={{ float: 'right', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#2d3436' }}>&times;</button>
 
-                        <h2 style={{ marginTop: 0 }}>Boleta #{viewingTicket}</h2>
+                        <h2 style={{ marginTop: 0, color: '#2d3436' }}>Boleta #{viewingTicket}</h2>
 
                         {getTicketStatus(viewingTicket) === 'RESERVED' ? (
                             <>
