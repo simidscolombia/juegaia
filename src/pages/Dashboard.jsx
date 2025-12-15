@@ -73,9 +73,8 @@ const Dashboard = () => {
     };
 
     const glassCard = (colorRel) => ({
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--color-card)',
+        border: '1px solid var(--color-border)',
         borderRadius: '20px',
         padding: '2rem',
         textAlign: 'center',
@@ -86,7 +85,8 @@ const Dashboard = () => {
         alignItems: 'center',
         gap: '1rem',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
     });
 
     return (

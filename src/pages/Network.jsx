@@ -75,13 +75,12 @@ const Network = () => {
 
     // --- STYLES ---
     const glassStyle = {
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'var(--color-card)',
+        border: '1px solid var(--color-border)',
         borderRadius: '16px',
         padding: '24px',
-        color: 'white',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+        color: 'var(--color-text)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
     };
 
     const gradientText = {
@@ -99,7 +98,7 @@ const Network = () => {
                 <button
                     onClick={() => navigate('/dashboard')}
                     style={{
-                        background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white',
+                        background: 'var(--color-card)', border: '1px solid var(--color-border)', color: 'var(--color-text)',
                         padding: '10px 15px', borderRadius: '8px', cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: '8px',
                         backdropFilter: 'blur(5px)'
@@ -181,9 +180,9 @@ const Network = () => {
                 <button
                     onClick={() => setActiveTab('history')}
                     style={{
-                        background: 'none', border: 'none', color: activeTab === 'history' ? '#60A5FA' : 'rgba(255,255,255,0.5)',
+                        background: 'none', border: 'none', color: activeTab === 'history' ? 'var(--color-primary)' : 'var(--color-text-muted)',
                         fontSize: '1.1rem', cursor: 'pointer', fontWeight: activeTab === 'history' ? 'bold' : 'normal',
-                        paddingBottom: '10px', borderBottom: activeTab === 'history' ? '2px solid #60A5FA' : 'none'
+                        paddingBottom: '10px', borderBottom: activeTab === 'history' ? '2px solid var(--color-primary)' : 'none'
                     }}
                 >
                     Historial de Comisiones
@@ -191,9 +190,9 @@ const Network = () => {
                 <button
                     onClick={() => setActiveTab('team')}
                     style={{
-                        background: 'none', border: 'none', color: activeTab === 'team' ? '#F472B6' : 'rgba(255,255,255,0.5)',
+                        background: 'none', border: 'none', color: activeTab === 'team' ? 'var(--color-accent)' : 'var(--color-text-muted)',
                         fontSize: '1.1rem', cursor: 'pointer', fontWeight: activeTab === 'team' ? 'bold' : 'normal',
-                        paddingBottom: '10px', borderBottom: activeTab === 'team' ? '2px solid #F472B6' : 'none'
+                        paddingBottom: '10px', borderBottom: activeTab === 'team' ? '2px solid var(--color-accent)' : 'none'
                     }}
                 >
                     Mi Equipo
@@ -204,9 +203,9 @@ const Network = () => {
             <div style={glassStyle}>
                 {activeTab === 'history' && (
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--color-text)' }}>
                             <thead>
-                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', textAlign: 'left', color: 'rgba(255,255,255,0.5)' }}>
+                                <tr style={{ borderBottom: '1px solid var(--color-border)', textAlign: 'left', color: 'var(--color-text-muted)' }}>
                                     <th style={{ padding: '15px' }}>Fecha</th>
                                     <th style={{ padding: '15px' }}>Origen</th>
                                     <th style={{ padding: '15px' }}>Nivel</th>
@@ -215,7 +214,7 @@ const Network = () => {
                             </thead>
                             <tbody>
                                 {commissions.map(c => (
-                                    <tr key={c.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <tr key={c.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                                         <td style={{ padding: '15px', opacity: 0.8 }}>{c.date}</td>
                                         <td style={{ padding: '15px' }}>
                                             <div style={{ fontWeight: 'bold' }}>{c.source}</div>

@@ -74,9 +74,9 @@ export const THEMES = {
         colors: {
             bg: '#fdf4ff',      // Fuschia-50 (Very light pink)
             card: '#ffffff',    // White
-            primary: '#d8b4fe', // Purple-300 (Soft Lavender)
-            accent: '#fb7185',  // Rose-400
-            text: '#4c1d95',    // Violet-900
+            primary: '#a855f7', // Purple-500 (Matches white text better than 300)
+            accent: '#f43f5e',  // Rose-500 (Darker for better visibility)
+            text: '#4c1d95',    // Violet-900 (Dark)
             textMuted: '#86198f', // Magenta-800
             border: '#f0abfc'   // Fuschia-300
         }
