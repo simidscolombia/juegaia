@@ -807,54 +807,25 @@ export const verifyGamePin = async (phone, pin) => {
         };
     }
 
-    // 2. Search in Raffle Tickets (Logic: PIN = Last 4 digits of Phone)
-    // Identify if it's a Raffle Login attempt:
-    // User enters Phone and PIN.
-    // If PIN matches last 4 of Phone, we search for TICKETS with that phone.
-
-    // Check if PIN rules match "Last 4 digits"
-    const expectedPin = phone.trim().slice(-4);
-
-    // Allow lenient check if PIN matches expected, OR if we want to fallback to the old "Ticket Number as PIN" 
-    // But user explicitly asked for "Last 4 digits".
-
-    if (pin === expectedPin) {
-        const { data: raffleData, error: raffleError } = await supabase
-            .from('tickets')
-            .select('*, raffles(name)')
-            .eq('phone', phone) // Match phone directly
-            .limit(1) // Just need one to confirm user existence
-            .maybeSingle();
-
-        if (raffleData) {
-            return {
-                type: 'RAFFLE',
-                gameId: raffleData.raffle_id,
-                ticketId: raffleData.id,
-                data: raffleData
-            };
-        }
-    }
-
-    // Fallback? Maybe keep the old "Ticket Number is PIN" check just in case specific users rely on it?
-    // Or replace completly? The user request "deberia ser un pin de 4 numeros" suggests replacement.
-    // Let's keep the OLD check as a fallback for now to avoid breaking existing manual test flows if any.
-
-    const { data: legacyRaffle, error: legError } = await supabase
+    // 2. Search in Raffle Tickets (Strict PIN check)
+    // Now we look for a ticket where the PIN column matches the input PIN
+    // AND the phone matches.
+    const { data: raffleData } = await supabase
         .from('tickets')
         .select('*, raffles(name)')
-        .eq('number', pin)
+        .eq('pin', pin) // Strict match on new PIN column
         .ilike('phone', `%${phone.trim()}%`)
+        .limit(1)
         .maybeSingle();
 
-    if (legacyRaffle) {
+    if (raffleData) {
         return {
             type: 'RAFFLE',
-            gameId: legacyRaffle.raffle_id,
-            ticketId: legacyRaffle.id,
-            data: legacyRaffle
+            gameId: raffleData.raffle_id,
+            ticketId: raffleData.id,
+            data: raffleData
         };
     }
 
-    throw new Error('No se encontró ningún ticket. Verifica tu celular y que el PIN sean los últimos 4 dígitos.');
+    throw new Error('Credenciales inválidas. Verifica tu celular y el PIN de 4 dígitos (recibido al reservar).');
 };
