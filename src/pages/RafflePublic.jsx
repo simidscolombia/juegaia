@@ -8,13 +8,17 @@ const RafflePublic = () => {
     const [raffle, setRaffle] = useState(null);
     const [tickets, setTickets] = useState([]);
 
-    // Multi-selection state
+    // Multi-selection state (for Buying)
     const [selectedNums, setSelectedNums] = useState([]);
+
+    // Single Ticket View State (for Uploading Payment)
+    const [viewingTicket, setViewingTicket] = useState(null);
 
     // Reservation Form State
     const [reserveName, setReserveName] = useState('');
     const [reservePhone, setReservePhone] = useState('');
     const [reserveDate, setReserveDate] = useState('');
+
     const [uploading, setUploading] = useState(false);
     const [showModal, setShowModal] = useState(false);
 
@@ -34,17 +38,35 @@ const RafflePublic = () => {
         return () => clearInterval(interval);
     }, [raffleId]);
 
-    const toggleNumber = (num) => {
-        const status = getTicketStatus(num);
-        if (status !== 'AVAILABLE') return;
+    const getTicketStatus = (num) => {
+        const t = tickets.find(t => t.number === num);
+        if (!t) return 'AVAILABLE';
+        if (t.status === 'RESERVED') {
+            const updated = new Date(t.updated_at || t.created_at).getTime();
+            const minutes = raffle.reservation_minutes || 15;
+            if (Date.now() - updated > minutes * 60 * 1000) return 'AVAILABLE';
+            return 'RESERVED';
+        }
+        if (t.status === 'PAID') return 'PAID';
+        return 'AVAILABLE';
+    };
 
-        setSelectedNums(prev => {
-            if (prev.includes(num)) {
-                return prev.filter(n => n !== num);
-            } else {
+    const handleClickTicket = (num) => {
+        const status = getTicketStatus(num);
+
+        if (status === 'AVAILABLE') {
+            // Toggle Selection for Availability
+            setSelectedNums(prev => {
+                if (prev.includes(num)) return prev.filter(n => n !== num);
                 return [...prev, num];
-            }
-        });
+            });
+        } else if (status === 'RESERVED') {
+            // View Details to Upload Payment
+            setViewingTicket(num);
+        } else if (status === 'PAID') {
+            // View Details (Just to see it's paid)
+            setViewingTicket(num);
+        }
     };
 
     const handleReserve = async (e) => {
@@ -79,19 +101,6 @@ const RafflePublic = () => {
         }
     };
 
-    const getTicketStatus = (num) => {
-        const t = tickets.find(t => t.number === num);
-        if (!t) return 'AVAILABLE';
-        if (t.status === 'RESERVED') {
-            const updated = new Date(t.updated_at || t.created_at).getTime();
-            const minutes = raffle.reservation_minutes || 15;
-            if (Date.now() - updated > minutes * 60 * 1000) return 'AVAILABLE';
-            return 'RESERVED';
-        }
-        if (t.status === 'PAID') return 'PAID';
-        return 'AVAILABLE';
-    };
-
     if (!raffle) return <div style={{ color: 'white', padding: '2rem' }}>Cargando rifa...</div>;
 
     const min = raffle.min_number !== undefined ? raffle.min_number : raffle.min;
@@ -123,9 +132,9 @@ const RafflePublic = () => {
                         let cursor = 'pointer';
 
                         if (status === 'PAID') {
-                            bg = '#06d6a0'; border = '2px solid #06d6a0'; color = '#fff'; cursor = 'default';
+                            bg = '#06d6a0'; border = '2px solid #06d6a0'; color = '#fff';
                         } else if (status === 'RESERVED') {
-                            bg = '#ffd166'; border = '2px solid #ffd166'; color = '#2d3436'; cursor = 'not-allowed';
+                            bg = '#ffd166'; border = '2px solid #ffd166'; color = '#2d3436';
                         } else if (isSelected) {
                             bg = '#0984e3'; border = '2px solid #0984e3'; color = '#fff';
                         }
@@ -133,8 +142,7 @@ const RafflePublic = () => {
                         return (
                             <button
                                 key={num}
-                                onClick={() => toggleNumber(num)}
-                                disabled={status !== 'AVAILABLE'}
+                                onClick={() => handleClickTicket(num)}
                                 style={{
                                     aspectRatio: '1', borderRadius: '10px', background: bg, border: border,
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -149,7 +157,7 @@ const RafflePublic = () => {
                 </div>
             </div>
 
-            {/* Bottom Floating Bar */}
+            {/* Bottom Floating Bar (Only when selecting) */}
             {selectedNums.length > 0 && (
                 <div style={{
                     position: 'fixed', bottom: 0, left: 0, width: '100%',
@@ -178,7 +186,7 @@ const RafflePublic = () => {
                 </div>
             )}
 
-            {/* Reservation Modal */}
+            {/* Reservation Modal (For BULK) */}
             {showModal && (
                 <div style={{
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 100,
@@ -223,6 +231,70 @@ const RafflePublic = () => {
                                 Confirmar Apartado
                             </button>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Detail/Upload Modal (For SINGLE Ticket) */}
+            {viewingTicket !== null && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 101,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div style={{ background: 'white', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center' }}>
+                        <button onClick={() => setViewingTicket(null)} style={{ float: 'right', background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+
+                        <h2 style={{ marginTop: 0 }}>Boleta #{viewingTicket}</h2>
+
+                        {getTicketStatus(viewingTicket) === 'RESERVED' ? (
+                            <>
+                                <p style={{ color: '#e67e22', fontWeight: 'bold' }}>🟡 APARTADA</p>
+                                <p style={{ fontSize: '0.9rem', color: '#636e72', marginBottom: '20px' }}>
+                                    Para confirmar tu boleta, realiza el pago y sube el comprobante aquí.
+                                </p>
+
+                                {raffle.payment_info && (
+                                    <div style={{ background: '#f1f2f6', padding: '10px', borderRadius: '10px', marginBottom: '20px', textAlign: 'left', fontSize: '0.9rem', whiteSpace: 'pre-line' }}>
+                                        {raffle.payment_info}
+                                    </div>
+                                )}
+
+                                <label style={{
+                                    display: 'inline-block', background: uploading ? '#b2bec3' : '#00b894',
+                                    color: 'white', padding: '12px 24px', borderRadius: '50px',
+                                    cursor: uploading ? 'wait' : 'pointer', fontWeight: 'bold',
+                                    boxShadow: '0 5px 15px rgba(0,0,0,0.1)'
+                                }}>
+                                    <input
+                                        type="file" accept="image/*"
+                                        style={{ display: 'none' }}
+                                        disabled={uploading}
+                                        onChange={async (e) => {
+                                            if (e.target.files[0]) {
+                                                setUploading(true);
+                                                try {
+                                                    await submitPaymentProof(raffle.id, viewingTicket, e.target.files[0]);
+                                                    alert('¡Comprobante subido! Esperando verificación.');
+                                                    setViewingTicket(null);
+                                                    const t = await getRaffleTickets(raffleId);
+                                                    setTickets(t);
+                                                } catch (err) {
+                                                    alert('Error: ' + err.message);
+                                                } finally {
+                                                    setUploading(false);
+                                                }
+                                            }
+                                        }}
+                                    />
+                                    {uploading ? 'Subiendo...' : '📸 Subir Comprobante'}
+                                </label>
+                            </>
+                        ) : (
+                            <>
+                                <p style={{ color: '#06d6a0', fontWeight: 'bold' }}>PAID / CONFIRMADA</p>
+                                <Lock size={48} color="#06d6a0" style={{ marginTop: '10px' }} />
+                            </>
+                        )}
                     </div>
                 </div>
             )}
