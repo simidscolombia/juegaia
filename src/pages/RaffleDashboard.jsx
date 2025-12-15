@@ -499,88 +499,136 @@ const RaffleDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Sell Ticket Area */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                            <div>
-                                <h4><DollarSign size={16} /> Vender Boleta</h4>
-                                <form onSubmit={handleSell} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    <input
-                                        type="number"
-                                        placeholder={`Número (${selectedRaffle.min_number || selectedRaffle.min}-${selectedRaffle.max_number || selectedRaffle.max})`}
-                                        value={saleForm.number}
-                                        onChange={e => setSaleForm({ ...saleForm, number: e.target.value })}
-                                        required
-                                        min={selectedRaffle.min_number || selectedRaffle.min}
-                                        max={selectedRaffle.max_number || selectedRaffle.max}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Nombre del Comprador"
-                                        value={saleForm.name}
-                                        onChange={e => setSaleForm({ ...saleForm, name: e.target.value })}
-                                        required
-                                    />
-                                    {/* Payment Date Input */}
-                                    <label style={{ fontSize: '0.8rem', opacity: 0.7 }}>Fecha de Pago</label>
-                                    <input
-                                        type="date"
-                                        value={saleForm.paymentDate}
-                                        onChange={e => setSaleForm({ ...saleForm, paymentDate: e.target.value })}
-                                        required
-                                        max={selectedRaffle.draw_date ? selectedRaffle.draw_date.split('T')[0] : undefined}
-                                    />
+                        {/* Sell Ticket Area - Responsive Layout */}
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginTop: '20px' }}>
+                            {/* Form Container */}
+                            <div style={{ flex: '1 1 300px', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '15px' }}>
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#06d6a0' }}>
+                                    <DollarSign size={20} /> Vender Boleta
+                                </h4>
+                                <form onSubmit={handleSell} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Número de Boleta</label>
+                                        <input
+                                            type="number"
+                                            placeholder={`${selectedRaffle.min_number || selectedRaffle.min} - ${selectedRaffle.max_number || selectedRaffle.max}`}
+                                            value={saleForm.number}
+                                            onChange={e => setSaleForm({ ...saleForm, number: e.target.value })}
+                                            required
+                                            min={selectedRaffle.min_number || selectedRaffle.min}
+                                            max={selectedRaffle.max_number || selectedRaffle.max}
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white', fontSize: '1.1rem', fontWeight: 'bold', textAlign: 'center'
+                                            }}
+                                        />
+                                    </div>
 
-                                    <button type="submit" style={{ background: '#06d6a0' }}>Registrar Venta</button>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Nombre del Cliente</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Nombre Completo"
+                                            value={saleForm.name}
+                                            onChange={e => setSaleForm({ ...saleForm, name: e.target.value })}
+                                            required
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Fecha de Pago (Real o Estimada)</label>
+                                        <input
+                                            type="date"
+                                            value={saleForm.paymentDate}
+                                            onChange={e => setSaleForm({ ...saleForm, paymentDate: e.target.value })}
+                                            required
+                                            max={selectedRaffle.draw_date ? selectedRaffle.draw_date.split('T')[0] : undefined}
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '8px',
+                                                background: '#0f3460', border: '1px solid #533483', color: 'white'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <button type="submit" style={{
+                                        background: 'linear-gradient(90deg, #06d6a0 0%, #05c493 100%)',
+                                        color: '#0f3460', padding: '15px', borderRadius: '10px',
+                                        fontWeight: 'bold', border: 'none', cursor: 'pointer', fontSize: '1.1rem',
+                                        marginTop: '10px', boxShadow: '0 4px 15px rgba(6, 214, 160, 0.3)'
+                                    }}>
+                                        Registrar Venta
+                                    </button>
                                 </form>
                             </div>
 
-                            <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                <h4><Users size={16} /> Compradores ({tickets.length})</h4>
-                                {tickets.length === 0 ? <p style={{ opacity: 0.5 }}>No hay ventas aún</p> : (
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ borderBottom: '1px solid #ffffff33' }}>
-                                                <th style={{ padding: '5px' }}>#</th>
-                                                <th>Nombre</th>
-                                                <th>Estado</th>
-                                                <th>Fecha Pago / Promesa</th>
-                                                <th>Comprobante</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {tickets.map(t => (
-                                                <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                    <td style={{ padding: '8px', color: '#ffd166', fontWeight: 'bold' }}>{t.number}</td>
-                                                    <td>{t.buyer_name || t.buyerName}</td>
-                                                    <td>
-                                                        <span style={{
-                                                            padding: '2px 8px', borderRadius: '10px', fontSize: '0.7rem',
-                                                            background: t.status === 'PAID' ? '#06d6a0' : '#ffd166',
-                                                            color: '#000'
-                                                        }}>
-                                                            {t.status}
-                                                        </span>
-                                                    </td>
-                                                    <td style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                                                        {t.payment_date
-                                                            ? new Date(t.payment_date).toLocaleDateString()
-                                                            : t.payment_promise_date
-                                                                ? <span style={{ color: '#fab1a0' }}>Promesa: {new Date(t.payment_promise_date).toLocaleString()}</span>
-                                                                : 'N/A'
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        {t.payment_proof_url ? (
-                                                            <a href={t.payment_proof_url} target="_blank" rel="noopener noreferrer" style={{ color: '#74b9ff', textDecoration: 'underline', fontSize: '0.8rem' }}>
-                                                                Ver Foto
-                                                            </a>
-                                                        ) : '-'}
-                                                    </td>
+                            {/* Table Container */}
+                            <div style={{ flex: '2 1 400px', background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '15px', display: 'flex', flexDirection: 'column' }}>
+                                <h4 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: 0, color: '#ffd166' }}>
+                                    <Users size={20} /> Listado de Compradores ({tickets.length})
+                                </h4>
+
+                                <div style={{ overflowX: 'auto', flex: 1, borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    {tickets.length === 0 ? (
+                                        <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.5 }}>No hay ventas registradas aún.</div>
+                                    ) : (
+                                        <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '500px' }}>
+                                            <thead style={{ background: 'rgba(0,0,0,0.3)' }}>
+                                                <tr>
+                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}># BOLETA</th>
+                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>CLIENTE</th>
+                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>ESTADO</th>
+                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>FECHA / PROMESA</th>
+                                                    <th style={{ padding: '15px', color: '#a0a0a0', fontSize: '0.85rem' }}>EVIDENCIA</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
+                                            </thead>
+                                            <tbody>
+                                                {tickets.map((t, i) => (
+                                                    <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)' }}>
+                                                        <td style={{ padding: '12px 15px', color: '#ffd166', fontWeight: 'bold', fontSize: '1.2rem' }}>
+                                                            {t.number.toString().padStart(selectedRaffle.digits || 3, '0')}
+                                                        </td>
+                                                        <td style={{ padding: '12px 15px', fontWeight: '500' }}>{t.buyer_name || t.buyerName}</td>
+                                                        <td style={{ padding: '12px 15px' }}>
+                                                            <span style={{
+                                                                padding: '4px 10px', borderRadius: '20px', fontSize: '0.75rem', fontWeight: 'bold',
+                                                                background: t.status === 'PAID' ? 'rgba(6, 214, 160, 0.2)' : 'rgba(255, 209, 102, 0.2)',
+                                                                color: t.status === 'PAID' ? '#06d6a0' : '#ffd166',
+                                                                border: t.status === 'PAID' ? '1px solid #06d6a0' : '1px solid #ffd166'
+                                                            }}>
+                                                                {t.status === 'PAID' ? 'PAGADO' : 'RESERVADO'}
+                                                            </span>
+                                                        </td>
+                                                        <td style={{ padding: '12px 15px', fontSize: '0.85rem', opacity: 0.8 }}>
+                                                            {t.payment_date
+                                                                ? <span style={{ color: '#06d6a0' }}>{new Date(t.payment_date).toLocaleDateString()}</span>
+                                                                : t.payment_promise_date
+                                                                    ? <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                        <span style={{ color: '#fab1a0', fontSize: '0.75rem' }}>Promesa:</span>
+                                                                        <span>{new Date(t.payment_promise_date).toLocaleDateString()}</span>
+                                                                    </div>
+                                                                    : '-'
+                                                            }
+                                                        </td>
+                                                        <td style={{ padding: '12px 15px' }}>
+                                                            {t.payment_proof_url ? (
+                                                                <a href={t.payment_proof_url} target="_blank" rel="noopener noreferrer" style={{
+                                                                    color: '#74b9ff', textDecoration: 'none', fontSize: '0.8rem',
+                                                                    border: '1px solid #74b9ff', padding: '2px 8px', borderRadius: '4px'
+                                                                }}>
+                                                                    Ver Foto
+                                                                </a>
+                                                            ) : <span style={{ opacity: 0.3 }}>-</span>}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
