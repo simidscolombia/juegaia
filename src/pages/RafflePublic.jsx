@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getRaffle, getRaffleTickets, reserveTicket, submitPaymentProof } from '../utils/storage';
-import { Clock, CheckCircle, Lock, Upload, Smartphone, Trash2 } from 'lucide-react';
+import { Clock, CheckCircle, Lock, Upload, Smartphone, Trash2, ArrowRight } from 'lucide-react';
 
 const RafflePublic = () => {
     const { raffleId } = useParams();
@@ -21,6 +21,10 @@ const RafflePublic = () => {
 
     const [uploading, setUploading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+
+    // Success Modal State
+    const [successData, setSuccessData] = useState(null);
+    const navigate = useNavigate(); // Requires hook at top-level
 
     useEffect(() => {
         const loadRaffle = async () => {
@@ -95,7 +99,14 @@ const RafflePublic = () => {
             // Refetch
             const t = await getRaffleTickets(raffleId);
             setTickets(t);
-            alert(`¡${selectedNums.length} boletas apartadas con éxito!`);
+
+            // Show Success Modal with Access Info
+            setSuccessData({
+                phone: reservePhone,
+                count: selectedNums.length,
+                tickets: selectedNums
+            });
+            // Don't clear phone yet so we can show it, but clear selection
         } catch (err) {
             alert(err.message);
         }
@@ -295,6 +306,77 @@ const RafflePublic = () => {
                                 <Lock size={48} color="#06d6a0" style={{ marginTop: '10px' }} />
                             </>
                         )}
+                    </div>
+                </div>
+            )}
+            {/* Success / Auto-Login Modal */}
+            {successData && (
+                <div style={{
+                    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 102,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+                }}>
+                    <div style={{ background: 'white', color: '#2d3436', padding: '2rem', borderRadius: '20px', width: '100%', maxWidth: '400px', maxHeight: '90vh', overflowY: 'auto', textAlign: 'center' }}>
+
+                        <div style={{ color: '#00b894', marginBottom: '10px' }}>
+                            <CheckCircle size={64} />
+                        </div>
+
+                        <h2 style={{ marginTop: 0, color: '#2d3436' }}>¡Reserva Exitosa!</h2>
+
+                        <p style={{ color: '#636e72', fontSize: '1rem' }}>
+                            Has apartado <strong>{successData.count}</strong> boletas.
+                        </p>
+
+                        <div style={{ background: '#f1f2f6', padding: '15px', borderRadius: '10px', margin: '20px 0', textAlign: 'left', color: '#2d3436' }}>
+                            <p style={{ margin: '0 0 5px 0', fontSize: '0.9rem', color: '#636e72' }}>Tus Credenciales de Acceso:</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                <strong>Celular:</strong>
+                                <span>{successData.phone}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <strong>Código / PIN:</strong>
+                                <span style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: '#0984e3' }}>{successData.tickets[0]}</span>
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: '#b2bec3', margin: '10px 0 0 0' }}>
+                                *Usa el primer número de tu boleta como contraseña para entrar.
+                            </p>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                // Auto-Login Logic
+                                localStorage.setItem('juegaia_guest', JSON.stringify({
+                                    phone: successData.phone,
+                                    pin: successData.tickets[0], // Use first ticket as PIN
+                                    lastGame: raffleId
+                                }));
+                                navigate('/lobby');
+                            }}
+                            style={{
+                                width: '100%', padding: '15px', background: '#e17055', color: 'white',
+                                border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                            }}
+                        >
+                            Ir a Mi Zona de Jugador <ArrowRight size={20} />
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setSuccessData(null);
+                                setSelectedNums([]);
+                                setReserveName('');
+                                setReservePhone('');
+                                setReserveDate('');
+                                setShowModal(false);
+                            }}
+                            style={{
+                                marginTop: '15px', background: 'transparent', border: 'none',
+                                color: '#636e72', cursor: 'pointer', textDecoration: 'underline'
+                            }}
+                        >
+                            Seguir Viendo la Rifa
+                        </button>
                     </div>
                 </div>
             )}

@@ -19,29 +19,38 @@ const PlayerLobby = () => {
         setLoading(true);
         try {
             const user = await getProfile();
+
+            let currentUser = user;
             if (!user) {
-                navigate('/login');
-                return;
+                // Check for Guest Token
+                const guestStr = localStorage.getItem('juegaia_guest');
+                if (guestStr) {
+                    const guest = JSON.parse(guestStr);
+                    currentUser = { id: 'guest', full_name: 'Jugador', phone: guest.phone, email: 'guest@juegaia.com' };
+                } else {
+                    navigate('/login');
+                    return;
+                }
             }
-            setProfile(user);
+            setProfile(currentUser);
 
             // Fetch Bingo Tickets (Matches phone OR email/user_id if we linked them)
             // For MVP Phase 2: We match by PHONE since that's what Admin inputs.
 
             // Requirement: User MUST have phone in profile to see tickets.
-            if (user.phone) {
+            if (currentUser.phone) {
                 // Fetch Bingos
                 const { data: bingoData } = await supabase
                     .from('bingo_players')
                     .select('*, bingo_games(name)')
-                    .eq('phone', user.phone)
+                    .eq('phone', currentUser.phone)
                     .order('created_at', { ascending: false });
 
                 // Fetch Raffles
                 const { data: raffleData } = await supabase
                     .from('tickets')
                     .select('*, raffles(name)')
-                    .eq('phone', user.phone)
+                    .eq('phone', currentUser.phone)
                     .order('created_at', { ascending: false });
 
                 // Normalize and Combine

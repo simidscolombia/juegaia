@@ -103,6 +103,9 @@ function App() {
 
                 {/* Public Bingo Lobby */}
                 <Route path="/bingo/:gameId/join" element={<BingoLobby />} />
+
+                {/* Guest/Public Player Lobby */}
+                <Route path="/lobby" element={<PlayerLobby />} />
             </Routes>
         </div>
     )
