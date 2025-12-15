@@ -334,20 +334,23 @@ const RafflePublic = () => {
                                 <span>{successData.phone}</span>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <strong>Código / PIN:</strong>
-                                <span style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: '#0984e3' }}>{successData.tickets[0]}</span>
+                                <strong>Tu PIN de Acceso:</strong>
+                                <span style={{ fontFamily: 'monospace', fontSize: '1.1rem', color: '#0984e3' }}>
+                                    {successData.phone.slice(-4)}
+                                </span>
                             </div>
                             <p style={{ fontSize: '0.8rem', color: '#b2bec3', margin: '10px 0 0 0' }}>
-                                *Usa el primer número de tu boleta como contraseña para entrar.
+                                *Usa los últimos 4 dígitos de tu celular para entrar siempre.
                             </p>
                         </div>
 
                         <button
                             onClick={() => {
-                                // Auto-Login Logic
+                                // Auto-Login Logic with new PIN rule
+                                const pin = successData.phone.slice(-4);
                                 localStorage.setItem('juegaia_guest', JSON.stringify({
                                     phone: successData.phone,
-                                    pin: successData.tickets[0], // Use first ticket as PIN
+                                    pin: pin,
                                     lastGame: raffleId
                                 }));
                                 navigate('/lobby');
