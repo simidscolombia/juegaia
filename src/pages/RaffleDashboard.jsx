@@ -450,10 +450,8 @@ const RaffleDashboard = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => {
-                                                    // Improved Magic: Search Unsplash
-                                                    if (!form.name) return alert("Escribe un nombre de rifa primero");
-                                                    const keyword = form.name.split(' ')[1] || 'gift';
-                                                    setForm({ ...form, image: `https://source.unsplash.com/800x600/?${keyword}` });
+                                                    // Improved Magic: Picsum for stability
+                                                    setForm({ ...form, image: `https://picsum.photos/800/600?random=${Date.now()}` });
                                                 }}
                                                 style={{ background: '#e94560', color: 'white', border: 'none', borderRadius: '8px', width: '40px', cursor: 'pointer' }}
                                                 title="Buscar imagen automática"
@@ -479,33 +477,33 @@ const RaffleDashboard = () => {
                                                     if (!file) return;
 
                                                     // Simple limit check
-                                                    if (file.size > 2 * 1024 * 1024) return alert("Imagen muy pesada (Max 2MB)");
+                                                    if (file.size > 5 * 1024 * 1024) return alert("Imagen muy pesada (Max 5MB)");
 
                                                     try {
+                                                        // Sanitize filename
                                                         const fileExt = file.name.split('.').pop();
-                                                        const fileName = `${Date.now()}.${fileExt}`;
-                                                        const filePath = `raffle-images/${fileName}`;
+                                                        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+                                                        const filePath = `${fileName}`;
 
                                                         const { data, error } = await supabase.storage
-                                                            .from('public-assets') // Assuming 'public-assets' bucket exists
+                                                            .from('public-assets')
                                                             .upload(filePath, file);
 
                                                         if (error) {
-                                                            // Fallback for demo if bucket setup fails: Use local object URL
-                                                            console.warn("Storage upload failed (Bucket missing?), using local preview:", error);
-                                                            const localUrl = URL.createObjectURL(file);
-                                                            setForm({ ...form, image: localUrl });
-                                                            alert("Nota: Usando vista previa local. Configura Supabase Storage para persistencia real.");
-                                                        } else {
-                                                            // Get Public URL
-                                                            const { data: { publicUrl } } = supabase.storage
-                                                                .from('public-assets')
-                                                                .getPublicUrl(filePath);
-                                                            setForm({ ...form, image: publicUrl });
+                                                            console.error("Supabase Upload Error:", error);
+                                                            alert(`Error detalle: ${error.message} (Código: ${error.statusCode})`);
+                                                            return;
                                                         }
+
+                                                        // Get Public URL
+                                                        const { data: { publicUrl } } = supabase.storage
+                                                            .from('public-assets')
+                                                            .getPublicUrl(filePath);
+                                                        setForm({ ...form, image: publicUrl });
+
                                                     } catch (err) {
-                                                        console.error(err);
-                                                        alert("Error subiendo imagen");
+                                                        console.error("Catch Error:", err);
+                                                        alert(`Error inesperado: ${err.message}`);
                                                     }
                                                 }}
                                                 style={{
