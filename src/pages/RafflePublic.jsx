@@ -394,6 +394,21 @@ const RafflePublic = () => {
 
                         <button
                             onClick={() => {
+                                const text = `🔐 *MIS CREDENCIALES JUEGAIA*\n\nHola, guardo esto para no olvidarlo:\n📱 *Usuario:* ${successData.phone}\n🔑 *PIN:* ${successData.pin}\n\nIngresa aquí: ${window.location.origin}/login`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+                            }}
+                            style={{
+                                width: '100%', padding: '15px', background: '#25D366', color: 'white',
+                                border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                marginBottom: '10px'
+                            }}
+                        >
+                            <Smartphone size={20} /> Guardar en WhatsApp
+                        </button>
+
+                        <button
+                            onClick={() => {
                                 // Auto-Login Logic with Derived PIN
                                 localStorage.setItem('juegaia_guest', JSON.stringify({
                                     phone: successData.phone,
