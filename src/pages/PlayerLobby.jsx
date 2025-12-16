@@ -39,18 +39,21 @@ const PlayerLobby = () => {
 
             // Requirement: User MUST have phone in profile to see tickets.
             if (currentUser.phone) {
+                // Clean phone for looser matching (remove spaces, match partial)
+                const cleanPhone = currentUser.phone.replace(/\s+/g, '');
+
                 // Fetch Bingos
                 const { data: bingoData } = await supabase
                     .from('bingo_players')
                     .select('*, bingo_games(name)')
-                    .eq('phone', currentUser.phone)
+                    .ilike('phone', `%${cleanPhone}%`)
                     .order('created_at', { ascending: false });
 
                 // Fetch Raffles
                 const { data: raffleData } = await supabase
                     .from('tickets')
                     .select('*, raffles(name)')
-                    .eq('phone', currentUser.phone)
+                    .ilike('phone', `%${cleanPhone}%`)
                     .order('created_at', { ascending: false });
 
                 // Normalize and Combine
