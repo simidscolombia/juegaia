@@ -230,7 +230,7 @@ const RafflePublic = () => {
                             />
                             <input
                                 type="tel" placeholder="WhatsApp / Celular" required
-                                value={reservePhone} onChange={e => setReservePhone(e.target.value)}
+                                value={reservePhone} onChange={e => setReservePhone(e.target.value.replace(/\D/g, ''))}
                                 style={{ width: '100%', padding: '12px', marginBottom: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
                             />
 

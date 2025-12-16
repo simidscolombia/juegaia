@@ -818,18 +818,34 @@ export const adminDeleteUser = async (userId) => {
 };
 
 
+
 export const verifyGamePin = async (phone, pin) => {
+    console.log(`[verifyGamePin] Verifying user: Phone=${phone}, Pin=${pin}`);
+
+    if (!phone || !pin) throw new Error("Teléfono y PIN son requeridos");
+
+    const cleanPhone = phone.trim();
+    const cleanPin = pin.trim();
+
     // 1. Search in Bingo Players
     const { data: bingoData, error: bingoError } = await supabase
         .from('bingo_players')
         .select('*, bingo_games(name)')
-        .eq('pin', pin)
-        // We might want to check phone too for security, or just PIN if PIN is unique enough.
-        // Let's enforce Phone match if provided for extra security
-        .ilike('phone', `%${phone.trim()}%`) // Using partial match or precise match
-        .single();
+        .eq('pin', cleanPin)
+        .ilike('phone', `%${cleanPhone}%`)
+        .maybeSingle(); // Changed to maybeSingle to avoid PGRST116 error log
+
+    if (bingoError) {
+        console.error("[verifyGamePin] Bingo Query Error:", bingoError);
+        // Continue to check Raffle, or throw? 
+        // If it's a DB error (not just not found), maybe we should throw?
+        // But maybeSingle won't return error for "not found". 
+        // So if error, it's real.
+        throw new Error("Error verificando Bingo: " + bingoError.message);
+    }
 
     if (bingoData) {
+        console.log("[verifyGamePin] Found in Bingo:", bingoData);
         return {
             type: 'BINGO',
             gameId: bingoData.game_id,
@@ -839,17 +855,21 @@ export const verifyGamePin = async (phone, pin) => {
     }
 
     // 2. Search in Raffle Tickets (Strict PIN check)
-    // Now we look for a ticket where the PIN column matches the input PIN
-    // AND the phone matches.
-    const { data: raffleData } = await supabase
+    const { data: raffleData, error: raffleError } = await supabase
         .from('tickets')
         .select('*, raffles(name)')
-        .eq('pin', pin) // Strict match on new PIN column
-        .ilike('phone', `%${phone.trim()}%`)
+        .eq('pin', cleanPin)
+        .ilike('phone', `%${cleanPhone}%`) // Ensure phone matches
         .limit(1)
         .maybeSingle();
 
+    if (raffleError) {
+        console.error("[verifyGamePin] Raffle Query Error:", raffleError);
+        throw new Error("Error verificando Rifa: " + raffleError.message);
+    }
+
     if (raffleData) {
+        console.log("[verifyGamePin] Found in Raffle:", raffleData);
         return {
             type: 'RAFFLE',
             gameId: raffleData.raffle_id,
@@ -858,5 +878,7 @@ export const verifyGamePin = async (phone, pin) => {
         };
     }
 
+    console.warn("[verifyGamePin] No match found.");
     throw new Error('Credenciales inválidas. Verifica tu celular y el PIN de 4 dígitos (recibido al reservar).');
 };
+

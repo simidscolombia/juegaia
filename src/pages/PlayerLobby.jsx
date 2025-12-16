@@ -103,10 +103,13 @@ const PlayerLobby = () => {
         <div style={{ maxWidth: '600px', margin: '0 auto', paddingBottom: '80px' }}>
             {/* ... (Header & Tabs unchanged) ... */}
 
+            {/* Header */}
             <div style={{ padding: '20px', background: 'var(--color-secondary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h2 style={{ margin: 0 }}>Hola, {profile?.full_name?.split(' ')[0]} 👋</h2>
-                    <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Jugador Verificado</p>
+                    <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>
+                        {profile?.id === 'guest' ? '👤 Invitado' : '✅ Jugador Verificado'}
+                    </p>
                 </div>
                 <button
                     onClick={() => supabase.auth.signOut().then(() => navigate('/login'))}
@@ -116,8 +119,31 @@ const PlayerLobby = () => {
                 </button>
             </div>
 
-            {/* Tabs (unchanged code for rendering tabs, omitted for brevity as it is context) */}
-            <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)' }}>
+            {/* Guest Registration CTA */}
+            {profile?.id === 'guest' && (
+                <div style={{
+                    margin: '15px 20px 5px', padding: '15px',
+                    background: 'linear-gradient(90deg, #818cf8 0%, #6366f1 100%)',
+                    borderRadius: '10px', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>¿Quieres guardar tu progreso?</div>
+                        <div style={{ fontSize: '0.8rem', opacity: 0.9 }}>Crea una cuenta para no perder tus tickets.</div>
+                    </div>
+                    <button
+                        onClick={() => navigate('/register')}
+                        style={{
+                            background: 'white', color: '#6366f1', border: 'none',
+                            padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'
+                        }}
+                    >
+                        Registrarse
+                    </button>
+                </div>
+            )}
+
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '1px solid var(--color-border)', marginTop: '10px' }}>
                 <button
                     onClick={() => setActiveTab('games')}
                     style={{
