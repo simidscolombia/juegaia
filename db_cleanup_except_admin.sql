@@ -18,32 +18,32 @@ BEGIN
 
     RAISE NOTICE 'Preserving Admin ID: %', v_admin_id;
 
-    -- 2. Delete Dependent Data first (to avoid FK violations if no cascade)
-    
-    -- Delete Commissions involving others
+    -- 2. Delete Dependent Data first (Reverse order of dependency)
+
+    -- commissions
     DELETE FROM commissions 
     WHERE beneficiary_id != v_admin_id OR source_user_id != v_admin_id;
 
-    -- Delete Transactions of others
+    -- transactions
     DELETE FROM transactions 
     WHERE user_id != v_admin_id;
 
-    -- Delete Tickets of games owned by others OR bought by others
-    -- (Actually, usually better to delete the Games of others, and cascade tickets if setup, but let's be explicit)
+    -- tickets (Delete tickets associated with Raffles owned by others)
     DELETE FROM tickets 
     WHERE raffle_id IN (SELECT id FROM raffles WHERE owner_id != v_admin_id);
 
+    -- bingo_players (Delete ALL bingo entries NOT by Admin)
     DELETE FROM bingo_players 
-    WHERE game_id IN (SELECT id FROM bingo_games WHERE owner_id != v_admin_id);
+    WHERE (user_id IS NULL OR user_id != v_admin_id);
 
     -- Delete Games owned by others
     DELETE FROM raffles WHERE owner_id != v_admin_id;
     DELETE FROM bingo_games WHERE owner_id != v_admin_id;
 
-    -- Delete Wallets of others
+    -- Wallets
     DELETE FROM wallets WHERE user_id != v_admin_id;
 
-    -- Delete Profiles of others
+    -- Profiles
     DELETE FROM profiles WHERE id != v_admin_id;
 
     -- 3. Delete Users from Auth (The Big One)

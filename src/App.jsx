@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
 import BingoDashboard from './pages/BingoDashboard'
@@ -11,7 +11,7 @@ import GameAdmin from './pages/GameAdmin'
 import BingoLobby from './pages/BingoLobby'
 
 import Login from './pages/Login'
-import Register from './pages/Register'
+// import Register from './pages/Register' // Deprecated
 import Recharge from './pages/Recharge'
 import Network from './pages/Network'
 import SuperAdminPanel from './pages/SuperAdminPanel'
@@ -25,7 +25,9 @@ function App() {
             <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+
+                {/* Redirect old register link to new unified login */}
+                <Route path="/register" element={<Navigate to="/login" replace />} />
 
                 {/* Admin Routes - Protected & Layout Wrapped */}
                 <Route path="/dashboard" element={
