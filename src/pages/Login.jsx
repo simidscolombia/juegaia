@@ -98,9 +98,11 @@ const Login = () => {
 
                 // Redirect
                 if (result.type === 'BINGO') {
-                    navigate(`/play/${result.gameId}?card=${result.ticketId}`);
+                    // navigate(`/play/${result.gameId}?card=${result.ticketId}`);
+                    navigate('/lobby');
                 } else if (result.type === 'RAFFLE') {
-                    navigate(`/raffle/${result.gameId}`);
+                    // navigate(`/raffle/${result.gameId}`);
+                    navigate('/lobby');
                 }
             }
         } catch (err) {

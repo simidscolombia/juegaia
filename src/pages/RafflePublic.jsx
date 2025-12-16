@@ -136,6 +136,19 @@ const RafflePublic = () => {
                 </div>
             </div>
 
+            {/* Floating Back Button (If Guest) */}
+            <button
+                onClick={() => navigate('/lobby')}
+                style={{
+                    position: 'fixed', top: '20px', left: '20px', zIndex: 90,
+                    background: 'white', border: 'none', borderRadius: '50px',
+                    padding: '10px 20px', boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: '#2d3436', fontWeight: 'bold'
+                }}
+            >
+                &larr; Volver al Panel
+            </button>
+
             {/* Grid */}
             <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 1rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '8px' }}>
