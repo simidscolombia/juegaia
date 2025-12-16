@@ -5,7 +5,7 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 ## 🟢 1. Autenticación y Seguridad (El "Smart Login")
 
 - [ ] **Login Admin (Email):** Entrar con `elkindanielcastillo@gmail.com` + contraseña. Debe llevar al Dashboard Admin.
-- [ ] **Login Admin (Google):** Entrar con botón Google (mismo correo). Debe llevar al Dashboard Admin.
+- [x] **Login Admin (Google):** Entrar con botón Google (mismo correo). Debe llevar al Dashboard Admin.
 - [ ] **Login Jugador Nuevo:** Entrar con Celular `3001234567` (o cualquiera nuevo). Debe llevar al Lobby de Jugador (vacío si es nuevo).
 - [ ] **Login Jugador Existente:** Entrar con un Celular que ya tenga tickets. Debe pedir PIN. Al ingresar PIN correcto, llevar al Lobby con sus tickets visibles.
 - [ ] **Registro con Referido:**

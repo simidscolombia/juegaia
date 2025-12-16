@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar, ChevronDown, ChevronUp, CheckCircle } from 'lucide-react';
+import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar, ChevronDown, ChevronUp, CheckCircle, Upload } from 'lucide-react';
 import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
-import { COMMON_LOTTERIES } from '../utils/lotteries';
+import { getLotterySchedule, COMMON_LOTTERIES } from '../utils/lotteries';
 import RechargeModal from '../components/RechargeModal';
 
 const RaffleDashboard = () => {
@@ -268,12 +268,23 @@ const RaffleDashboard = () => {
                         <div className="card" style={{ marginTop: '1rem', background: '#1a1a2e', border: '1px solid #16213e' }}>
                             <h4 style={{ margin: '0 0 15px 0', borderBottom: '1px solid #ffffff1a', paddingBottom: '10px' }}>Nueva Rifa</h4>
                             <form onSubmit={handleCreate}>
-                                {/* Digits Select */}
+                                {/* Digits / Range Select */}
                                 <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Cifras</label>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Tipo de Juego / Rango</label>
                                     <select
-                                        value={form.digits}
-                                        onChange={e => handleDigitsChange(e.target.value)}
+                                        value={form.digits === 'custom' ? 'custom' : form.digits}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === 'custom') {
+                                                setForm({ ...form, digits: 'custom', min_number: 0, max_number: 100 });
+                                            } else {
+                                                const d = Number(val);
+                                                let max = 99;
+                                                if (d === 3) max = 999;
+                                                if (d === 4) max = 9999;
+                                                setForm({ ...form, digits: d, min_number: 0, max_number: max });
+                                            }
+                                        }}
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
                                             background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
@@ -282,7 +293,34 @@ const RaffleDashboard = () => {
                                         <option value={2}>2 Cifras (00-99)</option>
                                         <option value={3}>3 Cifras (000-999)</option>
                                         <option value={4}>4 Cifras (0000-9999)</option>
+                                        <option value="custom">Personalizado (Rango Manual)</option>
                                     </select>
+
+                                    {form.digits === 'custom' && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                                            <div>
+                                                <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Desde (Mínimo)</label>
+                                                <input
+                                                    type="number"
+                                                    value={form.min_number || 0}
+                                                    onChange={e => setForm({ ...form, min_number: Number(e.target.value) })}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'white' }}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Hasta (Máximo)</label>
+                                                <input
+                                                    type="number"
+                                                    value={form.max_number || 100}
+                                                    onChange={e => setForm({ ...form, max_number: Number(e.target.value) })}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'white' }}
+                                                />
+                                            </div>
+                                            <div style={{ gridColumn: '1 / -1', fontSize: '0.75rem', color: '#f59e0b' }}>
+                                                * El sistema generará {(form.max_number - form.min_number) + 1} boletas.
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div style={{ marginBottom: '15px' }}>
@@ -299,7 +337,7 @@ const RaffleDashboard = () => {
                                     />
                                 </div>
 
-                                {/* Lottery with Dropdown */}
+                                {/* Lottery with Dropdown & Schedule Help */}
                                 <div style={{ marginBottom: '15px' }}>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Lotería / Sorteo</label>
                                     <select
@@ -323,6 +361,19 @@ const RaffleDashboard = () => {
                                         {COMMON_LOTTERIES.map(l => <option key={l} value={l}>{l}</option>)}
                                         <option value="Manual">Otra / Manual</option>
                                     </select>
+
+                                    {!isManualLottery && form.lotteryName && (
+                                        <div style={{ marginTop: '5px', fontSize: '0.8rem', color: '#3b82f6', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            ℹ️ {(() => {
+                                                const schedule = getLotterySchedule(form.lotteryName);
+                                                if (!schedule) return "Sin datos de horario.";
+                                                const daysMap = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+                                                const daysStr = schedule.days.map(d => daysMap[d]).join(', ');
+                                                return `Juega: ${daysStr} a las ${schedule.time}`;
+                                            })()}
+                                        </div>
+                                    )}
+
                                     {isManualLottery && (
                                         <input
                                             placeholder="Escribe nombre de lotería"
@@ -380,29 +431,97 @@ const RaffleDashboard = () => {
                                     </div>
                                 </div>
 
-                                {/* Image Section */}
+                                {/* Image Section with File Upload & Unsplash */}
                                 <div style={{ marginBottom: '15px' }}>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Imagen del Premio</label>
-                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                        <input
-                                            placeholder="URL Imagen"
-                                            value={form.image}
-                                            onChange={e => setForm({ ...form, image: e.target.value })}
-                                            style={{
-                                                flex: 1, padding: '10px', borderRadius: '8px',
-                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
-                                            }}
-                                        />
-                                        <button type="button" onClick={handleMagicImage} style={{ background: '#e94560', color: 'white', border: 'none', borderRadius: '8px', width: '40px', cursor: 'pointer' }} title="Generar con IA">
-                                            <Wand2 size={18} />
-                                        </button>
+                                    <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+
+                                        {/* URL Input (Manual) */}
+                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                            <input
+                                                placeholder="URL Imagen (o sube una abajo)"
+                                                value={form.image}
+                                                onChange={e => setForm({ ...form, image: e.target.value })}
+                                                style={{
+                                                    flex: 1, padding: '10px', borderRadius: '8px',
+                                                    background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    // Improved Magic: Search Unsplash
+                                                    if (!form.name) return alert("Escribe un nombre de rifa primero");
+                                                    const keyword = form.name.split(' ')[1] || 'gift';
+                                                    setForm({ ...form, image: `https://source.unsplash.com/800x600/?${keyword}` });
+                                                }}
+                                                style={{ background: '#e94560', color: 'white', border: 'none', borderRadius: '8px', width: '40px', cursor: 'pointer' }}
+                                                title="Buscar imagen automática"
+                                            >
+                                                <Wand2 size={18} />
+                                            </button>
+                                        </div>
+
+                                        {/* File Upload */}
+                                        <div style={{ position: 'relative', overflow: 'hidden', marginTop: '5px' }}>
+                                            <button type="button" style={{
+                                                width: '100%', padding: '8px', border: '1px dashed #4b5563', borderRadius: '8px',
+                                                background: 'rgba(255,255,255,0.05)', color: '#9ca3af', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                            }}>
+                                                <Upload size={16} /> Subir desde dispositivo
+                                            </button>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files[0];
+                                                    if (!file) return;
+
+                                                    // Simple limit check
+                                                    if (file.size > 2 * 1024 * 1024) return alert("Imagen muy pesada (Max 2MB)");
+
+                                                    try {
+                                                        const fileExt = file.name.split('.').pop();
+                                                        const fileName = `${Date.now()}.${fileExt}`;
+                                                        const filePath = `raffle-images/${fileName}`;
+
+                                                        const { data, error } = await supabase.storage
+                                                            .from('public-assets') // Assuming 'public-assets' bucket exists
+                                                            .upload(filePath, file);
+
+                                                        if (error) {
+                                                            // Fallback for demo if bucket setup fails: Use local object URL
+                                                            console.warn("Storage upload failed (Bucket missing?), using local preview:", error);
+                                                            const localUrl = URL.createObjectURL(file);
+                                                            setForm({ ...form, image: localUrl });
+                                                            alert("Nota: Usando vista previa local. Configura Supabase Storage para persistencia real.");
+                                                        } else {
+                                                            // Get Public URL
+                                                            const { data: { publicUrl } } = supabase.storage
+                                                                .from('public-assets')
+                                                                .getPublicUrl(filePath);
+                                                            setForm({ ...form, image: publicUrl });
+                                                        }
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                        alert("Error subiendo imagen");
+                                                    }
+                                                }}
+                                                style={{
+                                                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                                                    opacity: 0, cursor: 'pointer'
+                                                }}
+                                            />
+                                        </div>
+
                                     </div>
                                     {form.image && (
                                         <div style={{ marginTop: '10px', position: 'relative' }}>
                                             <img src={form.image} alt="Preview" style={{ width: '100%', height: '150px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #533483' }} />
                                             <button
                                                 type="button"
-                                                onClick={refreshImage}
+                                                onClick={() => setForm({ ...form, image: '' })}
                                                 style={{
                                                     position: 'absolute', bottom: '8px', right: '8px',
                                                     background: 'rgba(0,0,0,0.8)', color: 'white',
@@ -410,7 +529,7 @@ const RaffleDashboard = () => {
                                                     cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold'
                                                 }}
                                             >
-                                                🔄 Cambiar
+                                                🗑️ Quitar
                                             </button>
                                         </div>
                                     )}
