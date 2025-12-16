@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Users, Settings, DollarSign, Search, Trash2, Gamepad2 } from 'lucide-react';
-import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser } from '../utils/storage';
+import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser, adminUpdateUserReferrer } from '../utils/storage';
 
 const SuperAdminPanel = () => {
     const navigate = useNavigate();
@@ -117,6 +117,19 @@ const SuperAdminPanel = () => {
         try {
             await adminDeleteUser(userId);
             alert('Usuario eliminado');
+            loadData();
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    };
+
+    const handleLinkReferrer = async (user) => {
+        const code = prompt(`Ingresa el CÓDIGO de Referido del PADRE para vincular a:\n${user.email}`);
+        if (!code) return;
+
+        try {
+            await adminUpdateUserReferrer(user.email, code);
+            alert('¡Usuario vinculado exitosamente!');
             loadData();
         } catch (error) {
             alert('Error: ' + error.message);
@@ -306,6 +319,17 @@ const SuperAdminPanel = () => {
                                                 }}
                                             >
                                                 <Trash2 size={14} /> Eliminar
+                                            </button>
+                                            <button
+                                                onClick={() => handleLinkReferrer(user)}
+                                                style={{
+                                                    background: '#8b5cf6', border: 'none', color: 'white',
+                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px',
+                                                    display: 'flex', alignItems: 'center', gap: '5px'
+                                                }}
+                                                title="Vincular a un Referido"
+                                            >
+                                                <Users size={14} /> Vincular
                                             </button>
                                         </td>
                                     </tr>

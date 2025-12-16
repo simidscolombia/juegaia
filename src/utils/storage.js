@@ -882,3 +882,25 @@ export const verifyGamePin = async (phone, pin) => {
     throw new Error('Credenciales inválidas. Verifica tu celular y el PIN de 4 dígitos (recibido al reservar).');
 };
 
+export const adminUpdateUserReferrer = async (childEmail, parentCode) => {
+    // This calls the postgres function we just created logic in db_fix_referral_logic.sql
+    // manual_link_referral(p_child_email TEXT, p_parent_code TEXT)
+
+    // We can call it via RPC if we exposed it or just query directly if we made it a function convertible to RPC
+    // But since it returns text, let's use rpc()
+    const { data, error } = await supabase
+        .rpc('manual_link_referral', {
+            p_child_email: childEmail,
+            p_parent_code: parentCode
+        });
+
+    if (error) throw error;
+
+    if (data && typeof data === 'string' && data.startsWith('Error')) {
+        throw new Error(data);
+    }
+
+    return data;
+};
+
+
