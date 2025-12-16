@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar, ChevronDown, ChevronUp, CheckCircle, Upload } from 'lucide-react';
 import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
