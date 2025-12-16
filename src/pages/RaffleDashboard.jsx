@@ -631,7 +631,15 @@ const RaffleDashboard = () => {
                         </div>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.3, background: '#16213e', borderRadius: '15px' }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        minHeight: '300px',
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: '15px',
+                        color: 'var(--color-text-muted)',
+                        fontSize: '1.2rem',
+                        border: '1px dashed var(--color-border)'
+                    }}>
                         Selecciona una rifa para gestionar
                     </div>
                 )}

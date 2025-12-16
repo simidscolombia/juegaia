@@ -73,6 +73,28 @@ const RafflePublic = () => {
         }
     };
 
+    // Identity State
+    const [existingPin, setExistingPin] = useState(null);
+
+    useEffect(() => {
+        const loadIdentity = async () => {
+            // 1. Check Guest Session
+            const guestStr = localStorage.getItem('juegaia_guest');
+            if (guestStr) {
+                const guest = JSON.parse(guestStr);
+                if (guest.phone) setReservePhone(guest.phone);
+                if (guest.pin) setExistingPin(guest.pin);
+            }
+
+            // 2. Check Real Auth (Overrides Guest Phone usually if verified)
+            // We import supabase from storage indirectly or use direct client? 
+            // We need to import 'getProfile' from storage ideally, but let's just peek localStorage or rely on guest for now since we are in Public view.
+            // If user came from /lobby (which loads profile), they might be auth.
+            // Let's keep it simple: "Smart fill" from localStorage is 90% of the win.
+        };
+        loadIdentity();
+    }, []);
+
     const handleReserve = async (e) => {
         e.preventDefault();
 
@@ -88,31 +110,37 @@ const RafflePublic = () => {
         }
 
         try {
-            // Generate PIN locally to ensure we have it for the UI regardless of DB return
-            const localPin = Math.floor(1000 + Math.random() * 9000).toString();
+            // REUSE PIN if known, else Generate
+            const finalPin = existingPin || Math.floor(1000 + Math.random() * 9000).toString();
 
-            // Pass localPin to reserveTicket
-            await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null, localPin);
-
-            // Use the localPin directly
-            const generatedPin = localPin;
+            // Pass to reserveTicket
+            await reserveTicket(raffleId, selectedNums, reserveName, reservePhone, reserveDate || null, finalPin);
 
             setSelectedNums([]);
-            setReserveName('');
-            // setReservePhone(''); // Keep for modal context
+            // Don't clear phone/name so they can buy again easily
             setReserveDate('');
             setShowModal(false);
+
+            // Update Guest Session if NEW
+            if (!existingPin) {
+                localStorage.setItem('juegaia_guest', JSON.stringify({
+                    phone: reservePhone,
+                    pin: finalPin,
+                    lastGame: raffleId
+                }));
+                setExistingPin(finalPin);
+            }
 
             // Refetch
             const t = await getRaffleTickets(raffleId);
             setTickets(t);
 
-            // Show Success Modal with Access Info
+            // Show Success Modal
             setSuccessData({
                 phone: reservePhone,
                 count: selectedNums.length,
                 tickets: selectedNums,
-                pin: generatedPin // Pass the actual PIN from DB
+                pin: finalPin
             });
         } catch (err) {
             alert(err.message);
