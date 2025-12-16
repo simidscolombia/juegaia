@@ -18,6 +18,7 @@ const RaffleDashboard = () => {
     const [showCreate, setShowCreate] = useState(false);
     const [generatedCopy, setGeneratedCopy] = useState('');
     const [showRecharge, setShowRecharge] = useState(false);
+    const [isManualLottery, setIsManualLottery] = useState(false);
 
     // Ticket Sale State
     const [saleForm, setSaleForm] = useState({ number: '', name: '', paymentDate: new Date().toISOString().split('T')[0] });
@@ -95,6 +96,7 @@ const RaffleDashboard = () => {
             await fetchAllRaffles();
             setShowCreate(false);
             setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Sinuano Noche', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
+            setIsManualLottery(false);
             alert(`¡Rifa creada! Se descontaron $${cost} Coins.`);
         } catch (err) {
             alert('Error creando rifa: ' + err.message);
@@ -301,21 +303,30 @@ const RaffleDashboard = () => {
                                 <div style={{ marginBottom: '15px' }}>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Lotería / Sorteo</label>
                                     <select
-                                        value={form.lotteryName}
-                                        onChange={e => setForm({ ...form, lotteryName: e.target.value })}
+                                        value={isManualLottery ? 'Manual' : form.lotteryName}
+                                        onChange={e => {
+                                            const val = e.target.value;
+                                            if (val === 'Manual') {
+                                                setIsManualLottery(true);
+                                                setForm({ ...form, lotteryName: '' });
+                                            } else {
+                                                setIsManualLottery(false);
+                                                setForm({ ...form, lotteryName: val });
+                                            }
+                                        }}
                                         style={{
                                             width: '100%', padding: '10px', borderRadius: '8px',
                                             background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)',
-                                            marginBottom: form.lotteryName === 'Manual' ? '10px' : '0'
+                                            marginBottom: isManualLottery ? '10px' : '0'
                                         }}
                                     >
                                         {COMMON_LOTTERIES.map(l => <option key={l} value={l}>{l}</option>)}
                                         <option value="Manual">Otra / Manual</option>
                                     </select>
-                                    {form.lotteryName === 'Manual' && (
+                                    {isManualLottery && (
                                         <input
                                             placeholder="Escribe nombre de lotería"
-                                            value={form.manualLottery} // Changing to separate state if needed, but reusing lotteryName string for simplicity might bug if not careful. 
+                                            value={form.lotteryName}
                                             onChange={e => setForm({ ...form, lotteryName: e.target.value })}
                                             style={{
                                                 width: '100%', padding: '10px', borderRadius: '8px',

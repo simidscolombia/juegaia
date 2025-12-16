@@ -365,9 +365,16 @@ export const EVENTS = {
 // --- RAFFLE SYSTEM (SUPABASE CLOUD) ---
 
 export const getRaffles = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // If no user, return empty or throw, but for dashboard usually protected.
+    // Return empty to avoid crash if called publicly by mistake, though RLS protects too.
+    if (!user) return [];
+
     const { data, error } = await supabase
         .from('raffles')
         .select('*')
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
     if (error) throw error;
