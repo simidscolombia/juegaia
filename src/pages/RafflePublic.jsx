@@ -1,9 +1,84 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRaffle, getRaffleTickets, reserveTicket, submitPaymentProof } from '../utils/storage';
-import { Clock, CheckCircle, Lock, Upload, Smartphone, Trash2, ArrowRight } from 'lucide-react';
+import { Clock, CheckCircle, Lock, Upload, Smartphone, Trash2, ArrowRight, Download } from 'lucide-react';
 
 const RafflePublic = () => {
+    // ... existing state ...
+
+    const handleDownloadTicket = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 800;
+        const ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Header Decoration
+        ctx.fillStyle = '#e11d48';
+        ctx.fillRect(0, 0, canvas.width, 20);
+
+        // Title
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 40px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('JuegAIA', 300, 80);
+
+        ctx.font = '20px sans-serif';
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('COMPROBANTE DE RESERVA', 300, 110);
+
+        // Raffle Info
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText(raffle?.name || 'Rifa', 300, 180);
+
+        // Ticket Numbers
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 60px sans-serif';
+        const nums = successData.tickets.join(', ');
+        // Simple wrap logic or truncation for now
+        ctx.fillText(nums.substring(0, 20) + (nums.length > 20 ? '...' : ''), 300, 260);
+
+        ctx.font = '20px sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`${successData.count} Boleta(s) Apartada(s)`, 300, 300);
+
+        // Credentials Box
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(50, 350, 500, 250);
+
+        ctx.fillStyle = '#fb7185';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('TUS CREDENCIALES DE ACCESO', 300, 390);
+
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '20px sans-serif';
+        ctx.fillText(`📱 Usuario: ${successData.phone}`, 100, 450);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 30px sans-serif';
+        ctx.fillText(`🔑 PIN: ${successData.pin}`, 100, 500);
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'italic 16px sans-serif';
+        ctx.fillText('Usa este PIN para entrar a ver tus boletas.', 100, 550);
+
+        // Footer
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#64748b';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('Ingresa en: juegaia.vercel.app', 300, 750);
+
+        // Convert and Download
+        const link = document.createElement('a');
+        link.download = `Ticket-JuegAIA-${successData.tickets[0]}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg');
+        link.click();
+    };
     const { raffleId } = useParams();
     const [raffle, setRaffle] = useState(null);
     const [tickets, setTickets] = useState([]);
@@ -391,6 +466,18 @@ const RafflePublic = () => {
                                 *Guarda este código único para ingresar a gestionar tus boletas.
                             </p>
                         </div>
+
+                        <button
+                            onClick={handleDownloadTicket}
+                            style={{
+                                width: '100%', padding: '15px', background: '#3b82f6', color: 'white',
+                                border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '1.1rem',
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                                marginBottom: '10px'
+                            }}
+                        >
+                            <Download size={20} /> Descargar Ticket
+                        </button>
 
                         <button
                             onClick={() => {
