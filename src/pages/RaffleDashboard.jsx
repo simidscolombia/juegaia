@@ -21,7 +21,7 @@ const RaffleDashboard = () => {
     const [isManualLottery, setIsManualLottery] = useState(false);
 
     // Ticket Sale State
-    const [saleForm, setSaleForm] = useState({ number: '', name: '', paymentDate: new Date().toISOString().split('T')[0] });
+    const [saleForm, setSaleForm] = useState({ number: '', name: '', phone: '', paymentDate: new Date().toISOString().split('T')[0] });
     const [tickets, setTickets] = useState([]);
     const [wallet, setWallet] = useState({ balance: 0 });
     const [prices, setPrices] = useState({ raffle_price: 10000 });
@@ -168,10 +168,10 @@ const RaffleDashboard = () => {
                 }
             }
 
-            await sellRaffleTicket(selectedRaffle.id, saleForm.number, saleForm.name, '', saleForm.paymentDate);
+            await sellRaffleTicket(selectedRaffle.id, saleForm.number, saleForm.name, saleForm.phone, saleForm.paymentDate);
             const updatedTickets = await getRaffleTickets(selectedRaffle.id);
             setTickets(updatedTickets);
-            setSaleForm({ number: '', name: '', paymentDate: new Date().toISOString().split('T')[0] });
+            setSaleForm({ number: '', name: '', phone: '', paymentDate: new Date().toISOString().split('T')[0] });
             alert('¡Boleta vendida!');
         } catch (err) {
             alert('Error: ' + err.message);
@@ -542,6 +542,21 @@ const RaffleDashboard = () => {
                                             placeholder="Nombre Completo"
                                             value={saleForm.name}
                                             onChange={e => setSaleForm({ ...saleForm, name: e.target.value })}
+                                            required
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '8px',
+                                                background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)'
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Celular (Para Login)</label>
+                                        <input
+                                            type="tel"
+                                            placeholder="300 123 4567"
+                                            value={saleForm.phone}
+                                            onChange={e => setSaleForm({ ...saleForm, phone: e.target.value.replace(/\D/g, '') })}
                                             required
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '8px',

@@ -545,8 +545,16 @@ export const reserveTicket = async (raffleId, numbers, clientName, phone, promis
 };
 
 export const markTicketPaid = async (raffleId, number, buyerName = "Venta Directa", phone = '', paymentDate = null) => {
-    // Upsert allows updating if exists (e.g. converting Reservation to Paid)
-    // If it doesn't exist, it creates it.
+    // 1. Check if it exists to preserve PIN or Generate New One
+    const { data: existing } = await supabase
+        .from('tickets')
+        .select('pin')
+        .match({ raffle_id: raffleId, number: Number(number) })
+        .maybeSingle();
+
+    const pinToUse = existing?.pin || Math.floor(1000 + Math.random() * 9000).toString();
+
+    // 2. Upsert
     const { data, error } = await supabase
         .from('tickets')
         .upsert([
@@ -554,15 +562,20 @@ export const markTicketPaid = async (raffleId, number, buyerName = "Venta Direct
                 raffle_id: raffleId,
                 number: Number(number),
                 buyer_name: buyerName,
-                phone: phone,
+                phone: phone, // Crucial for login
                 status: 'PAID',
-                payment_date: paymentDate || new Date().toISOString() // New: Payment Date
+                pin: pinToUse, // Ensure PIN is set
+                payment_date: paymentDate || new Date().toISOString()
             }
-        ], { onConflict: 'raffle_id, number' }) // Important: Match unique constraint
+        ], { onConflict: 'raffle_id, number' })
         .select()
         .single();
 
     if (error) throw error;
+
+    // Alert the admin of the PIN if it's a new sale so they can tell the user (Optional, but good UX)
+    // We can't alert here easily as it's a utility, but the Dashboard will show it in the list.
+
     return data;
 };
 
