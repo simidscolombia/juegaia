@@ -320,7 +320,22 @@ const Login = () => {
                             </button>
 
                             {authMode === 'ADMIN' && (
-                                <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                                <div style={{ marginTop: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={async () => {
+                                            if (!identity) return setError('Ingresa tu correo primero.');
+                                            const { error } = await supabase.auth.resetPasswordForEmail(identity, {
+                                                redirectTo: window.location.origin + '/recharge', // Or a dedicated reset page
+                                            });
+                                            if (error) setError(error.message);
+                                            else alert('Revisa tu correo para restablecer la contraseña.');
+                                        }}
+                                        style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}
+                                    >
+                                        ¿Olvidaste tu contraseña?
+                                    </button>
+
                                     <Link to="/register" style={{ color: '#38bdf8', fontSize: '0.9rem', textDecoration: 'none' }}>
                                         ¿No tienes cuenta? Regístrate aquí
                                     </Link>

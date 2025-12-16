@@ -1,0 +1,68 @@
+# Plan de Pruebas General - JuegAIA
+
+Este documento detalla paso a paso las pruebas necesarias para validar la estabilidad y funcionalidad completa de la plataforma tras la unificación del login y la limpieza de base de datos.
+
+## 🟢 1. Autenticación y Seguridad (El "Smart Login")
+
+- [ ] **Login Admin (Email):** Entrar con `elkindanielcastillo@gmail.com` + contraseña. Debe llevar al Dashboard Admin.
+- [ ] **Login Admin (Google):** Entrar con botón Google (mismo correo). Debe llevar al Dashboard Admin.
+- [ ] **Login Jugador Nuevo:** Entrar con Celular `3001234567` (o cualquiera nuevo). Debe llevar al Lobby de Jugador (vacío si es nuevo).
+- [ ] **Login Jugador Existente:** Entrar con un Celular que ya tenga tickets. Debe pedir PIN. Al ingresar PIN correcto, llevar al Lobby con sus tickets visibles.
+- [ ] **Registro con Referido:**
+    1. Usar link `.../login?ref=LGX4IK` (o código real).
+    2. Registrarse como nuevo usuario (Google o Email).
+    3. Verificar en **SuperAdmin Panel** (o BD) que la columna `referred_by` tenga el ID del dueño del código.
+- [x] **Redirección Antigua:** Entrar a `.../register`. Debe redirigir automáticamente a `/login`.
+
+---
+
+## 🎟️ 2. Módulo de Rifas
+
+### A. Gestión (Admin)
+- [ ] **Crear Rifa:** Crear rifa de 2 cifras, sin lotería (manual), precio $10.000.
+- [ ] **IA Copywriter:** Probar generar texto con IA en el formulario de creación/edición.
+- [ ] **Editar Rifa:** Cambiar nombre o fecha de sorteo. Verificar cambios.
+- [ ] **Venta Manual (Admin):** Registrar venta desde el Dashboard a un celular `311...`.
+    - Verificar que descuenta de la grilla.
+    - Verificar que aparece en el "Lobby" de ese celular simulado.
+
+### B. Experiencia Pública
+- [ ] **Ver Rifa Pública:** Entrar al link público de la rifa.
+- [ ] **Botón Volver:** Probar el botón "← Volver al Panel" y que lleve al Login/Lobby.
+- [ ] **Apartar Boleta (Flujo Nuevo):**
+    - Seleccionar número.
+    - Llenar nombre y celular.
+    - Confirmar.
+    - **Verificar Modal de Éxito:** Debe mostrar PIN y Botón WhatsApp.
+    - **Probar Botón WhatsApp:** Debe abrir chat con credenciales.
+    - **Probar Botón Descarga:** Debe bajar imagen JPG del ticket.
+- [ ] **Reingreso (Cookie/Smart):** Refrescar página de rifa. Intentar apartar otra boleta.
+    - **Debe autocompletar** el celular y reusar el PIN anterior automáticamente.
+
+---
+
+## 🎱 3. Módulo de Bingo
+
+- [ ] **Crear Bingo:** Crear sala nueva en Dashboard.
+- [ ] **Admin de Sala (TV):** Entrar a la vista "Jugar" (TV).
+    - Probar sacar balotas.
+    - Probar "Cantar Bingo" (resetear última balota si error).
+- [ ] **Jugador:** Comprar/Asignar cartón a un jugador.
+- [ ] **Jugar:** Entrar como ese jugador al Lobby -> Entrar al Bingo.
+    - Verificar que el cartón se marca solo o permite marcar (según lógica actual).
+
+---
+
+## 💰 4. Panel de Control y Billetera
+
+- [ ] **Recarga Simulada:** (Si aplica) Intentar recargar saldo desde botón recarga (o UI Admin).
+- [ ] **Red de Mercadeo:**
+    - Entrar a pestaña "Mi Red".
+    - Verificar que aparezca el link de referido propio.
+    - Verificar tabla de referidos (si hay datos).
+
+---
+
+## ⚙️ 5. Mantenimiento
+
+- [ ] **Limpieza de Datos:** (Ya ejecutada). Verificar que no aparezcan usuarios extraños en `SuperAdmin > Usuarios`.
