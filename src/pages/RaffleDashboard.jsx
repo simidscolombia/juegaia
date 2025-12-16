@@ -304,7 +304,7 @@ const RaffleDashboard = () => {
                                                     type="number"
                                                     value={form.min_number || 0}
                                                     onChange={e => setForm({ ...form, min_number: Number(e.target.value) })}
-                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'white' }}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#0f172a', border: '1px solid #334155', color: '#f8fafc' }}
                                                 />
                                             </div>
                                             <div>
@@ -313,11 +313,11 @@ const RaffleDashboard = () => {
                                                     type="number"
                                                     value={form.max_number || 100}
                                                     onChange={e => setForm({ ...form, max_number: Number(e.target.value) })}
-                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'white' }}
+                                                    style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#0f172a', border: '1px solid #334155', color: '#f8fafc' }}
                                                 />
                                             </div>
                                             <div style={{ gridColumn: '1 / -1', fontSize: '0.75rem', color: '#f59e0b' }}>
-                                                * El sistema generará {(form.max_number - form.min_number) + 1} boletas.
+                                                * El sistema generará {((form.max_number || 0) - (form.min_number || 0)) + 1} boletas.
                                             </div>
                                         </div>
                                     )}
