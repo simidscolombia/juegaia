@@ -20,6 +20,9 @@ const TVMode = () => {
     // Decoration Balls for "Physics"
     const [decoBalls, setDecoBalls] = useState([]);
 
+    // Win Claims
+    const [claimQueue, setClaimQueue] = useState([]); // List of winners to show
+
     useEffect(() => {
         // Generate random balls for the visual drum (INCREASED COUNT)
         const balls = Array.from({ length: 60 }).map((_, i) => ({
@@ -56,35 +59,40 @@ const TVMode = () => {
             .channel(`game_updates_${gameId}`)
             .on(
                 'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'bingo_games',
-                    filter: `id=eq.${gameId}`
-                },
+                { event: 'UPDATE', schema: 'public', table: 'bingo_games', filter: `id=eq.${gameId}` },
                 (payload) => {
+                    // ... existing game logic ...
                     const newGameData = payload.new;
                     setGame(newGameData);
 
                     if (newGameData.called_numbers && newGameData.called_numbers.length > 0) {
                         const newLastCall = newGameData.called_numbers[newGameData.called_numbers.length - 1];
-
-                        // If it's a NEW number we haven't shown yet (Correctly check against Ref)
                         if (newLastCall !== lastCallRef.current) {
-                            // 1. Start Animation
                             setIsSpinning(true);
-
-                            // 2. Wait for spin (Sync with CSS animation time)
                             setTimeout(() => {
                                 setIsSpinning(false);
                                 setLastCall(newLastCall);
-                                lastCallRef.current = newLastCall; // Update Ref
-
-                                // 3. Speak
+                                lastCallRef.current = newLastCall;
                                 const letter = getLetter(newLastCall);
                                 speakNumber(newLastCall, letter);
                             }, 2500);
                         }
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'bingo_players', filter: `game_id=eq.${gameId}` },
+                (payload) => {
+                    const player = payload.new;
+                    if (player.status === 'WIN_CLAIMED') {
+                        // Add to queue if not exists
+                        setClaimQueue(prev => {
+                            if (prev.find(p => p.id === player.id)) return prev;
+                            const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
+                            audio.play().catch(e => console.log("Audio play failed", e));
+                            return [...prev, player];
+                        });
                     }
                 }
             )
@@ -368,7 +376,40 @@ const TVMode = () => {
                 </div>
             </div>
 
-            <style>{`
+        </div>
+
+            {/* WINNER OVERLAY */ }
+    {
+        claimQueue.length > 0 && (
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 100,
+                background: 'rgba(0,0,0,0.85)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+            }}>
+                <div style={{
+                    background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
+                    padding: '3rem', borderRadius: '30px', textAlign: 'center',
+                    boxShadow: '0 0 100px rgba(255, 215, 0, 0.5)',
+                    animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                }}>
+                    <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎉 BINGO 🎉</div>
+                    <h2 style={{ fontSize: '3rem', margin: 0, color: '#000' }}>{claimQueue[0].name}</h2>
+                    <p style={{ color: '#000', fontSize: '1.5rem', fontWeight: 'bold' }}>PIN: {claimQueue[0].pin} | Cartón #{claimQueue[0].id.substring(0, 4)}</p>
+
+                    <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                        <button
+                            onClick={() => setClaimQueue(prev => prev.slice(1))}
+                            style={{ padding: '15px 30px', fontSize: '1.2rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                            Validar / Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    <style>{`
         /* Enhanced Tumble Animations - More Chaos */
         @keyframes tumble-0 { 0% { transform: translate(0,0); } 100% { transform: translate(100px, -80px); } }
         @keyframes tumble-1 { 0% { transform: translate(0,0); } 100% { transform: translate(-90px, 90px); } }
@@ -417,7 +458,7 @@ const TVMode = () => {
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
       `}</style>
-        </div>
+        </div >
     );
 };
 export default TVMode;

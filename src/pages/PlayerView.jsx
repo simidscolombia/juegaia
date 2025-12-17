@@ -91,12 +91,26 @@ const PlayerView = () => {
         } catch (e) { console.error(e); }
     };
 
-    const handleBingoCall = () => {
+    const handleBingoCall = async () => {
         const ticket = myTickets[activeTicketIndex];
-        if (checkWin(ticket.card_matrix, 'HORIZONTAL_LINE') || checkWin(ticket.card_matrix, 'VERTICAL_LINE') || checkWin(ticket.card_matrix, 'DIAGONAL') || checkWin(ticket.card_matrix, 'FULL_HOUSE')) {
-            alert("¡BINGO CANTADO! 🥳\nEl organizador revisará tu victoria.");
+        // Validate locally first
+        if (checkWin(ticket.card_matrix, 'HORIZONTAL_LINE') ||
+            checkWin(ticket.card_matrix, 'VERTICAL_LINE') ||
+            checkWin(ticket.card_matrix, 'DIAGONAL') ||
+            checkWin(ticket.card_matrix, 'FULL_HOUSE')) {
+
+            try {
+                // Send Claim to DB
+                alert("🎉 ¡BINGO! Enviando aviso a la pantalla principal...");
+                await updateTicket(ticket.id, { status: 'WIN_CLAIMED' });
+                alert("✅ ¡Enviado! El organizador verificará tu victoria ahora.");
+            } catch (err) {
+                console.error(err);
+                alert("Error enviando bingo: " + err.message);
+            }
+
         } else {
-            alert("⚠️ Aún no tienes Bingo válido.");
+            alert("⚠️ El sistema no detecta un Bingo válido aún. Revisa tus marcas.");
         }
     };
 
