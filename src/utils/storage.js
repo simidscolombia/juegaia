@@ -589,6 +589,16 @@ export const releaseTicket = async (raffleId, number) => {
     if (error) throw error;
 };
 
+export const adminUpdateUserRole = async (userId, newRole) => {
+    // 1. Update Profile
+    const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+    if (error) throw error;
+};
+
 export const updateTicketStatus = async (ticketId, newStatus) => {
     const { data, error } = await supabase
         .from('tickets')

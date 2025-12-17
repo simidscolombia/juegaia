@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Users, Settings, DollarSign, Search, Trash2, Gamepad2 } from 'lucide-react';
-import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser, adminUpdateUserReferrer } from '../utils/storage';
+import { ArrowLeft, Save, Users, Settings, DollarSign, Search, Trash2, Gamepad2, Edit, Link } from 'lucide-react';
+import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser, adminUpdateUserReferrer, adminUpdateUserRole } from '../utils/storage';
 
 const SuperAdminPanel = () => {
     const navigate = useNavigate();
@@ -44,28 +42,14 @@ const SuperAdminPanel = () => {
 
             const [settingsRes, usersRes, gamesRes] = results;
 
-            // Log for debugging (user can check console if directed, but we'll show UI error too)
-            console.log("SuperAdmin Load Results:", results);
-
             if (settingsRes.status === 'fulfilled') {
                 setSettings(prev => ({ ...prev, ...settingsRes.value }));
-            } else {
-                console.error("Settings failed:", settingsRes.reason);
-                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Settings: " + settingsRes.reason.message);
             }
-
             if (usersRes.status === 'fulfilled') {
                 setUsers(usersRes.value || []);
-            } else {
-                console.error("Users failed:", usersRes.reason);
-                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Users: " + usersRes.reason.message);
             }
-
             if (gamesRes.status === 'fulfilled') {
                 setGames(gamesRes.value || []);
-            } else {
-                console.error("Games failed:", gamesRes.reason);
-                setErrorMsg(prev => (prev ? prev + "\n" : "") + "Error Games: " + gamesRes.reason.message);
             }
 
         } catch (error) {
@@ -124,7 +108,7 @@ const SuperAdminPanel = () => {
     };
 
     const handleLinkReferrer = async (user) => {
-        const code = prompt(`Ingresa el CÓDIGO de Referido del PADRE para vincular a:\n${user.email}`);
+        const code = prompt(`Ingresa el CÓDIGO de Referido del PADRE para vincular a:\n${user.email}\n\nActualmente referido por: ${user.referred_by || 'NADIE'}`);
         if (!code) return;
 
         try {
@@ -136,14 +120,29 @@ const SuperAdminPanel = () => {
         }
     };
 
+    const handleChangeRole = async (user) => {
+        const newRole = prompt(`Cambiar rol para ${user.email}.\nEscribe 'admin' o 'player':`, user.role);
+        if (!newRole) return;
+        if (newRole !== 'admin' && newRole !== 'player') return alert("Rol inválido. Usa 'admin' o 'player'");
+
+        try {
+            await adminUpdateUserRole(user.id, newRole);
+            alert(`Rol actualizado a ${newRole}`);
+            loadData();
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    };
+
     const filteredUsers = users.filter(u =>
         (u.email && u.email.toLowerCase().includes(filter.toLowerCase())) ||
         (u.full_name && u.full_name.toLowerCase().includes(filter.toLowerCase())) ||
-        (u.role && u.role.toLowerCase().includes(filter.toLowerCase()))
+        (u.role && u.role.toLowerCase().includes(filter.toLowerCase())) ||
+        (u.referral_code && u.referral_code.toLowerCase().includes(filter.toLowerCase()))
     );
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
                 <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-text)' }}>
                     <ArrowLeft size={20} /> Dashboard
@@ -208,7 +207,7 @@ const SuperAdminPanel = () => {
                             <Search size={18} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
                             <input
                                 type="text"
-                                placeholder="Buscar por nombre, email..."
+                                placeholder="Buscar por nombre, email, código..."
                                 value={filter}
                                 onChange={e => setFilter(e.target.value)}
                                 style={{ paddingLeft: '35px', width: '100%' }}
@@ -217,53 +216,82 @@ const SuperAdminPanel = () => {
                     </div>
 
                     <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px', fontSize: '0.9rem' }}>
                             <thead>
-                                <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px' }}>Usuario</th>
-                                    <th style={{ padding: '10px' }}>Rol</th>
-                                    <th style={{ padding: '10px' }}>Saldo</th>
-                                    <th style={{ padding: '10px' }}>Acciones</th>
+                                <tr style={{ borderBottom: '2px solid var(--color-border)', textAlign: 'left', background: 'rgba(255,255,255,0.05)' }}>
+                                    <th style={{ padding: '12px' }}>Usuario</th>
+                                    <th style={{ padding: '12px' }}>Códigos</th>
+                                    <th style={{ padding: '12px' }}>Rol</th>
+                                    <th style={{ padding: '12px' }}>Saldo</th>
+                                    <th style={{ padding: '12px' }}>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredUsers.map(user => (
                                     <tr key={user.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                                        <td style={{ padding: '10px' }}>
+                                        <td style={{ padding: '12px' }}>
                                             <div style={{ fontWeight: 'bold' }}>{user.full_name || 'Sin Nombre'}</div>
                                             <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{user.email}</div>
                                         </td>
-                                        <td style={{ padding: '10px' }}>
-                                            <span style={{
-                                                background: user.role === 'admin' ? '#F59E0B' : '#3B82F6',
-                                                color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem'
-                                            }}>
-                                                {user.role}
-                                            </span>
+                                        <td style={{ padding: '12px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <div title="Código Propio" style={{ background: 'rgba(59, 130, 246, 0.2)', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', fontSize: '0.75rem' }}>
+                                                    🆔 {user.referral_code || 'N/A'}
+                                                </div>
+                                                <div title="Referido Por (Padre)" style={{ background: user.referred_by ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.1)', padding: '2px 6px', borderRadius: '4px', width: 'fit-content', fontSize: '0.75rem' }}>
+                                                    🔗 {user.referred_by || 'HUÉRFANO'}
+                                                </div>
+                                            </div>
                                         </td>
-                                        <td style={{ padding: '10px', fontWeight: 'bold', color: '#10B981' }}>
-                                            ${user.balance?.toLocaleString()}
-                                        </td>
-                                        <td style={{ padding: '10px', display: 'flex', gap: '5px' }}>
+                                        <td style={{ padding: '12px' }}>
                                             <button
-                                                onClick={() => handleRechargeUser(user)}
+                                                onClick={() => handleChangeRole(user)}
                                                 style={{
-                                                    background: 'var(--color-card)', border: '1px solid var(--color-border)',
-                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px',
+                                                    background: 'none', border: '1px dashed var(--color-border)',
+                                                    color: user.role === 'admin' ? '#F59E0B' : '#3B82F6',
+                                                    padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem', cursor: 'pointer',
                                                     display: 'flex', alignItems: 'center', gap: '5px'
                                                 }}
                                             >
-                                                <DollarSign size={14} /> Recargar
+                                                {user.role} <Edit size={12} />
+                                            </button>
+                                        </td>
+                                        <td style={{ padding: '12px', fontWeight: 'bold', color: '#10B981' }}>
+                                            ${user.balance?.toLocaleString()}
+                                        </td>
+                                        <td style={{ padding: '12px', display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                            <button
+                                                onClick={() => handleLinkReferrer(user)}
+                                                style={{
+                                                    background: 'var(--color-secondary)', border: '1px solid var(--color-border)',
+                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                    padding: '6px', borderRadius: '6px', cursor: 'pointer'
+                                                }}
+                                                title="Asignar Referido Manualmente"
+                                            >
+                                                <Link size={16} color="#8b5cf6" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleRechargeUser(user)}
+                                                style={{
+                                                    background: 'var(--color-secondary)', border: '1px solid var(--color-border)',
+                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                    padding: '6px', borderRadius: '6px', cursor: 'pointer'
+                                                }}
+                                                title="Recargar Saldo"
+                                            >
+                                                <DollarSign size={16} color="#10B981" />
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteUser(user.id)}
                                                 style={{
-                                                    background: '#ef4444', border: 'none', color: 'white',
-                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px'
+                                                    background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444',
+                                                    display: 'flex', alignItems: 'center', gap: '5px',
+                                                    padding: '6px', borderRadius: '6px', cursor: 'pointer'
                                                 }}
                                                 title="Eliminar Usuario"
                                             >
-                                                <Trash2 size={14} />
+                                                <Trash2 size={16} color="#ef4444" />
                                             </button>
                                         </td>
                                     </tr>
