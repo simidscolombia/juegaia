@@ -238,6 +238,9 @@ const RafflePublic = () => {
                     ${price.toLocaleString()} COP / Boleta
                 </div>
 
+                {/* Countdown Timer */}
+                <CountdownTimer targetDate={raffle.draw_date} />
+
                 <div style={{ marginTop: '20px' }}>
                     <button
                         onClick={() => navigate('/lobby')}
@@ -532,6 +535,68 @@ const RafflePublic = () => {
                     </div>
                 </div>
             )}
+        </div>
+    );
+};
+
+const CountdownTimer = ({ targetDate }) => {
+    const calculateTimeLeft = () => {
+        if (!targetDate) return {};
+        const difference = +new Date(targetDate) - +new Date();
+        let timeLeft = {};
+
+        if (difference > 0) {
+            timeLeft = {
+                días: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hrs: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                min: Math.floor((difference / 1000 / 60) % 60),
+                seg: Math.floor((difference / 1000) % 60)
+            };
+        }
+        return timeLeft;
+    };
+
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+        return () => clearTimeout(timer);
+    });
+
+    const timerComponents = [];
+
+    // Force order
+    ['días', 'hrs', 'min', 'seg'].forEach(interval => {
+        if (timeLeft[interval] !== undefined) {
+            timerComponents.push(
+                <div key={interval} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    background: 'white', padding: '8px 12px', borderRadius: '8px',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)', minWidth: '50px'
+                }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#2d3436' }}>
+                        {timeLeft[interval] < 10 ? `0${timeLeft[interval]}` : timeLeft[interval]}
+                    </span>
+                    <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', color: '#b2bec3', letterSpacing: '1px' }}>
+                        {interval}
+                    </span>
+                </div>
+            );
+        }
+    });
+
+    if (!targetDate) return null;
+    if (Object.keys(timeLeft).length === 0) return (
+        <div style={{ marginTop: '15px', padding: '10px 20px', background: '#e17055', color: 'white', fontWeight: 'bold', borderRadius: '50px', display: 'inline-block' }}>
+            🏁 ¡Sorteo Finalizado!
+        </div>
+    );
+
+    return (
+        <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+            {timerComponents}
         </div>
     );
 };

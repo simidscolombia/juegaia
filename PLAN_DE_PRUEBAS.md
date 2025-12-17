@@ -19,7 +19,7 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 ## 🎟️ 2. Módulo de Rifas
 
 ### A. Gestión (Admin)
-- [ ] **Crear Rifa:** Crear rifa de 2 cifras, sin lotería (manual), precio $10.000.
+- [x] **Crear Rifa:** Crear rifa de 2 cifras, sin lotería (manual) o personalizada, precio $10.000.
 - [ ] **IA Copywriter:** Probar generar texto con IA en el formulario de creación/edición.
 - [ ] **Editar Rifa:** Cambiar nombre o fecha de sorteo. Verificar cambios.
 - [ ] **Venta Manual (Admin):** Registrar venta desde el Dashboard a un celular `311...`.
@@ -29,15 +29,15 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 ### B. Experiencia Pública
 - [ ] **Ver Rifa Pública:** Entrar al link público de la rifa.
 - [ ] **Botón Volver:** Probar el botón "← Volver al Panel" y que lleve al Login/Lobby.
-- [ ] **Apartar Boleta (Flujo Nuevo):**
-    - Seleccionar número.
-    - Llenar nombre y celular.
-    - Confirmar.
-    - **Verificar Modal de Éxito:** Debe mostrar PIN y Botón WhatsApp.
-    - **Probar Botón WhatsApp:** Debe abrir chat con credenciales.
-    - **Probar Botón Descarga:** Debe bajar imagen JPG del ticket.
-- [ ] **Reingreso (Cookie/Smart):** Refrescar página de rifa. Intentar apartar otra boleta.
-    - **Debe autocompletar** el celular y reusar el PIN anterior automáticamente.
+- [x] **Apartar Boleta (Flujo Nuevo):**
+    - [x] Seleccionar número.
+    - [x] Llenar nombre y celular.
+    - [x] Confirmar.
+    - [x] **Verificar Modal de Éxito:** Debe mostrar PIN y Botón WhatsApp.
+    - [x] **Probar Botón WhatsApp:** Debe abrir chat con credenciales.
+    - [x] **Probar Botón Descarga:** Debe bajar imagen JPG del ticket.
+- [x] **Reingreso (Cookie/Smart):** Refrescar página de rifa. Intentar apartar otra boleta.
+    - [x] **Debe autocompletar** el celular y reusar el PIN anterior automáticamente.
 
 ---
 
