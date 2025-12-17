@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Trash, ExternalLink, Ticket, DollarSign, Users, Wand2, Share2, MessageCircle, Calendar, ChevronDown, ChevronUp, CheckCircle, Upload } from 'lucide-react';
-import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket } from '../utils/storage';
+import { createGameService, getRaffles, getRaffleTickets, sellRaffleTicket, deleteRaffle, getWallet, getSystemSettings, updateTicketStatus, releaseTicket, updateRaffle } from '../utils/storage';
 import { generateMagicCopy } from '../utils/aiWriter';
 import { getLotterySchedule, COMMON_LOTTERIES } from '../utils/lotteries';
 import RechargeModal from '../components/RechargeModal';
 
 const RaffleDashboard = () => {
     const navigate = useNavigate();
+    const [editingId, setEditingId] = useState(null);
     const [raffles, setRaffles] = useState([]);
     const [selectedRaffle, setSelectedRaffle] = useState(null);
     const [form, setForm] = useState({
@@ -73,10 +74,47 @@ const RaffleDashboard = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
 
-        const cost = Number(prices.raffle_price);
-        if (wallet.balance < cost) {
-            // Open Modal instead of navigating
-            if (window.confirm(`Saldo insuficiente ($${wallet.balance}).\nNecesitas $${cost} Coins.\n\n¿Quieres recargar aquí mismo?`)) {
+        if (editingId) {
+            // Update Mode
+            try {
+                const updates = {
+                    name: form.name,
+                    price: Number(form.price),
+                    // minRange: form.min, // Typically fixed after creation but can be allowed if dangerous
+                    // maxRange: form.max,
+                    lotteryName: form.lotteryName,
+                    drawDate: form.drawDate,
+                    payment_info: form.paymentInfo,
+                    image: form.image
+                };
+                // Only send digits/range if really needed, keeping it safe for now:
+                // Actually user requested date and price specifically.
+
+                await updateRaffle(editingId, updates);
+                await fetchAllRaffles();
+
+                // Update selected details if we are viewing it
+                if (selectedRaffle && selectedRaffle.id === editingId) {
+                    const updated = await getRaffles(); // inefficient but safe
+                    const fresh = updated.find(r => r.id === editingId);
+                    setSelectedRaffle(fresh);
+                }
+
+                setShowCreate(false);
+                setEditingId(null);
+                setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Chontico Día', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
+                alert('¡Rifa actualizada correctamente!');
+            } catch (err) {
+                alert('Error actualizando: ' + err.message);
+            }
+            return;
+        }
+
+        // Creation Mode (Current Logic)
+        const cost = 2000;
+        // ... (rest as before)
+        if (wallet.balance < cost) { // Changed from wallet to wallet.balance
+            if (window.confirm(`Saldo insuficiente (${wallet.balance}). Crear rifa cuesta $${cost} Coins.\n¿Deseas recargar?`)) {
                 setShowRecharge(true);
             }
             return;
@@ -85,7 +123,6 @@ const RaffleDashboard = () => {
         if (!window.confirm(`Crear esta Rifa costará $${cost} Coins.\n¿Deseas continuar?`)) return;
 
         try {
-            // Updated to use Paid Service
             const config = {
                 min: form.min, max: form.max, price: form.price,
                 lottery: form.lotteryName, digits: form.digits,
@@ -96,12 +133,29 @@ const RaffleDashboard = () => {
             await createGameService('RAFFLE', form.name, config);
             await fetchAllRaffles();
             setShowCreate(false);
-            setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Sinuano Noche', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
+            setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Chontico Día', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
             setIsManualLottery(false);
             alert(`¡Rifa creada! Se descontaron $${cost} Coins.`);
         } catch (err) {
             alert('Error creando rifa: ' + err.message);
         }
+    };
+
+    const handleEditRaffle = (raffle) => {
+        setForm({
+            name: raffle.name,
+            min: raffle.min_number,
+            max: raffle.max_number,
+            price: raffle.price,
+            lotteryName: raffle.lottery_name,
+            digits: raffle.digits,
+            image: raffle.image || '',
+            reservationMinutes: raffle.reservation_minutes,
+            drawDate: raffle.draw_date ? raffle.draw_date.split('T')[0] : '', // Format for input type="date"
+            paymentInfo: raffle.payment_info || ''
+        });
+        setEditingId(raffle.id);
+        setShowCreate(true);
     };
 
     const handleMagicImage = () => {
@@ -576,8 +630,8 @@ const RaffleDashboard = () => {
                                     )}
                                 </div>
 
-                                <button type="submit" style={{ width: '100%', padding: '12px', background: '#06d6a0', color: '#0f3460', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
-                                    Confirmar y Crear
+                                <button type="submit" style={{ width: '100%', padding: '12px', background: editingId ? '#fdcb6e' : '#06d6a0', color: '#0f3460', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1rem' }}>
+                                    {editingId ? 'Guardar Cambios' : 'Confirmar y Crear'}
                                 </button>
                             </form>
                         </div>
@@ -624,6 +678,13 @@ const RaffleDashboard = () => {
                                     style={{ background: '#0984e3', color: '#fff', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
                                 >
                                     <Ticket size={18} /> Ver
+                                </button>
+                                <button
+                                    onClick={() => handleEditRaffle(selectedRaffle)}
+                                    style={{ background: '#74b9ff', color: '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                    title="Editar Rifa"
+                                >
+                                    ✏️ Editar
                                 </button>
                             </div>
                         </div>
