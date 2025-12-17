@@ -21,10 +21,8 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 ### A. Gestión (Admin)
 - [x] **Crear Rifa:** Crear rifa de 2 cifras, sin lotería (manual) o personalizada, precio $10.000.
 - [ ] **IA Copywriter:** Probar generar texto con IA en el formulario de creación/edición.
-- [ ] **Editar Rifa:** Cambiar nombre o fecha de sorteo. Verificar cambios.
-- [ ] **Venta Manual (Admin):** Registrar venta desde el Dashboard a un celular `311...`.
-    - Verificar que descuenta de la grilla.
-    - Verificar que aparece en el "Lobby" de ese celular simulado.
+- [x] **Editar Rifa:** Cambiar nombre o fecha de sorteo. Verificar cambios.
+- [~] **Venta Manual (Admin):** Removido a petición del usuario (Usar vista pública).
 
 ### B. Experiencia Pública
 - [ ] **Ver Rifa Pública:** Entrar al link público de la rifa.
@@ -56,10 +54,10 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 ## 💰 4. Panel de Control y Billetera
 
 - [ ] **Recarga Simulada:** (Si aplica) Intentar recargar saldo desde botón recarga (o UI Admin).
-- [ ] **Red de Mercadeo:**
-    - Entrar a pestaña "Mi Red".
-    - Verificar que aparezca el link de referido propio.
-    - Verificar tabla de referidos (si hay datos).
+- [x] **Red de Mercadeo:**
+    - [x] Entrar a pestaña "Mi Red".
+    - [x] Verificar que aparezca el link de referido propio.
+    - [x] Verificar tabla de referidos (si hay datos). (Corregido bug de vinculación)
 
 ---
 
