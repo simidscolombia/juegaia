@@ -7,6 +7,13 @@ import { Trophy, Phone, Grid } from 'lucide-react';
 const PlayerView = () => {
     const { gameId } = useParams(); // Now receiving gameId, not token
 
+    // Capture Referrer
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) localStorage.setItem('referral_code', ref);
+    }, []);
+
     // State
     const [game, setGame] = useState(null);
     const [myTickets, setMyTickets] = useState([]);

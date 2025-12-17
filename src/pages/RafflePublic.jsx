@@ -83,6 +83,15 @@ const RafflePublic = () => {
     const [raffle, setRaffle] = useState(null);
     const [tickets, setTickets] = useState([]);
 
+    // Capture Referrer from URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref');
+        if (ref) {
+            localStorage.setItem('referral_code', ref);
+        }
+    }, []);
+
     // Multi-selection state (for Buying)
     const [selectedNums, setSelectedNums] = useState([]);
 
