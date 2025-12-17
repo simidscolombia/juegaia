@@ -97,18 +97,20 @@ const Dashboard = () => {
     const glassCard = (colorRel) => ({
         background: 'var(--color-card)',
         border: '1px solid var(--color-border)',
-        borderRadius: '20px',
-        padding: '2rem',
+        borderRadius: '16px',
+        padding: '1.2rem',
         textAlign: 'center',
         cursor: 'pointer',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '1rem',
+        gap: '0.8rem',
         position: 'relative',
         overflow: 'hidden',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+        minHeight: '160px', // Uniform height
+        justifyContent: 'center'
     });
 
     return (
@@ -142,29 +144,29 @@ const Dashboard = () => {
             {/* Wallet Section */}
             <div style={{
                 background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
-                borderRadius: '24px', padding: '2rem', marginBottom: '3rem',
+                borderRadius: '20px', padding: '1.5rem', marginBottom: '2rem',
                 border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center',
                 backdropFilter: 'blur(10px)'
             }}>
-                <div style={{ opacity: 0.7, marginBottom: '5px' }}>Saldo Disponible</div>
-                <div style={{ fontSize: '3rem', fontWeight: 'bold', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ opacity: 0.5, fontSize: '2rem' }}>$</span>
+                <div style={{ opacity: 0.7, marginBottom: '5px', fontSize: '0.9rem' }}>Saldo Disponible</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ opacity: 0.5, fontSize: '1.5rem' }}>$</span>
                     {wallet.balance.toLocaleString()}
                 </div>
                 <button
                     onClick={() => navigate('/recharge')}
                     style={{
-                        background: '#10B981', color: 'white', border: 'none', padding: '12px 24px',
-                        borderRadius: '12px', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                        background: '#10B981', color: 'white', border: 'none', padding: '10px 20px',
+                        borderRadius: '10px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
                     }}
                 >
-                    <Plus size={20} /> Recargar Saldo
+                    <Plus size={18} /> Recargar Saldo
                 </button>
             </div>
 
-            {/* Dashboard Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            {/* Dashboard Grid - Mobile Friendly (2 Columns) */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
 
                 {/* 1. Network (Mi Red) */}
                 <div
@@ -179,8 +181,8 @@ const Dashboard = () => {
                     }}>
                         <Trophy size={32} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Mi Red</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Gestiona referidos y ganancias</p>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Mi Red</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Gestiona referidos</p>
                 </div>
 
                 {/* 2. Bingos */}
@@ -196,8 +198,8 @@ const Dashboard = () => {
                     }}>
                         <LayoutDashboard size={32} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Bingos</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Crea y administra tus juegos</p>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Bingos</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Crea y administra</p>
                 </div>
 
                 {/* 3. Raffles (Rifas) */}
@@ -213,8 +215,8 @@ const Dashboard = () => {
                     }}>
                         <Ticket size={32} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Rifas</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Gestiona sorteos y premios</p>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Rifas</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Gestiona sorteos</p>
                 </div>
 
                 {/* 4. Player Zone */}
@@ -230,8 +232,8 @@ const Dashboard = () => {
                     }}>
                         <Wallet size={32} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Zona Jugador</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Mis tickets comprados</p>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Zona Jugador</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Mis tickets</p>
                 </div>
 
                 {/* 5. Super Admin (Conditional) */}
@@ -248,8 +250,8 @@ const Dashboard = () => {
                         }}>
                             <Settings size={32} color="white" />
                         </div>
-                        <h3 style={{ margin: 0, fontSize: '1.3rem' }}>Super Admin</h3>
-                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.9rem' }}>Configuración global</p>
+                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Super Admin</h3>
+                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Global</p>
                     </div>
                 )}
             </div>
