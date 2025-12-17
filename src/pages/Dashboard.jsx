@@ -104,23 +104,22 @@ const Dashboard = () => {
         background: 'var(--color-card)',
         border: '1px solid var(--color-border)',
         borderRadius: '16px',
-        padding: '1.2rem',
+        padding: '0.8rem',
         textAlign: 'center',
         cursor: 'pointer',
         transition: 'transform 0.3s ease, box-shadow 0.3s ease',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '0.8rem',
+        gap: '0.5rem',
         position: 'relative',
         overflow: 'hidden',
         boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-        minHeight: '160px',
         justifyContent: 'center'
     });
 
     return (
-        <div style={{ padding: '1.5rem', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
+        <div style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto', fontFamily: 'Inter, sans-serif' }}>
 
             {/* 1. Compact Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -150,7 +149,7 @@ const Dashboard = () => {
                 background: 'rgba(255, 255, 255, 0.03)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '16px',
-                padding: '16px',
+                padding: '12px',
                 marginBottom: '1rem',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -199,7 +198,7 @@ const Dashboard = () => {
             <div style={{
                 background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.6) 100%)',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px', padding: '12px 16px', marginBottom: '2rem',
+                borderRadius: '16px', padding: '12px', marginBottom: '1.5rem',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -208,7 +207,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '0.75rem', opacity: 0.6, lineHeight: 1 }}>Saldo Disponible</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>${wallet.balance.toLocaleString()}</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>${wallet.balance?.toLocaleString() || '0'}</div>
                     </div>
                 </div>
 
@@ -225,7 +224,7 @@ const Dashboard = () => {
             </div>
 
             {/* 4. Dashboard Grid - Mobile Friendly (2 Columns) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.8rem' }}>
 
                 {/* 1. Network (Mi Red) */}
                 <div
@@ -234,12 +233,12 @@ const Dashboard = () => {
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #F472B6 0%, #DB2777 100%)',
-                        padding: '12px', borderRadius: '12px', marginBottom: '8px'
+                        padding: '8px', borderRadius: '10px', marginBottom: '6px'
                     }}>
-                        <Trophy size={28} color="white" />
+                        <Trophy size={24} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Mi Red</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Gestiona referidos</p>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Mi Red</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.75rem' }}>Gestiona referidos</p>
                 </div>
 
                 {/* 2. Bingos */}
@@ -249,12 +248,12 @@ const Dashboard = () => {
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #60A5FA 0%, #2563EB 100%)',
-                        padding: '12px', borderRadius: '12px', marginBottom: '8px'
+                        padding: '8px', borderRadius: '10px', marginBottom: '6px'
                     }}>
-                        <LayoutDashboard size={28} color="white" />
+                        <LayoutDashboard size={24} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Bingos</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Crea y administra</p>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Bingos</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.75rem' }}>Crea y administra</p>
                 </div>
 
                 {/* 3. Raffles (Rifas) */}
@@ -264,12 +263,12 @@ const Dashboard = () => {
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #34D399 0%, #059669 100%)',
-                        padding: '12px', borderRadius: '12px', marginBottom: '8px'
+                        padding: '8px', borderRadius: '10px', marginBottom: '6px'
                     }}>
-                        <Ticket size={28} color="white" />
+                        <Ticket size={24} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Rifas</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Gestiona sorteos</p>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Rifas</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.75rem' }}>Gestiona sorteos</p>
                 </div>
 
                 {/* 4. Player Zone */}
@@ -279,12 +278,12 @@ const Dashboard = () => {
                 >
                     <div style={{
                         background: 'linear-gradient(135deg, #FBBF24 0%, #D97706 100%)',
-                        padding: '12px', borderRadius: '12px', marginBottom: '8px'
+                        padding: '8px', borderRadius: '10px', marginBottom: '6px'
                     }}>
-                        <Wallet size={28} color="white" />
+                        <Wallet size={24} color="white" />
                     </div>
-                    <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Zona Jugador</h3>
-                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Mis tickets</p>
+                    <h3 style={{ margin: 0, fontSize: '1rem' }}>Zona Jugador</h3>
+                    <p style={{ margin: 0, opacity: 0.6, fontSize: '0.75rem' }}>Mis tickets</p>
                 </div>
 
                 {/* 5. Super Admin (Conditional) */}
@@ -295,12 +294,12 @@ const Dashboard = () => {
                     >
                         <div style={{
                             background: 'linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)',
-                            padding: '12px', borderRadius: '12px', marginBottom: '8px'
+                            padding: '8px', borderRadius: '10px', marginBottom: '6px'
                         }}>
-                            <Settings size={28} color="white" />
+                            <Settings size={24} color="white" />
                         </div>
-                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Super Admin</h3>
-                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.8rem' }}>Global</p>
+                        <h3 style={{ margin: 0, fontSize: '1rem' }}>Super Admin</h3>
+                        <p style={{ margin: 0, opacity: 0.6, fontSize: '0.75rem' }}>Global</p>
                     </div>
                 )}
             </div>
