@@ -147,11 +147,11 @@ const Dashboard = () => {
 
             {/* 2. Share Banner */}
             <div style={{
-                background: 'linear-gradient(to right, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
-                border: '1px solid rgba(255,255,255,0.05)',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
                 borderRadius: '16px',
                 padding: '16px',
-                marginBottom: '2rem',
+                marginBottom: '1rem',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center'
@@ -166,62 +166,61 @@ const Dashboard = () => {
                         gap: '6px',
                         color: '#fff'
                     }}>
-                        ✨ Comparte y gana puntos
+                        ✨ Comparte y gana
                     </div>
-                    <div style={{ fontSize: '0.8rem', opacity: 0.5 }}>Envía tu link a amigos</div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                         onClick={shareWhatsapp}
                         title="Enviar por WhatsApp"
                         style={{
-                            background: '#25D366', border: 'none', color: 'white', borderRadius: '12px',
-                            width: '42px', height: '42px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 4px 10px rgba(37, 211, 102, 0.2)',
-                            transition: 'transform 0.2s'
+                            background: '#25D366', border: 'none', color: 'white', borderRadius: '8px',
+                            padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)', fontWeight: 'bold', fontSize: '0.85rem'
                         }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                     >
-                        <MessageCircle size={22} fill="white" color="white" />
+                        <MessageCircle size={18} strokeWidth={2.5} /> WhatsApp
                     </button>
                     <button
                         onClick={copyLink}
                         title="Copiar Enlace"
                         style={{
-                            background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '12px',
-                            width: '42px', height: '42px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'background 0.2s'
+                            background: '#3B82F6', border: 'none', color: 'white', borderRadius: '8px',
+                            padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)', fontWeight: 'bold', fontSize: '0.85rem'
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
-                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                     >
-                        <Copy size={20} />
+                        <Copy size={18} strokeWidth={2.5} /> Copiar
                     </button>
                 </div>
             </div>
 
-            {/* 3. Wallet Section (Compact) */}
+            {/* 3. Wallet Section (Ultra Compact) */}
             <div style={{
-                background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%)',
-                borderRadius: '20px', padding: '1.5rem', marginBottom: '2rem',
-                border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                backdropFilter: 'blur(10px)'
+                background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.6) 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '16px', padding: '12px 16px', marginBottom: '2rem',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
             }}>
-                <div style={{ opacity: 0.7, marginBottom: '5px', fontSize: '0.9rem' }}>Saldo Disponible</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ opacity: 0.5, fontSize: '1.5rem' }}>$</span>
-                    {wallet.balance.toLocaleString()}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '8px', borderRadius: '50%' }}>
+                        <Wallet size={20} color="#10B981" />
+                    </div>
+                    <div>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.6, lineHeight: 1 }}>Saldo Disponible</div>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>${wallet.balance.toLocaleString()}</div>
+                    </div>
                 </div>
+
                 <button
                     onClick={() => navigate('/recharge')}
                     style={{
-                        background: '#10B981', color: 'white', border: 'none', padding: '10px 20px',
-                        borderRadius: '10px', fontSize: '0.95rem', fontWeight: 'bold', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                        background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
+                        padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '5px'
                     }}
                 >
-                    <Plus size={18} /> Recargar Saldo
+                    <Plus size={16} /> Recargar
                 </button>
             </div>
 
