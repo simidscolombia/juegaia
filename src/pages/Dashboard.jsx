@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProfile, getWallet } from '../utils/storage';
+import { getProfile, getWallet, adminUpdateUserReferrer } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
 import { LayoutDashboard, Ticket, ArrowRight, Wallet, Trophy, Settings, Copy, Plus } from 'lucide-react';
 
@@ -54,9 +54,31 @@ const Dashboard = () => {
     };
 
     const loadData = async () => {
-        const [p, w] = await Promise.all([getProfile(), getWallet()]);
-        if (p) setProfile(p);
-        if (w) setWallet(w);
+        try {
+            const [p, w] = await Promise.all([getProfile(), getWallet()]);
+
+            if (p) {
+                setProfile(p);
+
+                // Auto-Bind Referral if pending
+                const pendingRef = localStorage.getItem('referral_code');
+                if (pendingRef && !p.referred_by && p.referral_code !== pendingRef) {
+                    try {
+                        await adminUpdateUserReferrer(p.email, pendingRef);
+                        alert(`¡Has sido vinculado correctamente al código: ${pendingRef}!`);
+                        localStorage.removeItem('referral_code');
+                        // Refresh profile to see change
+                        const fresh = await getProfile();
+                        setProfile(fresh);
+                    } catch (err) {
+                        console.warn("Referral binding skipped:", err.message);
+                    }
+                }
+            }
+            if (w) setWallet(w);
+        } catch (err) {
+            console.error("Load Data Error:", err);
+        }
     };
 
     const copyLink = () => {
