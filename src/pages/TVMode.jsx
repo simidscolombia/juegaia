@@ -17,6 +17,19 @@ const TVMode = () => {
     const [speed, setSpeed] = useState(8); // Seconds
     const autoPlayRef = useRef(null);
 
+    const [currentUser, setCurrentUser] = useState(null);
+
+    // Fetch User for Permissions
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data } = await supabase.auth.getUser();
+            setCurrentUser(data.user);
+        };
+        fetchUser();
+    }, []);
+
+    const isOwner = game && currentUser && (game.owner_id === currentUser.id);
+
     // Decoration Balls for "Physics"
     const [decoBalls, setDecoBalls] = useState([]);
 
@@ -285,52 +298,58 @@ const TVMode = () => {
                     )}
                 </div>
 
-                {/* CONTROLS */}
-                <div style={{ display: 'grid', gap: '1rem', marginTop: '2rem' }}>
-                    {/* Main Draw Button */}
-                    {!autoPlay && (
-                        <button
-                            onClick={drawBall}
-                            disabled={isSpinning}
-                            style={{
-                                padding: '1rem', fontSize: '1.2rem', background: isSpinning ? '#30475e' : '#e94560', color: 'white',
-                                border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: isSpinning ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 4px 0 rgba(0,0,0,0.3)', transform: isSpinning ? 'translateY(2px)' : 'none',
-                                transition: 'all 0.1s'
-                            }}
-                        >
-                            {isSpinning ? 'MEZCLANDO...' : 'SACAR BALOTA MANUAL'}
-                        </button>
-                    )}
-
-                    {/* Auto Play Panel */}
-                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
-                                <Settings size={16} /> Modo Automático
-                            </span>
+                {/* CONTROLS (OWNER ONLY) */}
+                {isOwner ? (
+                    <div style={{ display: 'grid', gap: '1rem', marginTop: '2rem' }}>
+                        {/* Main Draw Button */}
+                        {!autoPlay && (
                             <button
-                                onClick={toggleAutoPlay}
-                                style={{ background: autoPlay ? '#ef476f' : '#06d6a0', padding: '5px 15px', fontSize: '0.9rem' }}
+                                onClick={drawBall}
+                                disabled={isSpinning}
+                                style={{
+                                    padding: '1rem', fontSize: '1.2rem', background: isSpinning ? '#30475e' : '#e94560', color: 'white',
+                                    border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: isSpinning ? 'not-allowed' : 'pointer',
+                                    boxShadow: '0 4px 0 rgba(0,0,0,0.3)', transform: isSpinning ? 'translateY(2px)' : 'none',
+                                    transition: 'all 0.1s'
+                                }}
                             >
-                                {autoPlay ? <Pause size={16} /> : <Play size={16} />}
-                                {autoPlay ? ' PAUSAR' : ' ACTIVAR'}
+                                {isSpinning ? 'MEZCLANDO...' : 'SACAR BALOTA MANUAL'}
                             </button>
-                        </div>
-
-                        {autoPlay && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
-                                <span>Velocidad:</span>
-                                <input
-                                    type="range" min="4" max="15" step="1"
-                                    value={speed} onChange={(e) => setSpeed(Number(e.target.value))}
-                                    style={{ flex: 1 }}
-                                />
-                                <span>{speed}s</span>
-                            </div>
                         )}
+
+                        {/* Auto Play Panel */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold' }}>
+                                    <Settings size={16} /> Modo Automático
+                                </span>
+                                <button
+                                    onClick={toggleAutoPlay}
+                                    style={{ background: autoPlay ? '#ef476f' : '#06d6a0', padding: '5px 15px', fontSize: '0.9rem' }}
+                                >
+                                    {autoPlay ? <Pause size={16} /> : <Play size={16} />}
+                                    {autoPlay ? ' PAUSAR' : ' ACTIVAR'}
+                                </button>
+                            </div>
+
+                            {autoPlay && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.9rem' }}>
+                                    <span>Velocidad:</span>
+                                    <input
+                                        type="range" min="4" max="15" step="1"
+                                        value={speed} onChange={(e) => setSpeed(Number(e.target.value))}
+                                        style={{ flex: 1 }}
+                                    />
+                                    <span>{speed}s</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center', fontSize: '0.9rem', opacity: 0.6 }}>
+                        Solo el organizador puede controlar el juego.
+                    </div>
+                )}
             </div>
 
             {/* Right Column: Board */}
