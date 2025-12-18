@@ -362,7 +362,7 @@ const GameAdmin = () => {
                     });
 
                     return (
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', padding: '15px' }}>
                             {Object.values(grouped).map((group, i) => (
                                 <ClientGroupRow
                                     key={i}
@@ -430,42 +430,51 @@ const ClientGroupRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
     };
 
     return (
-        <div style={{ borderBottom: '1px solid var(--color-border)', padding: '15px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{
-                        width: '40px', height: '40px', borderRadius: '50%',
-                        background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.2rem', fontWeight: 'bold', flexShrink: 0
-                    }}>
-                        {group.tickets.length}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '140px' }}>{group.name}</div>
-                        <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>{group.phone || 'Sin teléfono'}</div>
-                    </div>
+        <div style={{
+            border: '1px solid var(--color-border)',
+            padding: '15px',
+            borderRadius: '12px',
+            background: 'var(--color-bg)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '15px'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                    width: '45px', height: '45px', borderRadius: '50%',
+                    background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.2rem', fontWeight: 'bold', color: 'white', flexShrink: 0,
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+                }}>
+                    {group.tickets.length}
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'nowrap' }}>
-                    <button
-                        onClick={shareAll}
-                        style={{ background: '#25D366', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
-                    >
-                        <Share2 size={18} /> <span style={{ display: 'none', sm: 'inline' }}>Enviar</span>
-                    </button>
-                    <button
-                        onClick={onDeleteGroup}
-                        style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', padding: '10px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                        title="Eliminar Cliente y Cartones"
-                    >
-                        <Trash size={18} />
-                    </button>
-                    <button
-                        onClick={() => setExpanded(!expanded)}
-                        style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '10px', borderRadius: '8px', cursor: 'pointer' }}
-                    >
-                        {expanded ? 'Ocultar' : 'Ver'}
-                    </button>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.name}</div>
+                    <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>{group.phone || 'Sin teléfono'}</div>
                 </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                <button
+                    onClick={shareAll}
+                    style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', fontSize: '0.8rem' }}
+                    title="Enviar por WhatsApp"
+                >
+                    <Share2 size={16} /> Enviar
+                </button>
+                <button
+                    onClick={() => setExpanded(!expanded)}
+                    style={{ background: 'var(--color-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.8rem' }}
+                >
+                    {expanded ? '▲' : '▼ Ver'}
+                </button>
+                <button
+                    onClick={onDeleteGroup}
+                    style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                    title="Eliminar Todo"
+                >
+                    <Trash size={16} />
+                </button>
             </div>
 
             {expanded && (
