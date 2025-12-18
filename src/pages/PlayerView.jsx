@@ -68,6 +68,14 @@ const PlayerView = () => {
         }
     }, [game?.called_numbers]);
 
+    // Auto-scroll History
+    const historyRef = useRef(null);
+    useEffect(() => {
+        if (historyRef.current) {
+            historyRef.current.scrollLeft = historyRef.current.scrollWidth;
+        }
+    }, [game?.called_numbers]);
+
     const loadGame = async () => {
         try {
             const g = await getGame(gameId);
@@ -209,9 +217,13 @@ const PlayerView = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 10px' }}>
 
                         {/* HISTORY (Scrollable) */}
-                        <div style={{
-                            flex: 1, overflowX: 'auto', display: 'flex', gap: '5px', justifyContent: 'flex-end', paddingBottom: '5px'
-                        }}>
+                        <div
+                            ref={historyRef}
+                            style={{
+                                flex: 1, overflowX: 'auto', display: 'flex', gap: '5px', paddingBottom: '5px',
+                                // Fade mask to indicate scrolling? Optional.
+                            }}
+                        >
                             {/* We show ALL history except the last one, in order */}
                             {game.called_numbers.slice(0, game.called_numbers.length - 1).map(num => (
                                 <div key={num} style={{
