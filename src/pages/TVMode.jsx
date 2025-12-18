@@ -435,32 +435,42 @@ const TVMode = () => {
 
                                 {/* VALIDATION GRID */}
                                 <div style={{
-                                    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '5px',
                                     background: 'black', padding: '10px', borderRadius: '10px', margin: '0 auto 1.5rem auto',
                                     maxWidth: '300px'
                                 }}>
-                                    {/* Grid Cells */}
-                                    {matrix.map((cell) => {
-                                        const isCalled = called.includes(cell.number) || cell.number === 'FREE';
-                                        const isError = cell.marked && !isCalled;
+                                    {/* Headers */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: '5px' }}>
+                                        {['B', 'I', 'N', 'G', 'O'].map(l => (
+                                            <div key={l} style={{ color: 'white', fontWeight: 'bold' }}>{l}</div>
+                                        ))}
+                                    </div>
 
-                                        let bg = 'rgba(255,255,255,0.1)';
-                                        if (cell.marked && isCalled) bg = '#22c55e'; // Green (Correct Mark)
-                                        else if (isError) bg = '#ef4444'; // Red (False Mark)
-                                        else if (isCalled) bg = 'rgba(255,215,0,0.3)'; // Yellow (Called but ignored)
+                                    <div style={{
+                                        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '5px'
+                                    }}>
+                                        {/* Grid Cells */}
+                                        {matrix.map((cell) => {
+                                            const isCalled = called.includes(cell.number) || cell.number === 'FREE';
+                                            const isError = cell.marked && !isCalled;
 
-                                        return (
-                                            <div key={cell.id} style={{
-                                                aspectRatio: '1/1', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                background: bg,
-                                                color: 'white', fontWeight: 'bold', borderRadius: '4px',
-                                                border: isError ? '2px solid yellow' : 'none',
-                                                fontSize: cell.number === 'FREE' ? '0.6rem' : '1rem'
-                                            }}>
-                                                {cell.number}
-                                            </div>
-                                        );
-                                    })}
+                                            let bg = 'rgba(255,255,255,0.1)';
+                                            if (cell.marked && isCalled) bg = '#22c55e'; // Green (Correct Mark)
+                                            else if (isError) bg = '#ef4444'; // Red (False Mark)
+                                            else if (isCalled) bg = 'rgba(255,215,0,0.3)'; // Yellow (Called but ignored)
+
+                                            return (
+                                                <div key={cell.id} style={{
+                                                    aspectRatio: '1/1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    background: bg,
+                                                    color: 'white', fontWeight: 'bold', borderRadius: '4px',
+                                                    border: isError ? '2px solid yellow' : 'none',
+                                                    fontSize: cell.number === 'FREE' ? '0.6rem' : '1rem'
+                                                }}>
+                                                    {cell.number}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {mistakes.length > 0 && (

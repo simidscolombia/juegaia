@@ -209,13 +209,15 @@ const PlayerView = () => {
                     <span style={{ fontWeight: 'bold' }}>{activeTicket.name}</span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '8px', aspectRatio: '1/1' }}>
-                    {/* Headers */}
+                {/* Headers */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', marginBottom: '5px' }}>
                     {['B', 'I', 'N', 'G', 'O'].map(l => (
                         <div key={l} style={{ textAlign: 'center', fontWeight: '900', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{l}</div>
                     ))}
+                </div>
 
-                    {/* Numbers */}
+                {/* Grid Numbers */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '8px', aspectRatio: '1/1' }}>
                     {activeTicket.card_matrix.map(cell => {
                         const isCalled = game.called_numbers?.includes(cell.number) || cell.number === 'FREE';
                         const isMarked = cell.marked;
