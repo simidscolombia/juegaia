@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { getGame, getTicketsByPhone, checkWin, updateTicket } from '../utils/storage';
+import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
+import { checkWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Trophy, Phone, Grid } from 'lucide-react';
 
@@ -207,7 +208,7 @@ const PlayerView = () => {
                     <span style={{ fontWeight: 'bold' }}>{activeTicket.name}</span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', aspectRatio: '1/1' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '8px', aspectRatio: '1/1' }}>
                     {/* Headers */}
                     {['B', 'I', 'N', 'G', 'O'].map(l => (
                         <div key={l} style={{ textAlign: 'center', fontWeight: '900', color: 'var(--color-primary)', fontSize: '1.2rem' }}>{l}</div>
