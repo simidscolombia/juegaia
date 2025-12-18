@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
 import { checkWin, checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
-import { Trophy, Phone, Grid } from 'lucide-react';
+import { Trophy, Phone, Grid, Volume2 } from 'lucide-react';
 
 const getBallColor = (n) => {
     if (n <= 15) return '#ef4444'; // B - Red
@@ -245,6 +245,20 @@ const PlayerView = () => {
                         }}>
                             <span style={{ fontSize: '2.5rem' }}>{game.called_numbers[game.called_numbers.length - 1]}</span>
                             <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>ACTUAL</span>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const u = new SpeechSynthesisUtterance(game.called_numbers[game.called_numbers.length - 1].toString());
+                                    u.lang = 'es-ES';
+                                    window.speechSynthesis.speak(u);
+                                }}
+                                style={{
+                                    marginTop: '2px', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%',
+                                    width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white'
+                                }}
+                            >
+                                <Volume2 size={14} />
+                            </button>
                         </div>
                     </div>
                 ) : (

@@ -15,7 +15,7 @@ const GameAdmin = () => {
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [winningPattern, setWinningPattern] = useState([]); // Array of indices 0-24
-    const [hintsEnabled, setHintsEnabled] = useState(true);
+    const [hintsEnabled, setHintsEnabled] = useState(false); // Default OFF
     const [showModal, setShowModal] = useState(false);
 
     // WhatsApp State
@@ -43,7 +43,7 @@ const GameAdmin = () => {
             if (g && g.winning_pattern) setWinningPattern(g.winning_pattern);
             else setWinningPattern([...Array(25).keys()]); // Default Full House
 
-            setHintsEnabled(g.hints_enabled !== false); // Default True if undefined
+            setHintsEnabled(g.hints_enabled === true); // Default False if undefined/null
 
             if (g && g.called_numbers && g.called_numbers.length > 0) {
                 setLastCall(g.called_numbers[g.called_numbers.length - 1]);
