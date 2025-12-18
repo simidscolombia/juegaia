@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
 import { checkWin, checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Trophy, Phone, Grid } from 'lucide-react';
+
+const getBallColor = (n) => {
+    if (n <= 15) return '#ef4444'; // B - Red
+    if (n <= 30) return '#f59e0b'; // I - Yellow
+    if (n <= 45) return '#22c55e'; // N - Green
+    if (n <= 60) return '#3b82f6'; // G - Blue
+    return '#a855f7'; // O - Purple
+};
 
 const PlayerView = () => {
     const { gameId } = useParams(); // Now receiving gameId, not token
@@ -42,6 +50,23 @@ const PlayerView = () => {
 
         return () => { supabase.removeChannel(channel); };
     }, [gameId]);
+
+    // Audio Announcer
+    const lastAnnouncedRef = useRef(null);
+    useEffect(() => {
+        if (!game?.called_numbers?.length) return;
+        const last = game.called_numbers[game.called_numbers.length - 1];
+
+        if (lastAnnouncedRef.current === null) {
+            lastAnnouncedRef.current = last; // Sync on load without speaking
+        } else if (last !== lastAnnouncedRef.current) {
+            lastAnnouncedRef.current = last;
+            // Speak Only New Numbers
+            const u = new SpeechSynthesisUtterance(last.toString());
+            u.lang = 'es-ES';
+            window.speechSynthesis.speak(u);
+        }
+    }, [game?.called_numbers]);
 
     const loadGame = async () => {
         try {
@@ -176,6 +201,47 @@ const PlayerView = () => {
                         {game.current_number || '--'}
                     </div>
                 </div>
+            </div>
+
+            {/* GAME INFO & BALL DISPLAY (Mobile Friendly) */}
+            <div style={{ marginBottom: '15px', textAlign: 'center' }}>
+                {game?.called_numbers?.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Última Balota</div>
+                        {/* CURRENT BALL */}
+                        <div className="pop-in" style={{
+                            width: '70px', height: '70px',
+                            background: getBallColor(game.called_numbers[game.called_numbers.length - 1]),
+                            borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '2rem', fontWeight: '900', color: 'white',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                            border: '4px solid rgba(255,255,255,0.2)'
+                        }}>
+                            {game.called_numbers[game.called_numbers.length - 1]}
+                        </div>
+                        {/* HISTORY */}
+                        {game.called_numbers.length > 1 && (
+                            <div style={{ display: 'flex', gap: '5px', marginTop: '5px', opacity: 0.8 }}>
+                                {game.called_numbers.slice(Math.max(0, game.called_numbers.length - 6), game.called_numbers.length - 1).reverse().map(num => (
+                                    <div key={num} style={{
+                                        width: '30px', height: '30px',
+                                        background: getBallColor(num),
+                                        borderRadius: '50%',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        fontSize: '0.8rem', fontWeight: 'bold', color: 'white'
+                                    }}>
+                                        {num}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <div style={{ padding: '20px', background: 'var(--color-secondary)', borderRadius: '10px' }}>
+                        Esperando inicio del juego...
+                    </div>
+                )}
             </div>
 
             {/* TAB SELECTOR (If multiple) */}
