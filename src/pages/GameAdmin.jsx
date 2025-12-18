@@ -15,6 +15,7 @@ const GameAdmin = () => {
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [winningPattern, setWinningPattern] = useState([]); // Array of indices 0-24
+    const [hintsEnabled, setHintsEnabled] = useState(true);
     const [showModal, setShowModal] = useState(false);
 
     // WhatsApp State
@@ -41,6 +42,8 @@ const GameAdmin = () => {
             setGame(g);
             if (g && g.winning_pattern) setWinningPattern(g.winning_pattern);
             else setWinningPattern([...Array(25).keys()]); // Default Full House
+
+            setHintsEnabled(g.hints_enabled !== false); // Default True if undefined
 
             if (g && g.called_numbers && g.called_numbers.length > 0) {
                 setLastCall(g.called_numbers[g.called_numbers.length - 1]);
@@ -264,24 +267,34 @@ const GameAdmin = () => {
                 </div>
             </div>
 
-            {/* PATTERN CONFIGURATION */}
+            {/* PATTERN & HINTS CONFIGURATION */}
             <div className="card" style={{ marginBottom: '20px', border: '1px solid var(--color-primary)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                     <div>
-                        <h3 style={{ margin: 0 }}>🏆 Patrón de Victoria</h3>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Define qué casillas deben llenarse para ganar el Bingo.</div>
+                        <h3 style={{ margin: 0 }}>🏆 Configuración de Juego</h3>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Define reglas y ayudas visuales.</div>
                     </div>
-                    <button
-                        onClick={async () => {
-                            try {
-                                await updateGame(gameId, { winningPattern: winningPattern });
-                                alert('Patrón guardado correctamente');
-                            } catch (e) { alert(e.message) }
-                        }}
-                        style={{ background: 'var(--color-primary)', border: 'none', borderRadius: '6px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
-                    >
-                        Guardar Patrón
-                    </button>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', background: '#333', padding: '5px 10px', borderRadius: '5px' }}>
+                            <input
+                                type="checkbox"
+                                checked={hintsEnabled}
+                                onChange={(e) => setHintsEnabled(e.target.checked)}
+                            />
+                            <span>Ayudas Visuales (Indicar Balotas)</span>
+                        </label>
+                        <button
+                            onClick={async () => {
+                                try {
+                                    await updateGame(gameId, { winningPattern, hintsEnabled });
+                                    alert('Configuración guardada correctamente');
+                                } catch (e) { alert(e.message) }
+                            }}
+                            style={{ background: 'var(--color-primary)', border: 'none', borderRadius: '6px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                            Guardar Cambios
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>

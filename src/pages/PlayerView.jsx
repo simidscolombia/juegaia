@@ -204,41 +204,48 @@ const PlayerView = () => {
             </div>
 
             {/* GAME INFO & BALL DISPLAY (Mobile Friendly) */}
-            <div style={{ marginBottom: '15px', textAlign: 'center' }}>
+            <div style={{ marginBottom: '15px' }}>
                 {game?.called_numbers?.length > 0 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                        <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Última Balota</div>
-                        {/* CURRENT BALL */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 10px' }}>
+
+                        {/* HISTORY (Scrollable) */}
+                        <div style={{
+                            flex: 1, overflowX: 'auto', display: 'flex', gap: '5px', justifyContent: 'flex-end', paddingBottom: '5px'
+                        }}>
+                            {/* We show ALL history except the last one, in order */}
+                            {game.called_numbers.slice(0, game.called_numbers.length - 1).map(num => (
+                                <div key={num} style={{
+                                    minWidth: '35px', height: '35px',
+                                    background: getBallColor(num),
+                                    borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.9rem', fontWeight: 'bold', color: 'white',
+                                    opacity: 0.8,
+                                    flexShrink: 0
+                                }}>
+                                    {num}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* CURRENT BALL (Fixed Right) */}
                         <div className="pop-in" style={{
-                            width: '70px', height: '70px',
+                            width: '75px', height: '75px',
                             background: getBallColor(game.called_numbers[game.called_numbers.length - 1]),
                             borderRadius: '50%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '2rem', fontWeight: '900', color: 'white',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                            border: '4px solid rgba(255,255,255,0.2)'
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: '900', color: 'white',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
+                            border: '4px solid rgba(255,255,255,0.3)',
+                            flexShrink: 0,
+                            lineHeight: 1
                         }}>
-                            {game.called_numbers[game.called_numbers.length - 1]}
+                            <span style={{ fontSize: '2.5rem' }}>{game.called_numbers[game.called_numbers.length - 1]}</span>
+                            <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>ACTUAL</span>
                         </div>
-                        {/* HISTORY */}
-                        {game.called_numbers.length > 1 && (
-                            <div style={{ display: 'flex', gap: '5px', marginTop: '5px', opacity: 0.8 }}>
-                                {game.called_numbers.slice(Math.max(0, game.called_numbers.length - 6), game.called_numbers.length - 1).reverse().map(num => (
-                                    <div key={num} style={{
-                                        width: '30px', height: '30px',
-                                        background: getBallColor(num),
-                                        borderRadius: '50%',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        fontSize: '0.8rem', fontWeight: 'bold', color: 'white'
-                                    }}>
-                                        {num}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 ) : (
-                    <div style={{ padding: '20px', background: 'var(--color-secondary)', borderRadius: '10px' }}>
+                    <div style={{ padding: '20px', background: 'var(--color-secondary)', borderRadius: '10px', textAlign: 'center' }}>
                         Esperando inicio del juego...
                     </div>
                 )}
@@ -286,7 +293,10 @@ const PlayerView = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '8px', aspectRatio: '1/1' }}>
                     {activeTicket.card_matrix.map(cell => {
                         const isCalled = game.called_numbers?.includes(cell.number) || cell.number === 'FREE';
+                        const showHint = game.hints_enabled !== false; // Default True
                         const isMarked = cell.marked;
+
+                        const hintBg = (showHint && isCalled) ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255,255,255,0.05)';
 
                         return (
                             <button
@@ -296,7 +306,7 @@ const PlayerView = () => {
                                     aspectRatio: '1/1',
                                     borderRadius: '50%',
                                     border: 'none',
-                                    background: isMarked ? 'var(--color-primary)' : (isCalled ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255,255,255,0.05)'),
+                                    background: isMarked ? 'var(--color-primary)' : hintBg,
                                     color: isMarked ? 'white' : 'inherit',
                                     fontSize: cell.number === 'FREE' ? '0.7rem' : '1.1rem',
                                     fontWeight: 'bold',
