@@ -362,16 +362,28 @@ const GameAdmin = () => {
                     });
 
                     return (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '15px', padding: '15px' }}>
-                            {Object.values(grouped).map((group, i) => (
-                                <ClientGroupRow
-                                    key={i}
-                                    group={group}
-                                    gameId={gameId}
-                                    onDeleteGroup={() => deleteGroup(group)}
-                                    onDeleteTicket={deleteTicket}
-                                />
-                            ))}
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                                <thead>
+                                    <tr style={{ background: 'var(--color-secondary)', color: 'var(--color-text)', textAlign: 'left' }}>
+                                        <th style={{ padding: '12px', borderRadius: '8px 0 0 8px' }}>Cliente</th>
+                                        <th style={{ padding: '12px' }}>Teléfono</th>
+                                        <th style={{ padding: '12px', textAlign: 'center' }}>Cartones</th>
+                                        <th style={{ padding: '12px', textAlign: 'right', borderRadius: '0 8px 8px 0' }}>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.values(grouped).map((group, i) => (
+                                        <ClientGroupTableRow
+                                            key={i}
+                                            group={group}
+                                            gameId={gameId}
+                                            onDeleteGroup={() => deleteGroup(group)}
+                                            onDeleteTicket={deleteTicket}
+                                        />
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
                     );
                 })()}
@@ -414,7 +426,7 @@ const GameAdmin = () => {
     );
 };
 
-const ClientGroupRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
+const ClientGroupTableRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
     const [expanded, setExpanded] = useState(false);
 
     const shareAll = () => {
@@ -430,86 +442,79 @@ const ClientGroupRow = ({ group, gameId, onDeleteGroup, onDeleteTicket }) => {
     };
 
     return (
-        <div style={{
-            border: '1px solid var(--color-border)',
-            padding: '15px',
-            borderRadius: '12px',
-            background: 'var(--color-bg)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                    width: '45px', height: '45px', borderRadius: '50%',
-                    background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.2rem', fontWeight: 'bold', color: 'white', flexShrink: 0,
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
-                }}>
-                    {group.tickets.length}
-                </div>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{group.name}</div>
-                    <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>{group.phone || 'Sin teléfono'}</div>
-                </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                <button
-                    onClick={shareAll}
-                    style={{ background: '#25D366', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '5px', fontSize: '0.8rem' }}
-                    title="Enviar por WhatsApp"
-                >
-                    <Share2 size={16} /> Enviar
-                </button>
-                <button
-                    onClick={() => setExpanded(!expanded)}
-                    style={{ background: 'var(--color-secondary)', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '0.8rem' }}
-                >
-                    {expanded ? '▲' : '▼ Ver'}
-                </button>
-                <button
-                    onClick={onDeleteGroup}
-                    style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #ef4444', color: '#ef4444', padding: '8px', borderRadius: '6px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                    title="Eliminar Todo"
-                >
-                    <Trash size={16} />
-                </button>
-            </div>
-
-            {expanded && (
-                <div style={{ marginTop: '15px', paddingLeft: '50px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {group.tickets.map(ticket => (
-                        <div key={ticket.id} style={{
-                            background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '4px',
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                        }}>
-                            <span style={{ fontFamily: 'monospace' }}>PIN: <strong>{ticket.pin}</strong></span>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button
-                                    onClick={() => {
-                                        const link = `${window.location.origin}/play/${gameId}?card=${ticket.id}`;
-                                        const msg = `🎟️ *Tu Cartón ${ticket.pin}*: ${link}`;
-                                        if (navigator.share) navigator.share({ text: msg });
-                                        else { navigator.clipboard.writeText(msg); alert('Copiado!'); }
-                                    }}
-                                    style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer' }}
-                                >
-                                    Compartir
-                                </button>
-                                <button
-                                    onClick={() => onDeleteTicket(ticket.id)}
-                                    style={{ fontSize: '0.8rem', background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
-                                    title="Eliminar Cartón"
-                                >
-                                    <Trash size={14} />
-                                </button>
-                            </div>
+        <>
+            <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <td style={{ padding: '12px', fontWeight: 'bold' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.9rem' }}>
+                            {group.name.charAt(0).toUpperCase()}
                         </div>
-                    ))}
-                </div>
+                        {group.name}
+                    </div>
+                </td>
+                <td style={{ padding: '12px', opacity: 0.8 }}>{group.phone || '-'}</td>
+                <td style={{ padding: '12px', textAlign: 'center' }}>
+                    <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '12px', fontSize: '0.9rem' }}>
+                        {group.tickets.length}
+                    </span>
+                </td>
+                <td style={{ padding: '12px', textAlign: 'right' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                        <button
+                            onClick={shareAll}
+                            style={{ background: '#25D366', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem' }}
+                            title="Enviar WhatsApp"
+                        >
+                            <Share2 size={16} /> Enviar
+                        </button>
+                        <button
+                            onClick={() => setExpanded(!expanded)}
+                            style={{ background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem' }}
+                        >
+                            {expanded ? '▲' : '▼ Ver'}
+                        </button>
+                        <button
+                            onClick={onDeleteGroup}
+                            style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                            title="Eliminar Todo"
+                        >
+                            <Trash size={16} />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {expanded && (
+                <tr>
+                    <td colSpan={4} style={{ padding: '0 0 15px 0', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ padding: '10px 20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            {group.tickets.map(ticket => (
+                                <div key={ticket.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px', borderBottom: '1px dashed rgba(255,255,255,0.1)', alignItems: 'center' }}>
+                                    <span style={{ fontFamily: 'monospace', color: 'var(--color-accent)' }}>PIN: {ticket.pin}</span>
+                                    <div style={{ display: 'flex', gap: '15px' }}>
+                                        <button
+                                            onClick={() => {
+                                                const link = `${window.location.origin}/play/${gameId}?card=${ticket.id}`;
+                                                navigator.clipboard.writeText(link);
+                                                alert('Link copiado');
+                                            }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '0.8rem' }}
+                                        >
+                                            Copiar Link
+                                        </button>
+                                        <button
+                                            onClick={() => onDeleteTicket(ticket.id)}
+                                            style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}
+                                        >
+                                            <Trash size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </td>
+                </tr>
             )}
-        </div>
+        </>
     );
 };
 
