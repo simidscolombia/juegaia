@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
-import { checkWin } from '../utils/bingoLogic';
+import { checkWin, checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Trophy, Phone, Grid } from 'lucide-react';
 
@@ -101,11 +101,12 @@ const PlayerView = () => {
 
     const handleBingoCall = async () => {
         const ticket = myTickets[activeTicketIndex];
-        // Validate locally first
-        if (checkWin(ticket.card_matrix, 'HORIZONTAL_LINE') ||
-            checkWin(ticket.card_matrix, 'VERTICAL_LINE') ||
-            checkWin(ticket.card_matrix, 'DIAGONAL') ||
-            checkWin(ticket.card_matrix, 'FULL_HOUSE')) {
+
+        // Strict Validation against Game Pattern
+        const pattern = game.winning_pattern || [];
+        const matchesPattern = checkPatternWin(ticket.card_matrix, pattern);
+
+        if (matchesPattern) {
 
             try {
                 // Send Claim to DB

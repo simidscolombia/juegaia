@@ -14,6 +14,7 @@ const GameAdmin = () => {
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
+    const [winningPattern, setWinningPattern] = useState([]); // Array of indices 0-24
     const [showModal, setShowModal] = useState(false);
 
     // WhatsApp State
@@ -38,6 +39,9 @@ const GameAdmin = () => {
                 getGameTickets(gameId)
             ]);
             setGame(g);
+            if (g && g.winning_pattern) setWinningPattern(g.winning_pattern);
+            else setWinningPattern([...Array(25).keys()]); // Default Full House
+
             if (g && g.called_numbers && g.called_numbers.length > 0) {
                 setLastCall(g.called_numbers[g.called_numbers.length - 1]);
             }
@@ -260,6 +264,69 @@ const GameAdmin = () => {
                 </div>
             </div>
 
+            {/* PATTERN CONFIGURATION */}
+            <div className="card" style={{ marginBottom: '20px', border: '1px solid var(--color-primary)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                        <h3 style={{ margin: 0 }}>🏆 Patrón de Victoria</h3>
+                        <div style={{ fontSize: '0.9rem', opacity: 0.7 }}>Define qué casillas deben llenarse para ganar el Bingo.</div>
+                    </div>
+                    <button
+                        onClick={async () => {
+                            try {
+                                await updateGame(gameId, { winningPattern: winningPattern });
+                                alert('Patrón guardado correctamente');
+                            } catch (e) { alert(e.message) }
+                        }}
+                        style={{ background: 'var(--color-primary)', border: 'none', borderRadius: '6px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
+                    >
+                        Guardar Patrón
+                    </button>
+                </div>
+
+                <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
+                    {/* Presets */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '150px' }}>
+                        <strong>Plantillas:</strong>
+                        <button onClick={() => setWinningPattern([...Array(25).keys()])} style={{ padding: '8px', background: 'var(--color-secondary)', border: 'none', borderRadius: '4px', cursor: 'pointer', textAlign: 'left' }}>🔳 Plena (Todo)</button>
+                        <button onClick={() => setWinningPattern([0, 4, 6, 8, 12, 16, 18, 20, 24])} style={{ padding: '8px', background: 'var(--color-secondary)', border: 'none', borderRadius: '4px', cursor: 'pointer', textAlign: 'left' }}>❌ Forma X</button>
+                        <button onClick={() => setWinningPattern([0, 5, 10, 15, 20, 21, 22, 23, 24])} style={{ padding: '8px', background: 'var(--color-secondary)', border: 'none', borderRadius: '4px', cursor: 'pointer', textAlign: 'left' }}>╚ Forma L</button>
+                        <button onClick={() => setWinningPattern([0, 4, 20, 24])} style={{ padding: '8px', background: 'var(--color-secondary)', border: 'none', borderRadius: '4px', cursor: 'pointer', textAlign: 'left' }}>⛶ 4 Esquinas</button>
+                        <button onClick={() => setWinningPattern([])} style={{ padding: '8px', background: '#333', border: 'none', borderRadius: '4px', cursor: 'pointer', textAlign: 'left' }}>🗑️ Limpiar</button>
+                    </div>
+
+                    {/* Grid Editor */}
+                    <div>
+                        <div style={{
+                            display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px',
+                            background: '#000', padding: '10px', borderRadius: '10px'
+                        }}>
+                            {[...Array(25)].map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => {
+                                        setWinningPattern(prev =>
+                                            prev.includes(i) ? prev.filter(idx => idx !== i) : [...prev, i]
+                                        );
+                                    }}
+                                    style={{
+                                        width: '45px', height: '45px',
+                                        background: winningPattern.includes(i) ? '#22c55e' : '#333',
+                                        border: i === 12 ? '2px solid gold' : 'none', // Center
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        color: 'white', fontWeight: 'bold'
+                                    }}
+                                >
+                                    {i === 12 ? '★' : ''}
+                                </button>
+                            ))}
+                        </div>
+                        <div style={{ textAlign: 'center', marginTop: '5px', fontSize: '0.8rem', opacity: 0.6 }}>Clic para marcar/desmarcar</div>
+                    </div>
+                </div>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                 <h3>Lista de Jugadores</h3>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -281,60 +348,62 @@ const GameAdmin = () => {
 
             {/* Pending Requests Section */}
             {/* Pending Requests Section (GROUPED) */}
-            {(() => {
-                const pending = players.filter(p => p.status === 'PENDING');
-                if (pending.length === 0) return null;
+            {
+                (() => {
+                    const pending = players.filter(p => p.status === 'PENDING');
+                    if (pending.length === 0) return null;
 
-                // Group by phone or name
-                const groups = {};
-                pending.forEach(p => {
-                    const key = p.phone || p.name; // Grouping key
-                    if (!groups[key]) groups[key] = { name: p.name, phone: p.phone, tickets: [] };
-                    groups[key].tickets.push(p);
-                });
+                    // Group by phone or name
+                    const groups = {};
+                    pending.forEach(p => {
+                        const key = p.phone || p.name; // Grouping key
+                        if (!groups[key]) groups[key] = { name: p.name, phone: p.phone, tickets: [] };
+                        groups[key].tickets.push(p);
+                    });
 
-                return (
-                    <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
-                        <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({pending.length})</h3>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <tbody>
-                                {Object.values(groups).map((group, i) => (
-                                    <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                                        <td style={{ padding: '10px' }}>
-                                            <strong>{group.name}</strong><br />
-                                            <small>{group.phone}</small>
-                                            <div style={{ marginTop: '5px', fontSize: '0.85rem', opacity: 0.8 }}>
-                                                Solicita {group.tickets.length} cartón{group.tickets.length > 1 ? 'es' : ''}
-                                            </div>
-                                        </td>
-                                        <td style={{ textAlign: 'right', padding: '10px' }}>
-                                            <div style={{ fontWeight: 'bold', color: '#F59E0B', marginBottom: '5px' }}>
-                                                ${(group.tickets.length * 10000).toLocaleString()}
-                                            </div>
-                                            <button
-                                                className="primary"
-                                                onClick={async () => {
-                                                    if (!confirm(`¿Aprobar ${group.tickets.length} cartones para ${group.name}?`)) return;
-                                                    try {
-                                                        const ids = group.tickets.map(t => t.id);
-                                                        await approveBatchTickets(ids);
-                                                        // Auto-copy link on approval for convenience (use first ticket for data)
-                                                        copyShareLink(group.tickets[0]);
-                                                        await loadData();
-                                                    } catch (e) { alert(e.message) }
-                                                }}
-                                                style={{ background: '#F59E0B', border: 'none', width: '100%' }}
-                                            >
-                                                Aprobar Todos
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                );
-            })()}
+                    return (
+                        <div className="card" style={{ marginBottom: '20px', border: '1px solid #F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>
+                            <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({pending.length})</h3>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <tbody>
+                                    {Object.values(groups).map((group, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                                            <td style={{ padding: '10px' }}>
+                                                <strong>{group.name}</strong><br />
+                                                <small>{group.phone}</small>
+                                                <div style={{ marginTop: '5px', fontSize: '0.85rem', opacity: 0.8 }}>
+                                                    Solicita {group.tickets.length} cartón{group.tickets.length > 1 ? 'es' : ''}
+                                                </div>
+                                            </td>
+                                            <td style={{ textAlign: 'right', padding: '10px' }}>
+                                                <div style={{ fontWeight: 'bold', color: '#F59E0B', marginBottom: '5px' }}>
+                                                    ${(group.tickets.length * 10000).toLocaleString()}
+                                                </div>
+                                                <button
+                                                    className="primary"
+                                                    onClick={async () => {
+                                                        if (!confirm(`¿Aprobar ${group.tickets.length} cartones para ${group.name}?`)) return;
+                                                        try {
+                                                            const ids = group.tickets.map(t => t.id);
+                                                            await approveBatchTickets(ids);
+                                                            // Auto-copy link on approval for convenience (use first ticket for data)
+                                                            copyShareLink(group.tickets[0]);
+                                                            await loadData();
+                                                        } catch (e) { alert(e.message) }
+                                                    }}
+                                                    style={{ background: '#F59E0B', border: 'none', width: '100%' }}
+                                                >
+                                                    Aprobar Todos
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+                })()
+            }
 
             {/* Active Players Section (Grouped) */}
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -390,39 +459,41 @@ const GameAdmin = () => {
             </div>
 
             {/* Modal Vender Cartón */}
-            {showModal && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                    background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center',
-                    zIndex: 1000
-                }}>
-                    <div className="card" style={{ width: '90%', maxWidth: '400px' }}>
-                        <h3 style={{ marginTop: 0 }}>Nuevo Jugador</h3>
-                        <form onSubmit={handleCreateTicket}>
-                            <div style={{ marginBottom: '15px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px' }}>Nombre del Cliente</label>
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    placeholder="Ej. Tía Marta"
-                                    value={newPlayerName}
-                                    onChange={e => setNewPlayerName(e.target.value)}
-                                    style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                <button type="button" onClick={() => setShowModal(false)} style={{ background: 'transparent', border: '1px solid #ccc', color: 'var(--color-text)' }}>
-                                    Cancelar
-                                </button>
-                                <button type="submit" className="primary">
-                                    Generar Cartón
-                                </button>
-                            </div>
-                        </form>
+            {
+                showModal && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.8)', display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        zIndex: 1000
+                    }}>
+                        <div className="card" style={{ width: '90%', maxWidth: '400px' }}>
+                            <h3 style={{ marginTop: 0 }}>Nuevo Jugador</h3>
+                            <form onSubmit={handleCreateTicket}>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <label style={{ display: 'block', marginBottom: '5px' }}>Nombre del Cliente</label>
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        placeholder="Ej. Tía Marta"
+                                        value={newPlayerName}
+                                        onChange={e => setNewPlayerName(e.target.value)}
+                                        style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #ccc' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                    <button type="button" onClick={() => setShowModal(false)} style={{ background: 'transparent', border: '1px solid #ccc', color: 'var(--color-text)' }}>
+                                        Cancelar
+                                    </button>
+                                    <button type="submit" className="primary">
+                                        Generar Cartón
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

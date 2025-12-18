@@ -102,5 +102,43 @@ export const checkWin = (cardCells, currentPattern = 'FULL_HOUSE') => {
         if ([0, 1, 2, 3, 4].every(i => isMarked(i, 4 - i))) return true;
     }
 
+    if (currentPattern === 'CUSTOM' && Array.isArray(cardCells)) {
+        // patternIndices is passed as the second argument if it's an array
+        // Wait, currentPattern argument is string?
+        // Method signature update needed?
+        // Let's change how checkWin is called or add a new parser.
+    }
+
     return false;
+};
+
+// New Flexible Check
+export const checkPatternWin = (cardCells, patternIndices) => {
+    if (!patternIndices || patternIndices.length === 0) return checkWin(cardCells, 'FULL_HOUSE'); // Default
+
+    // Logic: Every index in patternIndices MUST be marked in cardCells
+    // cardCells mapping:
+    // We assume cardCells is 25 items. If it is Row-Major or Col-Major?
+    // PlayerView render was Col-Major data.
+    // Let's look at generation:
+    // RANGES loop (0..4 cols).
+    // so cardCells[0] = B0 (r0, c0). Index 0.
+    // cardCells[1] = B1 (r1, c0). Index 1 (Col-Major index).
+    // VISUAL Index (Row-Major): Row 0 Col 0 is 0. Row 0 Col 1 is 1.
+
+    // CRITICAL: How does the Admin define the pattern? Visually (Row Major).
+    // So if Admin selects Top-Right (Index 4), that corresponds to Row 0, Col 4.
+    // In cardCells (Col-Major), Row 0 Col 4 is the first element of O column.
+    // O col index is 4. Range 60-75.
+    // O array starts at index 20 of cardCells? (5*4).
+
+    // We need a helper to find cell by Row/Col.
+    const getCell = (r, c) => cardCells.find(cell => cell.row === r && cell.col === c);
+
+    return patternIndices.every(visualIndex => {
+        const r = Math.floor(visualIndex / 5);
+        const c = visualIndex % 5;
+        const cell = getCell(r, c);
+        return cell && cell.marked;
+    });
 };

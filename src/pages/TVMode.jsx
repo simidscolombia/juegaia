@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getGame, updateGame, generateBallSequence, updateTicket } from '../utils/storage';
+import { checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Play, Pause, FastForward, Settings } from 'lucide-react';
 
@@ -404,7 +405,10 @@ const TVMode = () => {
 
                     // Identify Mistakes
                     const mistakes = matrix.filter(cell => cell.marked && cell.number !== 'FREE' && !called.includes(cell.number));
-                    const isPerfect = mistakes.length === 0;
+
+                    // Strict Pattern Check
+                    const hasCorrectPattern = checkPatternWin(matrix, game.winning_pattern || []);
+                    const isPerfect = mistakes.length === 0 && hasCorrectPattern;
 
                     return (
                         <div style={{
@@ -478,6 +482,12 @@ const TVMode = () => {
                                         <>
                                             <button
                                                 onClick={async () => {
+                                                    // Audio Feedback (Boo)
+                                                    const u = new SpeechSynthesisUtterance("¡Buuu! ¡Falsa Alarma! ¡Qué mal!");
+                                                    u.lang = "es-ES";
+                                                    u.rate = 1.2;
+                                                    window.speechSynthesis.speak(u);
+
                                                     try { await updateTicket(winner.id, { status: 'PAID' }); } catch (e) { }
                                                     setClaimQueue(prev => prev.slice(1));
                                                 }}
