@@ -473,7 +473,18 @@ const TVMode = () => {
                                 <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                                     {isPerfect ? (
                                         <button
-                                            onClick={() => setClaimQueue(prev => prev.slice(1))}
+                                            onClick={async () => {
+                                                // 1. Confirm Win in DB
+                                                try { await updateTicket(winner.id, { status: 'WIN_CONFIRMED' }); } catch (e) { }
+
+                                                // 2. Audio Celebration
+                                                const u = new SpeechSynthesisUtterance("¡Bingo Correcto! ¡Felicidades " + winner.name + "!");
+                                                u.lang = "es-ES";
+                                                window.speechSynthesis.speak(u);
+
+                                                // 3. Close Overlay
+                                                setClaimQueue(prev => prev.slice(1));
+                                            }}
                                             style={{ padding: '15px 40px', fontSize: '1.3rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold', color: 'black', boxShadow: '0 5px 15px rgba(0,0,0,0.2)' }}
                                         >
                                             ✅ Confirmar Victoria
