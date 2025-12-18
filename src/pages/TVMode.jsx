@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getGame, updateGame, generateBallSequence } from '../utils/storage';
+import { getGame, updateGame, generateBallSequence, updateTicket } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
 import { Play, Pause, FastForward, Settings } from 'lucide-react';
 
@@ -377,35 +377,109 @@ const TVMode = () => {
             </div>
 
             {/* WINNER OVERLAY */}
-            {
-                claimQueue.length > 0 && (
-                    <div style={{
-                        position: 'fixed', inset: 0, zIndex: 100,
-                        background: 'rgba(0,0,0,0.85)',
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                        <div style={{
-                            background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
-                            padding: '3rem', borderRadius: '30px', textAlign: 'center',
-                            boxShadow: '0 0 100px rgba(255, 215, 0, 0.5)',
-                            animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                        }}>
-                            <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎉 BINGO 🎉</div>
-                            <h2 style={{ fontSize: '3rem', margin: 0, color: '#000' }}>{claimQueue[0].name}</h2>
-                            <p style={{ color: '#000', fontSize: '1.5rem', fontWeight: 'bold' }}>PIN: {claimQueue[0].pin} | Cartón #{claimQueue[0].id.substring(0, 4)}</p>
+            {claimQueue.length > 0 && (
+                (() => {
+                    const winner = claimQueue[0];
+                    const called = game.called_numbers || [];
+                    const matrix = (winner.card_matrix && Array.isArray(winner.card_matrix)) ? winner.card_matrix : [];
 
-                            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                                <button
-                                    onClick={() => setClaimQueue(prev => prev.slice(1))}
-                                    style={{ padding: '15px 30px', fontSize: '1.2rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}
-                                >
-                                    Validar / Cerrar
-                                </button>
+                    // Identify Mistakes
+                    const mistakes = matrix.filter(cell => cell.marked && cell.number !== 'FREE' && !called.includes(cell.number));
+                    const isPerfect = mistakes.length === 0;
+
+                    return (
+                        <div style={{
+                            position: 'fixed', inset: 0, zIndex: 100,
+                            background: 'rgba(0,0,0,0.95)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                            <div className="pop-in" style={{
+                                background: isPerfect ? 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)' : 'linear-gradient(135deg, #ef4444 0%, #7f1d1d 100%)',
+                                padding: '2rem', borderRadius: '30px', textAlign: 'center',
+                                boxShadow: isPerfect ? '0 0 100px rgba(255, 215, 0, 0.5)' : '0 0 100px rgba(239, 68, 68, 0.5)',
+                                maxWidth: '90%', maxHeight: '95vh', overflowY: 'auto',
+                                border: '4px solid white',
+                                color: isPerfect ? 'black' : 'white',
+                                width: '500px'
+                            }}>
+                                <div style={{ fontSize: '3rem', fontWeight: '900', marginBottom: '0.5rem' }}>
+                                    {isPerfect ? '🎉 ¡GANADOR! 🎉' : '⚠️ ¡FALSA ALARMA! ⚠️'}
+                                </div>
+                                <h2 style={{ fontSize: '2.5rem', margin: 0, lineHeight: 1 }}>{winner.name}</h2>
+                                <p style={{ fontSize: '1.2rem', marginBottom: '1.5rem', fontWeight: 'bold', opacity: 0.8 }}>
+                                    PIN: {winner.pin} | Cartón #{winner.id.slice(0, 4)}
+                                </p>
+
+                                {/* VALIDATION GRID */}
+                                <div style={{
+                                    display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '5px',
+                                    background: 'black', padding: '10px', borderRadius: '10px', margin: '0 auto 1.5rem auto',
+                                    maxWidth: '300px'
+                                }}>
+                                    {/* Grid Cells */}
+                                    {matrix.map((cell) => {
+                                        const isCalled = called.includes(cell.number) || cell.number === 'FREE';
+                                        const isError = cell.marked && !isCalled;
+
+                                        let bg = 'rgba(255,255,255,0.1)';
+                                        if (cell.marked && isCalled) bg = '#22c55e'; // Green (Correct Mark)
+                                        else if (isError) bg = '#ef4444'; // Red (False Mark)
+                                        else if (isCalled) bg = 'rgba(255,215,0,0.3)'; // Yellow (Called but ignored)
+
+                                        return (
+                                            <div key={cell.id} style={{
+                                                aspectRatio: '1/1', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: bg,
+                                                color: 'white', fontWeight: 'bold', borderRadius: '4px',
+                                                border: isError ? '2px solid yellow' : 'none',
+                                                fontSize: cell.number === 'FREE' ? '0.6rem' : '1rem'
+                                            }}>
+                                                {cell.number}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {mistakes.length > 0 && (
+                                    <div style={{ background: 'rgba(0,0,0,0.5)', padding: '10px', borderRadius: '10px', marginBottom: '1rem', color: '#fff' }}>
+                                        <strong>⚠️ Errores Detectados:</strong>
+                                        <div style={{ fontSize: '0.9rem' }}>{mistakes.map(m => m.number).join(', ')} marcados sin salir.</div>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    {isPerfect ? (
+                                        <button
+                                            onClick={() => setClaimQueue(prev => prev.slice(1))}
+                                            style={{ padding: '15px 40px', fontSize: '1.3rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold', color: 'black', boxShadow: '0 5px 15px rgba(0,0,0,0.2)' }}
+                                        >
+                                            ✅ Confirmar Victoria
+                                        </button>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={async () => {
+                                                    try { await updateTicket(winner.id, { status: 'PAID' }); } catch (e) { }
+                                                    setClaimQueue(prev => prev.slice(1));
+                                                }}
+                                                style={{ padding: '15px', fontSize: '1rem', borderRadius: '15px', border: 'none', background: 'rgba(0,0,0,0.5)', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                👎 Falsa Alarma
+                                            </button>
+                                            <button
+                                                onClick={() => setClaimQueue(prev => prev.slice(1))}
+                                                style={{ padding: '15px', fontSize: '1rem', borderRadius: '15px', border: 'none', background: 'white', color: 'black', cursor: 'pointer', fontWeight: 'bold' }}
+                                            >
+                                                Ignorar
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )
-            }
+                    );
+                })()
+            )}
 
             <style>{`
         /* Enhanced Tumble Animations - More Chaos */
