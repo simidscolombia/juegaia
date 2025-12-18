@@ -68,14 +68,6 @@ const PlayerView = () => {
         }
     }, [game?.called_numbers]);
 
-    // Auto-scroll History
-    const historyRef = useRef(null);
-    useEffect(() => {
-        if (historyRef.current) {
-            historyRef.current.scrollLeft = historyRef.current.scrollWidth;
-        }
-    }, [game?.called_numbers]);
-
     const loadGame = async () => {
         try {
             const g = await getGame(gameId);
@@ -216,16 +208,15 @@ const PlayerView = () => {
                 {game?.called_numbers?.length > 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 10px' }}>
 
-                        {/* HISTORY (Scrollable) */}
+                        {/* HISTORY (Scrollable RTL) */}
                         <div
-                            ref={historyRef}
                             style={{
                                 flex: 1, overflowX: 'auto', display: 'flex', gap: '5px', paddingBottom: '5px',
-                                // Fade mask to indicate scrolling? Optional.
+                                direction: 'rtl', textAlign: 'left' // Left align text inside balls if needed
                             }}
                         >
-                            {/* We show ALL history except the last one, in order */}
-                            {game.called_numbers.slice(0, game.called_numbers.length - 1).map(num => (
+                            {/* We show RECENT history first (at Right due to RTL), scroll left for older */}
+                            {game.called_numbers.slice(0, game.called_numbers.length - 1).reverse().map(num => (
                                 <div key={num} style={{
                                     minWidth: '35px', height: '35px',
                                     background: getBallColor(num),
