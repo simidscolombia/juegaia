@@ -376,40 +376,38 @@ const TVMode = () => {
                 </div>
             </div>
 
-        </div>
+            {/* WINNER OVERLAY */}
+            {
+                claimQueue.length > 0 && (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 100,
+                        background: 'rgba(0,0,0,0.85)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                        <div style={{
+                            background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
+                            padding: '3rem', borderRadius: '30px', textAlign: 'center',
+                            boxShadow: '0 0 100px rgba(255, 215, 0, 0.5)',
+                            animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                        }}>
+                            <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎉 BINGO 🎉</div>
+                            <h2 style={{ fontSize: '3rem', margin: 0, color: '#000' }}>{claimQueue[0].name}</h2>
+                            <p style={{ color: '#000', fontSize: '1.5rem', fontWeight: 'bold' }}>PIN: {claimQueue[0].pin} | Cartón #{claimQueue[0].id.substring(0, 4)}</p>
 
-            {/* WINNER OVERLAY */ }
-    {
-        claimQueue.length > 0 && (
-            <div style={{
-                position: 'fixed', inset: 0, zIndex: 100,
-                background: 'rgba(0,0,0,0.85)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-            }}>
-                <div style={{
-                    background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
-                    padding: '3rem', borderRadius: '30px', textAlign: 'center',
-                    boxShadow: '0 0 100px rgba(255, 215, 0, 0.5)',
-                    animation: 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
-                }}>
-                    <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>🎉 BINGO 🎉</div>
-                    <h2 style={{ fontSize: '3rem', margin: 0, color: '#000' }}>{claimQueue[0].name}</h2>
-                    <p style={{ color: '#000', fontSize: '1.5rem', fontWeight: 'bold' }}>PIN: {claimQueue[0].pin} | Cartón #{claimQueue[0].id.substring(0, 4)}</p>
-
-                    <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                        <button
-                            onClick={() => setClaimQueue(prev => prev.slice(1))}
-                            style={{ padding: '15px 30px', fontSize: '1.2rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}
-                        >
-                            Validar / Cerrar
-                        </button>
+                            <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => setClaimQueue(prev => prev.slice(1))}
+                                    style={{ padding: '15px 30px', fontSize: '1.2rem', borderRadius: '15px', border: 'none', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                                >
+                                    Validar / Cerrar
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        )
-    }
+                )
+            }
 
-    <style>{`
+            <style>{`
         /* Enhanced Tumble Animations - More Chaos */
         @keyframes tumble-0 { 0% { transform: translate(0,0); } 100% { transform: translate(100px, -80px); } }
         @keyframes tumble-1 { 0% { transform: translate(0,0); } 100% { transform: translate(-90px, 90px); } }

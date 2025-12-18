@@ -44,7 +44,7 @@ Este documento detalla paso a paso las pruebas necesarias para validar la estabi
 - [ ] **Crear Bingo:** Crear sala nueva en Dashboard.
 - [ ] **Admin de Sala (TV):** Entrar a la vista "Jugar" (TV).
     - Probar sacar balotas.
-    - Probar "Cantar Bingo" (resetear última balota si error).
+    - Probar "Cantar Bingo": Debe enviar notificación a la TV y mostrar Overlay de Ganador.
 - [ ] **Jugador:** Comprar/Asignar cartón a un jugador.
 - [ ] **Jugar:** Entrar como ese jugador al Lobby -> Entrar al Bingo.
     - Verificar que el cartón se marca solo o permite marcar (según lógica actual).
