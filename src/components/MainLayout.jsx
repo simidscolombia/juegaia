@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Palette,
-    Home
+    Home,
+    Settings
 } from 'lucide-react';
 
 const MainLayout = ({ children }) => {
@@ -51,6 +52,10 @@ const MainLayout = ({ children }) => {
         { path: '/bingos', label: 'Bingos', icon: <LayoutDashboard size={20} /> },
         { path: '/raffles', label: 'Rifas', icon: <Ticket size={20} /> },
     ];
+
+    if (profile?.role === 'admin') {
+        navItems.push({ path: '/superadmin', label: 'Super Admin', icon: <Settings size={20} /> });
+    }
 
     return (
         <div style={{

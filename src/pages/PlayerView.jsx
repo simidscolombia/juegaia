@@ -4,6 +4,7 @@ import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
 import { checkWin, checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Trophy, Phone, Grid, Volume2 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const getBallColor = (n) => {
     if (n <= 15) return '#ef4444'; // B - Red
@@ -124,6 +125,19 @@ const PlayerView = () => {
         } catch (e) { console.error(e); }
     };
 
+    const [hasCelebrated, setHasCelebrated] = useState(false);
+
+    const celebrate = () => {
+        // Confetti burst
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        // Voice cheer
+        if ('speechSynthesis' in window) {
+            const u = new SpeechSynthesisUtterance('¡Felicidades!');
+            u.lang = 'es-ES';
+            window.speechSynthesis.speak(u);
+        }
+    };
+
     const handleBingoCall = async () => {
         const ticket = myTickets[activeTicketIndex];
 
@@ -138,6 +152,10 @@ const PlayerView = () => {
                 alert("🎉 ¡BINGO! Enviando aviso a la pantalla principal...");
                 await updateTicket(ticket.id, { status: 'WIN_CLAIMED' });
                 alert("✅ ¡Enviado! El organizador verificará tu victoria ahora.");
+                if (!hasCelebrated) {
+                    celebrate();
+                    setHasCelebrated(true);
+                }
             } catch (err) {
                 console.error(err);
                 alert("Error enviando bingo: " + err.message);

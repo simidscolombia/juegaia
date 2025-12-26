@@ -4,8 +4,22 @@ import { getGame, updateGame, generateBallSequence, updateTicket } from '../util
 import { checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Play, Pause, FastForward, Settings } from 'lucide-react';
+import confetti from 'canvas-confetti';
 
 const TVMode = () => {
+    // Celebration state for TV screen
+    const [hasCelebratedTV, setHasCelebratedTV] = useState(false);
+
+    const celebrateTV = () => {
+        // Confetti burst
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        // Voice cheer
+        if ('speechSynthesis' in window) {
+            const u = new SpeechSynthesisUtterance('¡Felicidades!');
+            u.lang = 'es-ES';
+            window.speechSynthesis.speak(u);
+        }
+    };
     const { gameId } = useParams();
     const [game, setGame] = useState(null);
     const [ballSequence, setBallSequence] = useState([]);
@@ -409,6 +423,14 @@ const TVMode = () => {
                     // Strict Pattern Check
                     const hasCorrectPattern = checkPatternWin(matrix, game.winning_pattern || []);
                     const isPerfect = mistakes.length === 0 && hasCorrectPattern;
+
+                    // Trigger celebration on TV when perfect win detected
+                    useEffect(() => {
+                        if (isPerfect && !hasCelebratedTV) {
+                            celebrateTV();
+                            setHasCelebratedTV(true);
+                        }
+                    }, [isPerfect, hasCelebratedTV]);
 
                     return (
                         <div style={{
