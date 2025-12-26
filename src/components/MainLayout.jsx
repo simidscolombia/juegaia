@@ -53,7 +53,7 @@ const MainLayout = ({ children }) => {
         { path: '/raffles', label: 'Rifas', icon: <Ticket size={20} /> },
     ];
 
-    if (profile?.role === 'admin') {
+    if (profile?.role === 'admin' || profile?.email === 'elkindanielcastillo@gmail.com') {
         navItems.push({ path: '/superadmin', label: 'Super Admin', icon: <Settings size={20} /> });
     }
 

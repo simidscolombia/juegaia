@@ -20,7 +20,7 @@ const SuperAdminPanel = () => {
 
     const checkAdmin = async () => {
         const p = await getProfile();
-        if (p?.role !== 'admin') {
+        if (p?.role !== 'admin' && p?.email !== 'elkindanielcastillo@gmail.com') {
             alert('Acceso Denegado');
             navigate('/dashboard');
         }
