@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer, resetGame } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save, Play, RefreshCw, StopCircle } from 'lucide-react';
-import { generateBingoCard } from '../utils/bingoLogic';
+import { generateBingoCard, checkPatternWin } from '../utils/bingoLogic';
 import { countryCodes } from '../utils/countryCodes';
 import { supabase } from '../utils/supabaseClient';
 
@@ -386,33 +386,59 @@ const GameAdmin = () => {
                             <h3 style={{ color: '#22c55e', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Check size={24} /> ¡POSIBLES GANADORES! ({claimers.length})
                             </h3>
-                            <p>Estos jugadores han gritado Bingo. Verifica sus cartones.</p>
+                            <p>Estos jugadores han gritado Bingo. El sistema verifica automáticamente sus marcas.</p>
 
-                            {claimers.map(p => (
-                                <div key={p.id} style={{ background: 'white', color: 'black', padding: '15px', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                        <strong>{p.name}</strong> ({p.phone || 'Sin cel'})<br />
-                                        <code style={{ fontSize: '1.2rem', color: 'purple' }}>PIN: {p.pin}</code>
+                            {claimers.map(p => {
+                                const matrix = p.card_matrix || [];
+                                const called = game.called_numbers || [];
+                                const pattern = game.winning_pattern || [];
+                                const matchesPattern = checkPatternWin(matrix, pattern); // Pattern Shape Check
+                                const invalidMarks = matrix.filter(c => c.marked && c.number !== 'FREE' && !called.includes(c.number)); // Anti-Cheat Check
+                                const isValid = matchesPattern && invalidMarks.length === 0;
+
+                                return (
+                                    <div key={p.id} style={{ background: 'white', color: 'black', padding: '15px', borderRadius: '8px', marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <strong>{p.name}</strong>
+                                                <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                                                    {p.claimed_at ? new Date(p.claimed_at).toLocaleTimeString() : 'Hace un momento'}
+                                                </span>
+                                            </div>
+                                            <code style={{ fontSize: '1.1rem', color: 'purple', marginRight: '10px' }}>PIN: {p.pin}</code>
+                                            <span style={{ padding: '2px 8px', borderRadius: '4px', background: isValid ? '#dcfce7' : '#fee2e2', color: isValid ? '#166534' : '#991b1b', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                                {isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'}
+                                            </span>
+                                            {!isValid && invalidMarks.length > 0 && (
+                                                <div style={{ color: 'red', fontSize: '0.86rem', marginTop: 5 }}>
+                                                    ⚠️ Marcó balotas que NO han salido: {invalidMarks.map(c => c.number).join(', ')}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                            <button
+                                                className="primary"
+                                                onClick={async () => {
+                                                    if (!confirm("¿Confirmar que " + p.name + " GANÓ el Bingo?")) return;
+                                                    try {
+                                                        await updateGame(gameId, {
+                                                            winner_info: { name: p.name, pin: p.pin, cardId: p.id },
+                                                            status: 'FINISHED'
+                                                        });
+                                                        alert("¡Ganador Anunciado!");
+                                                        await loadData();
+                                                    } catch (e) { alert(e.message); }
+                                                }}
+                                                style={{ background: isValid ? '#22c55e' : '#9ca3af', cursor: isValid ? 'pointer' : 'not-allowed', border: 'none' }}
+                                                disabled={!isValid}
+                                            >
+                                                <Check size={20} style={{ marginRight: 5, verticalAlign: 'middle' }} /> APROBAR
+                                            </button>
+                                        </div>
                                     </div>
-                                    <button
-                                        className="primary"
-                                        style={{ background: '#22c55e' }}
-                                        onClick={async () => {
-                                            if (!confirm("¿Confirmar que " + p.name + " GANÓ el Bingo? \nEsto lo anunciará en todas las pantallas.")) return;
-                                            try {
-                                                await updateGame(gameId, {
-                                                    winner_info: { name: p.name, pin: p.pin, cardId: p.id },
-                                                    status: 'FINISHED'
-                                                });
-                                                alert("¡Ganador Anunciado!");
-                                                await loadData();
-                                            } catch (e) { alert(e.message); }
-                                        }}
-                                    >
-                                        <Check size={20} /> CONFIRMAR GANADOR
-                                    </button>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     );
                 }

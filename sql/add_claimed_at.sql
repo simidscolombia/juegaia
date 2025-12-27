@@ -1,0 +1,1 @@
+ALTER TABLE bingo_players ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMPTZ;

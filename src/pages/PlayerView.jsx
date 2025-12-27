@@ -152,24 +152,36 @@ const PlayerView = () => {
         const pattern = game.winning_pattern || [];
         const matchesPattern = checkPatternWin(ticket.card_matrix, pattern);
 
-        if (matchesPattern) {
+        if (!matchesPattern) {
+            alert("⚠️ El sistema no detecta la figura ganadora aún. Revisa tus marcas.");
+            return;
+        }
 
-            try {
-                // Send Claim to DB
-                alert("🎉 ¡BINGO! Enviando aviso a la pantalla principal...");
-                await updateTicket(ticket.id, { status: 'WIN_CLAIMED' });
-                alert("✅ ¡Enviado! El organizador verificará tu victoria ahora.");
-                if (!hasCelebrated) {
-                    celebrate();
-                    setHasCelebrated(true);
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Error enviando bingo: " + err.message);
+        // Anti-Cheat Validation: Check if marked numbers were actually called
+        const called = game.called_numbers || [];
+        const markedCells = ticket.card_matrix.filter(c => c.marked);
+        const invalidMarks = markedCells.filter(c => c.number !== 'FREE' && !called.includes(c.number));
+
+        if (invalidMarks.length > 0) {
+            alert(`⛔ ¡Error! Has marcado números que NO han salido: ${invalidMarks.map(c => c.number).join(', ')}.\n\nPor favor desmárcalos.`);
+            return;
+        }
+
+        try {
+            // Send Claim to DB
+            alert("🎉 ¡BINGO! Enviando aviso a la pantalla principal...");
+            await updateTicket(ticket.id, {
+                status: 'WIN_CLAIMED',
+                claimed_at: new Date().toISOString()
+            });
+            alert("✅ ¡Enviado! El organizador verificará tu victoria ahora.");
+            if (!hasCelebrated) {
+                celebrate();
+                setHasCelebrated(true);
             }
-
-        } else {
-            alert("⚠️ El sistema no detecta un Bingo válido aún. Revisa tus marcas.");
+        } catch (err) {
+            console.error(err);
+            alert("Error enviando bingo: " + err.message);
         }
     };
 
@@ -377,6 +389,22 @@ const PlayerView = () => {
             >
                 <Trophy size={24} /> ¡BINGO!
             </button>
+
+            {/* WINNER ANNOUNCED OVERLAY */}
+            {game.winner_info && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 2000,
+                    background: 'rgba(0,0,0,0.95)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', textAlign: 'center', padding: '20px'
+                }}>
+                    <Trophy size={64} style={{ color: '#F59E0B', marginBottom: 20 }} />
+                    <h1 style={{ fontSize: '2rem', margin: 0, color: '#F59E0B' }}>¡TENEMOS GANADOR!</h1>
+                    <h2 style={{ fontSize: '2.5rem', margin: '15px 0' }}>{game.winner_info.name}</h2>
+                    <p style={{ opacity: 0.8, fontSize: '1.2rem' }}>PIN: {game.winner_info.pin}</p>
+                    <div style={{ marginTop: 30, fontSize: '0.9rem', opacity: 0.6 }}>Juego Finalizado</div>
+                </div>
+            )}
         </div>
     );
 };
