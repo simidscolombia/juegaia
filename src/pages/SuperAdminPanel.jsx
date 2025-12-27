@@ -1,3 +1,5 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Users, Settings, DollarSign, Search, Trash2, Gamepad2, Edit, Link } from 'lucide-react';
 import { getSystemSettings, adminUpdateSettings, getAllProfiles, adminManualRecharge, getProfile, getAllAllGames, adminDeleteGame, adminDeleteUser, adminUpdateUserReferrer, adminUpdateUserRole } from '../utils/storage';
 
