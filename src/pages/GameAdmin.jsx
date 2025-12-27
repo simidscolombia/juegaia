@@ -13,6 +13,7 @@ const GameAdmin = () => {
     const [game, setGame] = useState(null);
     const [players, setPlayers] = useState([]);
     const [history, setHistory] = useState([]);
+    const [selectedClaimers, setSelectedClaimers] = useState([]); // For Split Winners
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [winningPattern, setWinningPattern] = useState([]); // Array of indices 0-24
@@ -432,66 +433,122 @@ const GameAdmin = () => {
 
             {/* WINNERS CHECK */}
             {(() => {
-                const claimers = players.filter(p => p.status === 'WIN_CLAIMED');
+                const claimers = players.filter(p => p.status === 'WIN_CLAIMED')
+                    .sort((a, b) => new Date(a.claimed_at) - new Date(b.claimed_at)); // Sorted
+
                 if (claimers.length > 0) {
                     return (
                         <div className="card" style={{ marginBottom: '20px', border: '2px solid #22c55e', background: 'rgba(34, 197, 94, 0.1)' }}>
                             <h3 style={{ color: '#22c55e', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Check size={24} /> ¡POSIBLES GANADORES! ({claimers.length})
                             </h3>
+
                             <p>Estos jugadores han gritado Bingo. El sistema verifica automáticamente sus marcas.</p>
 
-                            {claimers.map(p => {
-                                const matrix = p.card_matrix || [];
-                                const called = game.called_numbers || [];
-                                const pattern = game.winning_pattern || [];
-                                const matchesPattern = checkPatternWin(matrix, pattern); // Pattern Shape Check
-                                const invalidMarks = matrix.filter(c => c.marked && c.number !== 'FREE' && !called.includes(c.number)); // Anti-Cheat Check
-                                const isValid = matchesPattern && invalidMarks.length === 0;
+                            {/* Batch Actions for Split Prize */}
+                            {
+                                selectedClaimers.length > 0 && (
+                                    <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', marginBottom: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <strong>{selectedClaimers.length} Seleccionados para Empate</strong>
+                                        <button
+                                            className="primary"
+                                            style={{ background: '#F59E0B', border: 'none', padding: '10px 15px', color: 'white', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                                            onClick={async () => {
+                                                if (selectedClaimers.length < 2) {
+                                                    alert("Selecciona al menos 2 jugadores para un empate.");
+                                                    return;
+                                                }
+                                                const names = selectedClaimers.map(c => c.name).join(" & ");
+                                                const pins = selectedClaimers.map(c => c.pin).join(" / ");
 
-                                return (
-                                    <div key={p.id} style={{ background: 'white', color: 'black', padding: '15px', borderRadius: '8px', marginBottom: '10px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <strong>{p.name}</strong>
-                                                <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
-                                                    {p.claimed_at ? new Date(p.claimed_at).toLocaleTimeString() : 'Hace un momento'}
-                                                </span>
-                                            </div>
-                                            <code style={{ fontSize: '1.1rem', color: 'purple', marginRight: '10px' }}>PIN: {p.pin}</code>
-                                            <span style={{ padding: '2px 8px', borderRadius: '4px', background: isValid ? '#dcfce7' : '#fee2e2', color: isValid ? '#166534' : '#991b1b', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                                                {isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'}
-                                            </span>
-                                            {!isValid && invalidMarks.length > 0 && (
-                                                <div style={{ color: 'red', fontSize: '0.86rem', marginTop: 5 }}>
-                                                    ⚠️ Marcó balotas que NO han salido: {invalidMarks.map(c => c.number).join(', ')}
-                                                </div>
-                                            )}
-                                        </div>
+                                                if (!confirm(`¿Confirmar empate entre ${selectedClaimers.length} jugadores?\n\n¡El premio será compartido!\n\nGanadores:\n${names}`)) return;
 
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button
-                                                className="primary"
-                                                onClick={async () => {
-                                                    if (!confirm("¿Confirmar que " + p.name + " GANÓ el Bingo?")) return;
-                                                    try {
-                                                        await updateGame(gameId, {
-                                                            winner_info: { name: p.name, pin: p.pin, cardId: p.id },
-                                                            status: 'FINISHED'
-                                                        });
-                                                        alert("¡Ganador Anunciado!");
-                                                        await loadData();
-                                                    } catch (e) { alert(e.message); }
-                                                }}
-                                                style={{ background: isValid ? '#22c55e' : '#9ca3af', cursor: isValid ? 'pointer' : 'not-allowed', border: 'none' }}
-                                                disabled={!isValid}
-                                            >
-                                                <Check size={20} style={{ marginRight: 5, verticalAlign: 'middle' }} /> APROBAR
-                                            </button>
-                                        </div>
+                                                try {
+                                                    await updateGame(gameId, {
+                                                        winnerInfo: { name: names, pin: pins, status: 'SHARED', timestamp: new Date().toISOString() },
+                                                        status: 'FINISHED'
+                                                    });
+                                                    alert("¡Empate confirmado! El premio ha sido repartido.");
+                                                    loadData();
+                                                    setSelectedClaimers([]);
+                                                } catch (e) { alert(e.message) }
+                                            }}
+                                        >
+                                            🤝 Confirmar Empate (Repartir Premio)
+                                        </button>
                                     </div>
-                                );
-                            })}
+                                )
+                            }
+
+                            {
+                                claimers.map((p, index) => {
+                                    const matrix = p.card_matrix || [];
+                                    const called = game.called_numbers || [];
+                                    const pattern = game.winning_pattern || [];
+                                    const matchesPattern = checkPatternWin(matrix, pattern); // Pattern Shape Check
+                                    const invalidMarks = matrix.filter(c => c.marked && c.number !== 'FREE' && !called.includes(c.number)); // Anti-Cheat Check
+                                    const isValid = matchesPattern && invalidMarks.length === 0;
+                                    const isSelected = selectedClaimers.find(c => c.id === p.id);
+
+                                    return (
+                                        <div key={p.id} style={{
+                                            background: isSelected ? '#fff7ed' : 'white',
+                                            color: 'black', padding: '15px', borderRadius: '8px', marginBottom: '10px',
+                                            border: isSelected ? '2px solid #F59E0B' : (isValid ? '2px solid #22c55e' : '2px solid #ef4444'),
+                                            display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center'
+                                        }}>
+                                            {isValid && (
+                                                <input
+                                                    type="checkbox"
+                                                    style={{ width: '24px', height: '24px', cursor: 'pointer', marginRight: '10px' }}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) setSelectedClaimers(prev => [...prev, p]);
+                                                        else setSelectedClaimers(prev => prev.filter(c => c.id !== p.id));
+                                                    }}
+                                                />
+                                            )}
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <strong>{p.name}</strong>
+                                                    <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>
+                                                        {p.claimed_at ? new Date(p.claimed_at).toLocaleTimeString('es-CO', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) : 'Hace un momento'}
+                                                    </span>
+                                                </div>
+                                                <code style={{ fontSize: '1.1rem', color: 'purple', marginRight: '10px' }}>PIN: {p.pin}</code>
+                                                <span style={{ padding: '2px 8px', borderRadius: '4px', background: isValid ? '#dcfce7' : '#fee2e2', color: isValid ? '#166534' : '#991b1b', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                                                    {isValid ? '✅ VÁLIDO' : '❌ INVÁLIDO'}
+                                                </span>
+                                                {!isValid && invalidMarks.length > 0 && (
+                                                    <div style={{ color: 'red', fontSize: '0.86rem', marginTop: 5 }}>
+                                                        ⚠️ Marcó balotas que NO han salido: {invalidMarks.map(c => c.number).join(', ')}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                <button
+                                                    className="primary"
+                                                    onClick={async () => {
+                                                        if (!confirm("¿Confirmar que " + p.name + " GANÓ el Bingo?")) return;
+                                                        try {
+                                                            await updateGame(gameId, {
+                                                                winner_info: { name: p.name, pin: p.pin, cardId: p.id },
+                                                                status: 'FINISHED'
+                                                            });
+                                                            alert("¡Ganador Anunciado!");
+                                                            await loadData();
+                                                        } catch (e) { alert(e.message); }
+                                                    }}
+                                                    style={{ background: isValid ? '#22c55e' : '#9ca3af', cursor: isValid ? 'pointer' : 'not-allowed', border: 'none' }}
+                                                    disabled={!isValid}
+                                                >
+                                                    <Check size={20} style={{ marginRight: 5, verticalAlign: 'middle' }} /> APROBAR
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            }
                         </div>
                     );
                 }
@@ -630,28 +687,30 @@ const GameAdmin = () => {
             </div>
 
             {/* HISTORY SECTION */}
-            {history.length > 0 && (
-                <div className="card" style={{ marginTop: '20px' }}>
-                    <h3 style={{ marginTop: 0 }}>📜 Historial de Partidas</h3>
-                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                        {history.map(h => (
-                            <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #333', marginBottom: '5px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7, fontSize: '0.85rem' }}>
-                                    <span>{new Date(h.played_at).toLocaleString()}</span>
-                                    <span>{(h.called_numbers || []).length} balotas</span>
-                                </div>
-                                {h.winner_info ? (
-                                    <div style={{ color: '#22c55e', fontWeight: 'bold' }}>
-                                        🏆 Ganador: {h.winner_info.name} (PIN: {h.winner_info.pin})
+            {
+                history.length > 0 && (
+                    <div className="card" style={{ marginTop: '20px' }}>
+                        <h3 style={{ marginTop: 0 }}>📜 Historial de Partidas</h3>
+                        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                            {history.map(h => (
+                                <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #333', marginBottom: '5px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7, fontSize: '0.85rem' }}>
+                                        <span>{new Date(h.played_at).toLocaleString()}</span>
+                                        <span>{(h.called_numbers || []).length} balotas</span>
                                     </div>
-                                ) : (
-                                    <div style={{ opacity: 0.5 }}>Cancelada / Sin ganador confirmado</div>
-                                )}
-                            </div>
-                        ))}
+                                    {h.winner_info ? (
+                                        <div style={{ color: '#22c55e', fontWeight: 'bold' }}>
+                                            🏆 Ganador: {h.winner_info.name} (PIN: {h.winner_info.pin})
+                                        </div>
+                                    ) : (
+                                        <div style={{ opacity: 0.5 }}>Cancelada / Sin ganador confirmado</div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Modal Vender Cartón */}
             {

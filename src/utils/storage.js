@@ -49,6 +49,7 @@ export const updateGame = async (gameId, updates) => {
     if (updates.ticketPrice !== undefined) dbUpdates.ticket_price = updates.ticketPrice;
     if (updates.roundPrice !== undefined) dbUpdates.round_price = updates.roundPrice;
     if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
+    if (updates.winnerInfo !== undefined) dbUpdates.winner_info = updates.winnerInfo;
 
     const { data, error } = await supabase
         .from('bingo_games')
