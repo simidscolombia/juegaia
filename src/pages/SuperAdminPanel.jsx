@@ -53,8 +53,8 @@ const SuperAdminPanel = () => {
             }
 
         } catch (error) {
-            console.error(error);
-            setErrorMsg("Critical Error: " + error.message);
+            console.error("Critical Error Loading Data:", error);
+            setErrorMsg("Critical Error: " + (error.message || 'Unknown error'));
         } finally {
             setLoading(false);
         }
@@ -347,17 +347,6 @@ const SuperAdminPanel = () => {
                                                 }}
                                             >
                                                 <Trash2 size={14} /> Eliminar
-                                            </button>
-                                            <button
-                                                onClick={() => handleLinkReferrer(user)}
-                                                style={{
-                                                    background: '#8b5cf6', border: 'none', color: 'white',
-                                                    cursor: 'pointer', padding: '5px 10px', borderRadius: '4px',
-                                                    display: 'flex', alignItems: 'center', gap: '5px'
-                                                }}
-                                                title="Vincular a un Referido"
-                                            >
-                                                <Users size={14} /> Vincular
                                             </button>
                                         </td>
                                     </tr>
