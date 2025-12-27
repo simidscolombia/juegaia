@@ -47,6 +47,7 @@ export const updateGame = async (gameId, updates) => {
     if (updates.winningPattern !== undefined) dbUpdates.winning_pattern = updates.winningPattern;
     if (updates.hintsEnabled !== undefined) dbUpdates.hints_enabled = updates.hintsEnabled;
     if (updates.ticketPrice !== undefined) dbUpdates.ticket_price = updates.ticketPrice;
+    if (updates.roundPrice !== undefined) dbUpdates.round_price = updates.roundPrice;
     if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
 
     const { data, error } = await supabase
@@ -794,9 +795,32 @@ export const saveRaffleWinner = async (raffleId, winnerNumber) => {
     if (error) throw error;
 };
 
-export const resetGame = async (gameId) => {
-    const { error } = await supabase.rpc('reset_game_round', { p_game_id: gameId });
+export const resetGame = async (gameId, chargeNextRound = false) => {
+    const { error } = await supabase.rpc('reset_game_round', {
+        p_game_id: gameId,
+        p_charge_next_round: chargeNextRound
+    });
     if (error) throw error;
+};
+
+export const getUserCredits = async (userId) => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', userId)
+        .single();
+    // If no profile found (error code PGRST116), return 0
+    if (error) return 0;
+    return data?.credits || 0;
+};
+
+export const payRoundFee = async (playerId, amount) => {
+    const { data, error } = await supabase.rpc('pay_round_fee', {
+        p_player_id: playerId,
+        p_amount: amount
+    });
+    if (error) throw error;
+    return data; // true (success) or false (insufficient funds)
 };
 
 export const getBingoHistory = async (gameId) => {

@@ -230,23 +230,56 @@ const GameAdmin = () => {
                         {isDrawing ? 'Mezclando...' : 'SACAR BALOTA'}
                     </button>
 
-                    <button
-                        onClick={async () => {
-                            if (!confirm("¿REINICIAR JUEGO? \n\nEsto borrará:\n- Las balotas sacadas.\n- El ganador actual.\n- Las marcas en los cartones (visual).\n\nLos jugadores mantendrán sus cartones comprados.")) return;
-                            try {
-                                await resetGame(gameId);
-                                alert("Juego Reiniciado completamante.");
-                                await loadData();
-                            } catch (e) { alert(e.message) }
-                        }}
-                        style={{
-                            width: '100%', padding: '12px', fontSize: '1rem',
-                            background: 'rgba(255,255,255,0.1)', border: '1px solid #ef4444', color: '#ef4444',
-                            marginTop: '5px', cursor: 'pointer', borderRadius: '8px', fontWeight: 'bold'
-                        }}
-                    >
-                        <RefreshCw size={16} style={{ verticalAlign: 'middle', marginRight: 5 }} /> REINICIAR (NUEVA PARTIDA)
-                    </button>
+                    <div style={{ marginTop: '20px', borderTop: '1px dashed rgba(255,255,255,0.2)', paddingTop: '15px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', justifyContent: 'center', marginBottom: '10px' }}>
+                            <label style={{ fontSize: '0.9rem' }}>Precio Próxima Ronda:</label>
+                            <input
+                                type="number"
+                                value={game.round_price || 5000}
+                                onChange={async (e) => {
+                                    try {
+                                        await updateGame(gameId, { roundPrice: parseInt(e.target.value) });
+                                        loadData();
+                                    } catch (e) { }
+                                }}
+                                style={{ width: '100px', padding: '5px', borderRadius: '4px', border: 'none', textAlign: 'right', color: 'black' }}
+                            />
+                        </div>
+
+                        <button
+                            onClick={async () => {
+                                const action = prompt(
+                                    "¿REINICIAR JUEGO?\n\n" +
+                                    "Escribe 'COBRAR' para cobrar la ronda ($" + (game.round_price || 5000) + ").\n" +
+                                    "Escribe 'GRATIS' para reiniciar sin cobrar.\n" +
+                                    "Escribe 'CANCELAR' para salir."
+                                );
+
+                                if (!action) return;
+                                const cleanAction = action.trim().toUpperCase();
+
+                                if (cleanAction !== 'COBRAR' && cleanAction !== 'GRATIS') {
+                                    alert("Acción cancelada. Debes escribir COBRAR o GRATIS.");
+                                    return;
+                                }
+
+                                const charge = cleanAction === 'COBRAR';
+
+                                try {
+                                    await resetGame(gameId, charge);
+                                    alert(charge ? "Reiniciado. Jugadores deben pagar para continuar." : "Reiniciado Gratis.");
+                                    await loadData();
+                                } catch (e) { alert(e.message) }
+                            }}
+                            style={{
+                                width: '100%', padding: '12px', fontSize: '1rem',
+                                background: 'rgba(255,255,255,0.1)', border: '1px solid #ef4444', color: '#ef4444',
+                                cursor: 'pointer', borderRadius: '8px', fontWeight: 'bold'
+                            }}
+                        >
+                            <RefreshCw size={16} style={{ verticalAlign: 'middle', marginRight: 5 }} /> REINICIAR (SIGUIENTE RONDA)
+                        </button>
+                    </div>
 
                     <small style={{ display: 'block', opacity: 0.6 }}>
                         Esto actualizará la pantalla de TV automáticamente.

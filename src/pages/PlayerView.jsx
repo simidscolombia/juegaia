@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getGame, getTicketsByPhone, updateTicket } from '../utils/storage';
+import { getGame, getTicketsByPhone, updateTicket, getUserCredits, payRoundFee } from '../utils/storage';
 import { checkWin, checkPatternWin } from '../utils/bingoLogic';
 import { supabase } from '../utils/supabaseClient';
 import { Trophy, Phone, Grid, Volume2 } from 'lucide-react';
@@ -29,6 +29,7 @@ const PlayerView = () => {
     const [myTickets, setMyTickets] = useState([]);
     const [activeTicketIndex, setActiveTicketIndex] = useState(0);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userCredits, setUserCredits] = useState(0); // Credits State
 
     // Login Inputs
     const [phoneInput, setPhoneInput] = useState('');
@@ -95,12 +96,22 @@ const PlayerView = () => {
             const tickets = await getTicketsByPhone(gameId, phoneToUse);
             if (tickets && tickets.length > 0) {
                 // Filter only PAID/Active tickets just in case query returned pending (though getTicketsByPhone usually returns clean list, better safe)
-                const activeTickets = tickets.filter(t => t.status === 'PAID' || t.status === 'WIN_CLAIMED');
+                // Filter PAID, WIN_CLAIMED, or AWAITING_PAYMENT
+                const activeTickets = tickets.filter(t =>
+                    t.status === 'PAID' ||
+                    t.status === 'WIN_CLAIMED' ||
+                    t.status === 'AWAITING_PAYMENT'
+                );
 
                 if (activeTickets.length > 0) {
                     setMyTickets(activeTickets);
                     setIsAuthenticated(true);
                     localStorage.setItem(`bingo_phone_${gameId}`, phoneToUse);
+
+                    // Fetch Credits
+                    if (activeTickets[0].user_id) {
+                        getUserCredits(activeTickets[0].user_id).then(setUserCredits);
+                    }
                 } else {
                     alert("Tienes cartones registrados pero AÚN NO ESTÁN ACTIVOS. El administrador debe verificar tu pago.");
                 }
@@ -423,6 +434,64 @@ const PlayerView = () => {
                     <h2 style={{ fontSize: '2.5rem', margin: '15px 0' }}>{game.winner_info.name}</h2>
                     <p style={{ opacity: 0.8, fontSize: '1.2rem' }}>PIN: {game.winner_info.pin}</p>
                     <div style={{ marginTop: 30, fontSize: '0.9rem', opacity: 0.6 }}>Juego Finalizado</div>
+                </div>
+            )}
+
+            {/* PAYMENT REQUIRED OVERLAY */}
+            {activeTicket.status === 'AWAITING_PAYMENT' && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 3000,
+                    background: 'rgba(5, 5, 20, 0.98)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    color: 'white', textAlign: 'center', padding: '20px'
+                }}>
+                    <h1 style={{ color: '#F59E0B' }}>💰 Activar Siguiente Ronda</h1>
+                    <p style={{ fontSize: '1.1rem', opacity: 0.8 }}>Para continuar jugando con este cartón:</p>
+
+                    <div style={{ background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '15px', margin: '20px 0', width: '100%', maxWidth: '300px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                            <span>Costo Ronda:</span>
+                            <strong>${(game.round_price || 5000).toLocaleString()}</strong>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #555', paddingTop: '10px' }}>
+                            <span>Tu Saldo:</span>
+                            <span style={{ color: userCredits >= (game.round_price || 5000) ? '#4ade80' : '#ef4444' }}>
+                                ${userCredits.toLocaleString()}
+                            </span>
+                        </div>
+                    </div>
+
+                    {userCredits >= (game.round_price || 5000) ? (
+                        <button
+                            onClick={async () => {
+                                if (confirm('¿Confirmar pago de $' + (game.round_price || 5000) + '?')) {
+                                    try {
+                                        setLoading(true);
+                                        const success = await payRoundFee(activeTicket.id, (game.round_price || 5000));
+                                        if (success) {
+                                            alert("¡Pago exitoso! Buena suerte.");
+                                            handleLogin(null, phoneInput);
+                                        } else {
+                                            alert("Saldo insuficiente.");
+                                        }
+                                    } catch (e) { alert(e.message) }
+                                    finally { setLoading(false); }
+                                }
+                            }}
+                            className="primary"
+                            style={{ padding: '15px 30px', fontSize: '1.2rem', background: '#2563EB', border: 'none', borderRadius: '8px', color: 'white', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                            PAGAR AHORA
+                        </button>
+                    ) : (
+                        <div>
+                            <p style={{ color: '#ef4444', fontWeight: 'bold' }}>Saldo Insuficiente</p>
+                            <p style={{ fontSize: '0.9rem' }}>Por favor recarga con el administrador.</p>
+                            <button onClick={() => handleLogin(null, phoneInput)} style={{ marginTop: '10px', background: 'transparent', border: '1px solid white', color: 'white', padding: '8px 15px', borderRadius: '5px', cursor: 'pointer' }}>
+                                Ya Recargué (Actualizar)
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
