@@ -794,6 +794,11 @@ export const saveRaffleWinner = async (raffleId, winnerNumber) => {
     if (error) throw error;
 };
 
+export const resetGame = async (gameId) => {
+    const { error } = await supabase.rpc('reset_game_round', { p_game_id: gameId });
+    if (error) throw error;
+};
+
 // --- PAYMENT METHODS (User Specific) ---
 
 export const getPaymentMethods = async (userId) => {

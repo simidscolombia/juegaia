@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer } from '../utils/storage';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer, resetGame } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save, Play, RefreshCw, StopCircle } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 import { countryCodes } from '../utils/countryCodes';
@@ -210,6 +210,24 @@ const GameAdmin = () => {
                         {isDrawing ? 'Mezclando...' : 'SACAR BALOTA'}
                     </button>
 
+                    <button
+                        onClick={async () => {
+                            if (!confirm("¿REINICIAR JUEGO? \n\nEsto borrará:\n- Las balotas sacadas.\n- El ganador actual.\n- Las marcas en los cartones (visual).\n\nLos jugadores mantendrán sus cartones comprados.")) return;
+                            try {
+                                await resetGame(gameId);
+                                alert("Juego Reiniciado completamante.");
+                                await loadData();
+                            } catch (e) { alert(e.message) }
+                        }}
+                        style={{
+                            width: '100%', padding: '12px', fontSize: '1rem',
+                            background: 'rgba(255,255,255,0.1)', border: '1px solid #ef4444', color: '#ef4444',
+                            marginTop: '5px', cursor: 'pointer', borderRadius: '8px', fontWeight: 'bold'
+                        }}
+                    >
+                        <RefreshCw size={16} style={{ verticalAlign: 'middle', marginRight: 5 }} /> REINICIAR (NUEVA PARTIDA)
+                    </button>
+
                     <small style={{ display: 'block', opacity: 0.6 }}>
                         Esto actualizará la pantalla de TV automáticamente.
                     </small>
@@ -358,6 +376,47 @@ const GameAdmin = () => {
                     </button>
                 </div>
             </div>
+
+            {/* WINNERS CHECK */}
+            {(() => {
+                const claimers = players.filter(p => p.status === 'WIN_CLAIMED');
+                if (claimers.length > 0) {
+                    return (
+                        <div className="card" style={{ marginBottom: '20px', border: '2px solid #22c55e', background: 'rgba(34, 197, 94, 0.1)' }}>
+                            <h3 style={{ color: '#22c55e', marginTop: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Check size={24} /> ¡POSIBLES GANADORES! ({claimers.length})
+                            </h3>
+                            <p>Estos jugadores han gritado Bingo. Verifica sus cartones.</p>
+
+                            {claimers.map(p => (
+                                <div key={p.id} style={{ background: 'white', color: 'black', padding: '15px', borderRadius: '8px', marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <strong>{p.name}</strong> ({p.phone || 'Sin cel'})<br />
+                                        <code style={{ fontSize: '1.2rem', color: 'purple' }}>PIN: {p.pin}</code>
+                                    </div>
+                                    <button
+                                        className="primary"
+                                        style={{ background: '#22c55e' }}
+                                        onClick={async () => {
+                                            if (!confirm("¿Confirmar que " + p.name + " GANÓ el Bingo? \nEsto lo anunciará en todas las pantallas.")) return;
+                                            try {
+                                                await updateGame(gameId, {
+                                                    winner_info: { name: p.name, pin: p.pin, cardId: p.id },
+                                                    status: 'FINISHED'
+                                                });
+                                                alert("¡Ganador Anunciado!");
+                                                await loadData();
+                                            } catch (e) { alert(e.message); }
+                                        }}
+                                    >
+                                        <Check size={20} /> CONFIRMAR GANADOR
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                }
+            })()}
 
             {/* Pending Requests Section */}
             {/* Pending Requests Section (GROUPED) */}

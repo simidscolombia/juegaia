@@ -43,6 +43,26 @@ const TVMode = () => {
         fetchUser();
     }, []);
 
+    // Winner Announcement Effect
+    useEffect(() => {
+        if (game?.winner_info) {
+            const duration = 5 * 1000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Stop previous
+                const u = new SpeechSynthesisUtterance("¡Atención! ¡Tenemos un ganador! Felicidades " + game.winner_info.name);
+                u.lang = 'es-ES';
+                window.speechSynthesis.speak(u);
+            }
+        }
+    }, [game?.winner_info]);
+
     const isOwner = game && currentUser && (game.owner_id === currentUser.id);
 
     // Decoration Balls for "Physics"
@@ -639,6 +659,33 @@ const TVMode = () => {
             animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
       `}</style>
+            {/* OFFICIAL CONFIRMED WINNER (Global) */}
+            {game.winner_info && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.95)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    animation: 'fadeIn 0.5s'
+                }}>
+                    <div className="pop-in" style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: '8rem', lineHeight: 1, marginBottom: '20px' }}>🏆</div>
+                        <h1 style={{
+                            fontSize: '5vw', margin: '0 0 20px 0',
+                            background: 'linear-gradient(to right, #f43f5e, #fbbf24)',
+                            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                            textTransform: 'uppercase', fontWeight: '900', letterSpacing: '2px'
+                        }}>
+                            ¡GANADOR!
+                        </h1>
+                        <h2 style={{ fontSize: '4vw', color: 'white', margin: 0, textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>
+                            {game.winner_info.name}
+                        </h2>
+                        <div style={{ fontSize: '2vw', color: '#fbbf24', marginTop: '20px', fontFamily: 'monospace' }}>
+                            PIN: {game.winner_info.pin}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
