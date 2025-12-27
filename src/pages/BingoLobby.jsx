@@ -234,7 +234,14 @@ const BingoLobby = () => {
                                 {paymentMethods.map(m => (
                                     <div
                                         key={m.id}
-                                        onClick={() => setSelectedMethod(m)}
+                                        onClick={() => {
+                                            setSelectedMethod(m);
+                                            // Auto-copy account number
+                                            if (m.account_number) {
+                                                navigator.clipboard.writeText(m.account_number);
+                                                // We could show a toast here, but the selection highlight is enough context
+                                            }
+                                        }}
                                         style={{
                                             border: selectedMethod?.id === m.id ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
                                             background: selectedMethod?.id === m.id ? 'rgba(37, 99, 235, 0.1)' : 'var(--color-bg)',
@@ -244,7 +251,12 @@ const BingoLobby = () => {
                                     >
                                         <div>
                                             <strong>{m.type}</strong>
-                                            <div style={{ fontSize: '0.9rem' }}>{m.account_number}</div>
+                                            <div style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                                                {m.account_number}
+                                                <span style={{ fontSize: '0.7rem', background: '#2563EB', color: 'white', padding: '2px 6px', borderRadius: '4px' }}>
+                                                    {selectedMethod?.id === m.id ? '¡COPIADO!' : 'COPIAR'}
+                                                </span>
+                                            </div>
                                             {m.account_name && <small>{m.account_name}</small>}
                                         </div>
                                         {selectedMethod?.id === m.id && <Check size={20} color="var(--color-primary)" />}

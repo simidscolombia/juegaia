@@ -22,6 +22,7 @@ const TVMode = () => {
     };
     const { gameId } = useParams();
     const [game, setGame] = useState(null);
+    const [displayedNumbers, setDisplayedNumbers] = useState([]);
     const [ballSequence, setBallSequence] = useState([]);
     const [isSpinning, setIsSpinning] = useState(false);
     const [lastCall, setLastCall] = useState(null);
@@ -98,6 +99,7 @@ const TVMode = () => {
                 const g = await getGame(gameId);
                 if (g) {
                     setGame(g);
+                    setDisplayedNumbers(g.called_numbers || []);
                     if (g.called_numbers && g.called_numbers.length > 0) {
                         setLastCall(g.called_numbers[g.called_numbers.length - 1]);
                     }
@@ -128,10 +130,18 @@ const TVMode = () => {
                                 setIsSpinning(false);
                                 setLastCall(newLastCall);
                                 lastCallRef.current = newLastCall;
+                                setDisplayedNumbers(newGameData.called_numbers); // REVEAL ON GRID NOW
                                 const letter = getLetter(newLastCall);
                                 speakNumber(newLastCall, letter);
                             }, 2500);
+                        } else {
+                            setDisplayedNumbers(newGameData.called_numbers);
                         }
+                    } else {
+                        // Reset
+                        setDisplayedNumbers([]);
+                        setLastCall(null);
+                        setGame(newGameData);
                     }
                 }
             )
@@ -429,7 +439,7 @@ const TVMode = () => {
                 <h2 style={{ margin: '0 0 1rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>TABLERO DE CONTROL</span>
                     <div style={{ fontSize: '2rem', fontWeight: '900', color: '#4cc9f0' }}>
-                        {(game.called_numbers || []).length} <span style={{ fontSize: '1rem', opacity: 0.5 }}>/ 75</span>
+                        {(displayedNumbers || []).length} <span style={{ fontSize: '1rem', opacity: 0.5 }}>/ 75</span>
                     </div>
                 </h2>
 
@@ -446,7 +456,7 @@ const TVMode = () => {
                             <div style={{ display: 'flex', flex: 1, gap: '5px' }}>
                                 {Array.from({ length: 15 }, (_, i) => {
                                     const num = idx * 15 + i + 1;
-                                    const isCalled = (game.called_numbers || []).includes(num);
+                                    const isCalled = (displayedNumbers || []).includes(num);
                                     const isLast = num === lastCall;
                                     return (
                                         <div key={num} style={{
