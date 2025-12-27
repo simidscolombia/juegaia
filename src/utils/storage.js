@@ -799,6 +799,16 @@ export const resetGame = async (gameId) => {
     if (error) throw error;
 };
 
+export const getBingoHistory = async (gameId) => {
+    const { data, error } = await supabase
+        .from('bingo_history')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('played_at', { ascending: false });
+    if (error) return [];
+    return data;
+};
+
 // --- PAYMENT METHODS (User Specific) ---
 
 export const getPaymentMethods = async (userId) => {

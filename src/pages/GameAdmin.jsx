@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer, resetGame } from '../utils/storage';
+import { getGame, getGameTickets, createTicket, deleteGame, releaseTicket, updateTicket, updateGame, approveBatchTickets, deleteBingoPlayer, resetGame, getBingoHistory } from '../utils/storage';
 import { User, Share2, Trash, Plus, Check, Link as LinkIcon, ArrowLeft, Settings, Save, Play, RefreshCw, StopCircle } from 'lucide-react';
 import { generateBingoCard, checkPatternWin } from '../utils/bingoLogic';
 import { countryCodes } from '../utils/countryCodes';
@@ -12,6 +12,7 @@ const GameAdmin = () => {
 
     const [game, setGame] = useState(null);
     const [players, setPlayers] = useState([]);
+    const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newPlayerName, setNewPlayerName] = useState('');
     const [winningPattern, setWinningPattern] = useState([]); // Array of indices 0-24
@@ -60,6 +61,7 @@ const GameAdmin = () => {
                 }
             }
             setPlayers(p || []);
+            getBingoHistory(gameId).then(h => setHistory(h || []));
         } catch (error) {
             console.error(error);
             alert('Error cargando datos del juego');
@@ -166,6 +168,24 @@ const GameAdmin = () => {
             <button onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', marginBottom: '20px', color: 'var(--color-text)' }}>
                 <ArrowLeft size={20} style={{ marginRight: '5px' }} /> Volver
             </button>
+
+            {game.winner_info && (
+                <div style={{
+                    background: 'linear-gradient(to right, #F59E0B, #D97706)',
+                    color: 'white', padding: '15px', borderRadius: '8px', marginBottom: '20px',
+                    textAlign: 'center', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', animation: 'fadeIn 0.5s'
+                }}>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                        🏆 ¡TENEMOS GANADOR!
+                    </h2>
+                    <div style={{ fontSize: '1.2rem', marginTop: '5px', fontWeight: 'bold' }}>
+                        {game.winner_info.name}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', opacity: 0.9 }}>
+                        PIN: {game.winner_info.pin}
+                    </div>
+                </div>
+            )}
 
             <div className="card" style={{ marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -575,6 +595,30 @@ const GameAdmin = () => {
                     );
                 })()}
             </div>
+
+            {/* HISTORY SECTION */}
+            {history.length > 0 && (
+                <div className="card" style={{ marginTop: '20px' }}>
+                    <h3 style={{ marginTop: 0 }}>📜 Historial de Partidas</h3>
+                    <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                        {history.map(h => (
+                            <div key={h.id} style={{ padding: '10px', borderBottom: '1px solid #333', marginBottom: '5px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7, fontSize: '0.85rem' }}>
+                                    <span>{new Date(h.played_at).toLocaleString()}</span>
+                                    <span>{(h.called_numbers || []).length} balotas</span>
+                                </div>
+                                {h.winner_info ? (
+                                    <div style={{ color: '#22c55e', fontWeight: 'bold' }}>
+                                        🏆 Ganador: {h.winner_info.name} (PIN: {h.winner_info.pin})
+                                    </div>
+                                ) : (
+                                    <div style={{ opacity: 0.5 }}>Cancelada / Sin ganador confirmado</div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Modal Vender Cartón */}
             {
