@@ -346,27 +346,47 @@ const PlayerView = () => {
                 {/* Grid Numbers */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gridAutoFlow: 'column', gap: '8px', aspectRatio: '1/1' }}>
                     {activeTicket.card_matrix.map(cell => {
+                        // 1. Pattern Logic
+                        const pattern = game.winning_pattern;
+                        // Calculate Visual Index (Row-Major 0..24) to match Admin Pattern Entitor
+                        // cell.row (0-4) * 5 + cell.col (0-4)
+                        const visualIndex = (cell.row !== undefined && cell.col !== undefined)
+                            ? (cell.row * 5 + cell.col)
+                            : -1;
+
+                        // If pattern is defined and full (length > 0 and < 25), filter. 
+                        // If pattern is empty/null, consider all valid (Full House or Default).
+                        const isPartOfPattern = !pattern || pattern.length === 0 || visualIndex === -1 || pattern.includes(visualIndex);
+
                         const isCalled = game.called_numbers?.includes(cell.number) || cell.number === 'FREE';
-                        const showHint = game.hints_enabled !== false; // Default True
+                        const showHint = game.hints_enabled !== false;
                         const isMarked = cell.marked;
 
                         const hintBg = (showHint && isCalled) ? 'rgba(255, 215, 0, 0.3)' : 'rgba(255,255,255,0.05)';
+                        const activeBg = isMarked ? 'var(--color-primary)' : hintBg;
+
+                        // Disabled Style
+                        const isDisabled = !isPartOfPattern;
+                        const finalBg = isDisabled ? '#222' : activeBg;
 
                         return (
                             <button
                                 key={cell.id}
                                 onClick={() => handleMark(cell.id)}
+                                disabled={isDisabled}
                                 style={{
                                     aspectRatio: '1/1',
                                     borderRadius: '50%',
-                                    border: 'none',
-                                    background: isMarked ? 'var(--color-primary)' : hintBg,
-                                    color: isMarked ? 'white' : 'inherit',
+                                    border: isDisabled ? '1px dashed #333' : 'none',
+                                    background: finalBg,
+                                    color: isMarked ? 'white' : (isDisabled ? 'rgba(255,255,255,0.1)' : 'inherit'),
                                     fontSize: cell.number === 'FREE' ? '0.7rem' : '1.1rem',
                                     fontWeight: 'bold',
-                                    cursor: 'pointer',
-                                    boxShadow: isMarked ? '0 0 10px var(--color-primary)' : 'none',
-                                    transition: 'all 0.2s'
+                                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                    boxShadow: (isMarked && !isDisabled) ? '0 0 10px var(--color-primary)' : 'none',
+                                    opacity: isDisabled ? 0.5 : 1,
+                                    transition: 'all 0.2s',
+                                    pointerEvents: isDisabled ? 'none' : 'auto'
                                 }}
                             >
                                 {cell.number}
