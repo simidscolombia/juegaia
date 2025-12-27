@@ -379,38 +379,58 @@ const GameAdmin = () => {
                             <h3 style={{ color: '#F59E0B', marginTop: 0 }}>Solicitudes Pendientes ({pending.length})</h3>
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <tbody>
-                                    {Object.values(groups).map((group, i) => (
-                                        <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
-                                            <td style={{ padding: '10px' }}>
-                                                <strong>{group.name}</strong><br />
-                                                <small>{group.phone}</small>
-                                                <div style={{ marginTop: '5px', fontSize: '0.85rem', opacity: 0.8 }}>
-                                                    Solicita {group.tickets.length} cartón{group.tickets.length > 1 ? 'es' : ''}
-                                                </div>
-                                            </td>
-                                            <td style={{ textAlign: 'right', padding: '10px' }}>
-                                                <div style={{ fontWeight: 'bold', color: '#F59E0B', marginBottom: '5px' }}>
-                                                    ${(group.tickets.length * 10000).toLocaleString()}
-                                                </div>
-                                                <button
-                                                    className="primary"
-                                                    onClick={async () => {
-                                                        if (!confirm(`¿Aprobar ${group.tickets.length} cartones para ${group.name}?`)) return;
-                                                        try {
-                                                            const ids = group.tickets.map(t => t.id);
-                                                            await approveBatchTickets(ids);
-                                                            // Auto-copy link on approval for convenience (use first ticket for data)
-                                                            copyShareLink(group.tickets[0]);
-                                                            await loadData();
-                                                        } catch (e) { alert(e.message) }
-                                                    }}
-                                                    style={{ background: '#F59E0B', border: 'none', width: '100%' }}
-                                                >
-                                                    Aprobar Todos
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {Object.values(groups).map((group, i) => {
+                                        // Find if any ticket in group has proof url (usually all same for batch, but check first)
+                                        const proofUrl = group.tickets.find(t => t.payment_proof_url)?.payment_proof_url;
+
+                                        return (
+                                            <tr key={i} style={{ borderBottom: '1px solid rgba(0,0,0,0.1)' }}>
+                                                <td style={{ padding: '10px' }}>
+                                                    <strong>{group.name}</strong><br />
+                                                    <small>{group.phone}</small>
+                                                    <div style={{ marginTop: '5px', fontSize: '0.85rem', opacity: 0.8 }}>
+                                                        Solicita {group.tickets.length} cartón{group.tickets.length > 1 ? 'es' : ''}
+                                                    </div>
+                                                    {proofUrl && (
+                                                        <a
+                                                            href={proofUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                                                marginTop: '8px', background: '#fff', color: '#000',
+                                                                padding: '4px 8px', borderRadius: '4px', textDecoration: 'none',
+                                                                fontSize: '0.8rem', fontWeight: 'bold'
+                                                            }}
+                                                        >
+                                                            <LinkIcon size={14} /> Ver Comprobante
+                                                        </a>
+                                                    )}
+                                                </td>
+                                                <td style={{ textAlign: 'right', padding: '10px' }}>
+                                                    <div style={{ fontWeight: 'bold', color: '#F59E0B', marginBottom: '5px' }}>
+                                                        ${(group.tickets.length * (game.ticket_price || 10000)).toLocaleString()}
+                                                    </div>
+                                                    <button
+                                                        className="primary"
+                                                        onClick={async () => {
+                                                            if (!confirm(`¿Aprobar ${group.tickets.length} cartones para ${group.name}?`)) return;
+                                                            try {
+                                                                const ids = group.tickets.map(t => t.id);
+                                                                await approveBatchTickets(ids);
+                                                                // Auto-copy link on approval for convenience (use first ticket for data)
+                                                                copyShareLink(group.tickets[0]);
+                                                                await loadData();
+                                                            } catch (e) { alert(e.message) }
+                                                        }}
+                                                        style={{ background: '#F59E0B', border: 'none', width: '100%' }}
+                                                    >
+                                                        Aprobar Todos
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

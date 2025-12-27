@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, createTicket } from '../utils/storage';
+import { getGame, createTicket, uploadBingoProof } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
-import { Wallet, Check, AlertCircle } from 'lucide-react';
+import { Wallet, Check, AlertCircle, Upload } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 
 const BingoLobby = () => {
@@ -11,6 +11,7 @@ const BingoLobby = () => {
     const [game, setGame] = useState(null);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({ name: '', phone: '', quantity: 1 });
+    const [paymentFile, setPaymentFile] = useState(null); // New state for file
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
     const [currentUser, setCurrentUser] = useState(null);
 
@@ -50,6 +51,17 @@ const BingoLobby = () => {
             if (!formData.name || !formData.phone || formData.quantity < 1) {
                 throw new Error("Por favor completa todos los campos.");
             }
+            if (!paymentFile) {
+                throw new Error("Debes subir el comprobante de pago.");
+            }
+
+            // Upload Proof First
+            let proofUrl = null;
+            try {
+                proofUrl = await uploadBingoProof(gameId, paymentFile);
+            } catch (err) {
+                throw new Error("Error subiendo imagen: " + err.message);
+            }
 
             // Create Requests (One ticket per quantity)
             // Note: We create them as 'PENDING'.
@@ -59,8 +71,8 @@ const BingoLobby = () => {
             for (let i = 0; i < formData.quantity; i++) {
                 const card = generateBingoCard();
                 const pin = Math.floor(1000 + Math.random() * 9000).toString();
-                // Passing 'PENDING' as status. We need to update storage.js to handle/pass this.
-                promises.push(createTicket(gameId, formData.name, card, pin, 'PENDING', formData.phone, currentUser?.id));
+                // Provide proofUrl
+                promises.push(createTicket(gameId, formData.name, card, pin, 'PENDING', formData.phone, currentUser?.id, proofUrl));
             }
 
             await Promise.all(promises);
@@ -85,21 +97,21 @@ const BingoLobby = () => {
                 </div>
 
                 <div className="card">
-                    <h3>¿Qué sigue?</h3>
-                    <p style={{ opacity: 0.8 }}>Para activar tus cartones, realiza el pago y envía el comprobante al administrador.</p>
+                    <h3>⏳ Esperando Verificación</h3>
+                    <p style={{ opacity: 0.8 }}>Hemos recibido tu comprobante. El administrador lo revisará pronto para activar tus cartones.</p>
                     <div style={{ background: 'var(--color-bg)', padding: '10px', borderRadius: '8px', margin: '15px 0' }}>
-                        <strong>Nequi / Daviplata</strong><br />
-                        {game.admin_whatsapp ? game.admin_whatsapp : 'Consulta al Admin'}
+                        <small>Puedes avisar por WhatsApp para agilizar:</small><br />
+                        {game.admin_whatsapp ? game.admin_whatsapp : 'Contacto Admin'}
                     </div>
                     {game.admin_whatsapp && (
                         <button
                             className="primary"
                             onClick={() => {
                                 let phone = game.admin_whatsapp.replace(/\D/g, ''); // Remove non-digits
-                                window.location.href = `https://wa.me/${phone}?text=Hola, acabo de pedir ${formData.quantity} cartones para el bingo ${game.name}. Mi nombre es ${formData.name}.`;
+                                window.location.href = `https://wa.me/${phone}?text=Hola, acabo de subir mi comprobante para ${formData.quantity} cartones del bingo ${game.name}. Quedo atento a la activación.`;
                             }}
                         >
-                            Reportar Pago en WhatsApp
+                            Avisar al Admin 💬
                         </button>
                     )}
                 </div>
@@ -196,9 +208,28 @@ const BingoLobby = () => {
                     <div style={{ background: 'rgba(233, 69, 96, 0.1)', padding: '15px', borderRadius: '8px', marginBottom: '20px', textAlign: 'center' }}>
                         <span>Total a Pagar:</span>
                         <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>
-                            ${(formData.quantity * 10000).toLocaleString()} COP
+                            ${(formData.quantity * (game.ticket_price || 10000)).toLocaleString()} COP
                         </div>
-                        <small style={{ opacity: 0.7 }}>(Costo aprox: $10,000 / cartón)</small>
+                        <small style={{ opacity: 0.7 }}>(Costo por cartón: ${(game.ticket_price || 10000).toLocaleString()})</small>
+                    </div>
+
+                    {/* Payment Proof Upload */}
+                    <div style={{ marginBottom: '25px', background: 'var(--color-bg)', padding: '15px', borderRadius: '8px', border: '1px dashed var(--color-border)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', cursor: 'pointer' }}>
+                            <Upload size={20} /> Subir Comprobante de Pago (Nequi/Daviplata)
+                        </label>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={e => {
+                                if (e.target.files?.[0]) {
+                                    setPaymentFile(e.target.files[0]);
+                                }
+                            }}
+                            style={{ width: '100%' }}
+                            required
+                        />
+                        <small style={{ display: 'block', marginTop: '5px', opacity: 0.7 }}>* Es obligatorio subir la captura del pago para que te activen.</small>
                     </div>
 
                     <button
@@ -207,7 +238,7 @@ const BingoLobby = () => {
                         style={{ width: '100%', padding: '15px', fontSize: '1.1rem' }}
                         disabled={status === 'submitting'}
                     >
-                        {status === 'submitting' ? 'Procesando...' : 'Solicitar Cartones'}
+                        {status === 'submitting' ? 'Enviando y Subiendo...' : 'Enviar Solicitud y Comprobante'}
                     </button>
                 </form>
             </div>

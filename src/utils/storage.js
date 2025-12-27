@@ -46,6 +46,8 @@ export const updateGame = async (gameId, updates) => {
     if (updates.adminWhatsapp !== undefined) dbUpdates.admin_whatsapp = updates.adminWhatsapp;
     if (updates.winningPattern !== undefined) dbUpdates.winning_pattern = updates.winningPattern;
     if (updates.hintsEnabled !== undefined) dbUpdates.hints_enabled = updates.hintsEnabled;
+    if (updates.ticketPrice !== undefined) dbUpdates.ticket_price = updates.ticketPrice;
+    if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime;
 
     const { data, error } = await supabase
         .from('bingo_games')
@@ -73,7 +75,7 @@ export const getGame = async (gameId) => {
 };
 
 // Player/Ticket Management
-export const createTicket = async (gameId, playerName, cardMatrix, pin, status = 'PAID', phone = '', userId = null) => {
+export const createTicket = async (gameId, playerName, cardMatrix, pin, status = 'PAID', phone = '', userId = null, proofUrl = null) => {
     // Note: cardMatrix should be passed in. If not, generate it here?
     // The previous code had a "todo" for generation. 
     // We will assume the UI generates it and passes it, or we import logic here.
@@ -94,6 +96,7 @@ export const createTicket = async (gameId, playerName, cardMatrix, pin, status =
     };
 
     if (userId) payload.user_id = userId;
+    if (proofUrl) payload.payment_proof_url = proofUrl; // Add proof URL
 
     const { data, error } = await supabase
         .from('bingo_players')
@@ -232,8 +235,7 @@ export const createGameService = async (serviceType, name, config = {}) => {
     const { data, error } = await supabase
         .rpc('create_game_service', {
             p_service_type: serviceType,
-            p_name: name,
-            p_config: config
+            p_name: name
         });
 
     if (error) throw error;
@@ -645,7 +647,31 @@ export const submitPaymentProof = async (raffleId, ticketNumber, file) => {
 };
 
 // Alias for compatibility if used elsewhere, but ideally use markTicketPaid
+// Alias for compatibility if used elsewhere, but ideally use markTicketPaid
 export const sellRaffleTicket = markTicketPaid;
+
+export const uploadBingoProof = async (gameId, file) => {
+    // 1. Upload File
+    const fileExt = file.name.split('.').pop();
+    const fileName = `bingo_${gameId}_${Date.now()}.${fileExt}`;
+    // Use 'payment-proofs' bucket if exists, else fallback to 'raffle-proofs' or create one.
+    // We will assume 'raffle-proofs' is the general proof bucket for now as per previous code.
+    const bucket = 'raffle-proofs';
+    const filePath = `${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file);
+
+    if (uploadError) throw new Error('Error subiendo imagen: ' + uploadError.message);
+
+    // 2. Get Public URL
+    const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
+
+    return publicUrl;
+};
 
 
 

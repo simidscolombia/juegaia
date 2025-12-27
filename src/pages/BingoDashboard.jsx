@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createGameService, getGames, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame, getSystemSettings } from '../utils/storage'; // Updated imports
+import { createGameService, getGames, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame, getSystemSettings, updateGame } from '../utils/storage'; // Updated imports
 import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
-import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2, Coins } from 'lucide-react'; // Added Icons
+import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2, Coins, Calendar, DollarSign } from 'lucide-react'; // Added Icons
 
 const BingoDashboard = () => {
     const navigate = useNavigate();
     const [games, setGames] = useState([]);
     const [newGameName, setNewGameName] = useState('');
     const [loading, setLoading] = useState(false);
-    const [prices, setPrices] = useState({ bingo_price: 5000 }); // Default fallback
-
-    // Wallet State
+    const [prices, setPrices] = useState({ bingo_price: 5000 });
     const [wallet, setWallet] = useState({ balance: 0 });
     const [profile, setProfile] = useState(null);
+    const [ticketPrice, setTicketPrice] = useState('5000');
+    const [startTime, setStartTime] = useState('');
 
     useEffect(() => {
         loadData();
@@ -22,7 +22,6 @@ const BingoDashboard = () => {
 
     const loadData = async () => {
         try {
-            // Load settings first
             const settings = await getSystemSettings();
             if (settings.bingo_price) setPrices(prev => ({ ...prev, ...settings }));
 
@@ -42,12 +41,12 @@ const BingoDashboard = () => {
     const handleCreateGame = async (e) => {
         e.preventDefault();
         if (!newGameName.trim()) return;
+        if (!ticketPrice || !startTime) return alert('Completa todos los campos (Precio y Fecha)');
 
         const cost = Number(prices.bingo_price);
+
         if (wallet.balance < cost) {
-            if (window.confirm(`Saldo insuficiente.\nCosto: $${cost}\nTu Saldo: $${wallet.balance}\n\n¿Ir a recargar?`)) {
-                navigate('/recharge');
-            }
+            if (window.confirm(`Saldo insuficiente.\nCosto: $${cost}\nTu Saldo: $${wallet.balance}\n\n¿Ir a recargar?`)) navigate('/recharge');
             return;
         }
 
@@ -55,11 +54,14 @@ const BingoDashboard = () => {
 
         setLoading(true);
         try {
-            // SaaS: Use createGameService
             const result = await createGameService('BINGO', newGameName);
             if (result.success) {
+                const gId = result.game_id || result.id || result.data?.id;
+                if (gId) {
+                    await updateGame(gId, { ticketPrice, startTime });
+                }
                 alert(`¡Bingo "${newGameName}" creado exitosamente!\nSe descontaron $${cost} Coins.`);
-                await loadData(); // Reload to see new balance/game
+                await loadData();
             }
             setNewGameName('');
         } catch (err) {
@@ -125,15 +127,46 @@ const BingoDashboard = () => {
                     </div>
                 </div>
 
-                <form onSubmit={handleCreateGame} style={{ display: 'flex', gap: '1rem' }}>
-                    <input
-                        type="text"
-                        placeholder="Nombre del Evento (ej. Gran Bingo Bailable)"
-                        value={newGameName}
-                        onChange={(e) => setNewGameName(e.target.value)}
-                        disabled={loading}
-                    />
-                    <button type="submit" className="primary" disabled={loading}>
+                <form onSubmit={handleCreateGame} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
+                        <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '2px' }}>Nombre del Evento</label>
+                            <input
+                                type="text"
+                                placeholder="Ej. Gran Bingo Bailable"
+                                value={newGameName}
+                                onChange={(e) => setNewGameName(e.target.value)}
+                                disabled={loading}
+                                style={{ width: '100%', padding: '10px' }}
+                                required
+                            />
+                        </div>
+                        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '2px' }}>Valor Cartón</label>
+                            <input
+                                type="number"
+                                placeholder="Valor Cartón"
+                                value={ticketPrice}
+                                onChange={(e) => setTicketPrice(e.target.value)}
+                                disabled={loading}
+                                style={{ width: '100%', padding: '10px' }}
+                                required
+                            />
+                        </div>
+                        <div style={{ flex: '1 1 150px', display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '2px' }}>Hora de Inicio</label>
+                            <input
+                                type="datetime-local"
+                                value={startTime}
+                                onChange={(e) => setStartTime(e.target.value)}
+                                disabled={loading}
+                                style={{ width: '100%', padding: '10px' }}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <button type="submit" className="primary" disabled={loading} style={{ alignSelf: 'flex-start' }}>
                         <Plus size={18} style={{ verticalAlign: 'middle', marginRight: '5px' }} />
                         {loading ? 'Procesando...' : 'Pagar y Crear'}
                     </button>

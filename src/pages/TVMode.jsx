@@ -62,6 +62,13 @@ const TVMode = () => {
             dy: (Math.random() - 0.5) * 2
         }));
         setDecoBalls(balls);
+
+        // Timer interval
+        const timer = setInterval(() => {
+            // Force re-render for countdown
+            setDecoBalls(prev => [...prev]);
+        }, 1000);
+        return () => clearInterval(timer);
     }, []);
 
     // Load Game & Realtime Sync
@@ -185,21 +192,29 @@ const TVMode = () => {
 
         setIsSpinning(true);
 
+        // ------------- SOUND EFFECT: SPINNING WHEEL -------------
+        // Sound of balls rolling inside the cage
+        const spinAudio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-bag-of-coins-touching-3195.mp3');
+        // Or a better rolling sound if available. Using a generic rattle for now.
+        // Let's loop it a bit to match animation duration
+        spinAudio.loop = true;
+        spinAudio.volume = 0.5;
+        spinAudio.play().catch(e => console.log("Audio play failed", e));
+        // --------------------------------------------------------
+
         // Animation time
         setTimeout(async () => {
+            // STOP SOUND
+            spinAudio.pause();
+            spinAudio.currentTime = 0;
+
             const nextBall = available[0];
             const updatedCalled = [...currentCalled, nextBall];
 
             try {
                 // Update in DB (async)
-                // Note: stored proc or backend usually handles appending, but here we read-modify-write.
-                // Race condition possible if multi-admin, but for single host it's fine.
                 const updatedGame = await updateGame(game.id, {
-                    calledNumbers: updatedCalled, // Adapter might map this to snake_case? 
-                    // Wait, I mapped it in storage.js manually:
-                    // if (updates.calledNumbers !== undefined) dbUpdates.called_numbers = updates.calledNumbers;
-                    // So passing camelCase calledNumbers is CORRECT for my storage.js API.
-
+                    calledNumbers: updatedCalled,
                     currentNumber: nextBall,
                     status: 'PLAYING',
                     lastCallTime: new Date().toISOString()
@@ -246,6 +261,28 @@ const TVMode = () => {
                 {/* Header */}
                 <div style={{ textAlign: 'center', opacity: 0.8, marginBottom: '1rem' }}>
                     <h3>{game.name}</h3>
+                    {/* COUNTDOWN TIMER */}
+                    {(() => {
+                        if (!game.start_time) return null;
+                        const start = new Date(game.start_time).getTime();
+                        const now = new Date().getTime();
+                        const diff = start - now;
+
+                        if (diff <= 0) return <div style={{ color: '#00e676', fontWeight: 'bold' }}>¡EN VIVO! 🔴</div>;
+
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        return (
+                            <div style={{ background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '5px', marginTop: '5px', border: '1px solid #F59E0B' }}>
+                                <div style={{ fontSize: '0.8rem', color: '#F59E0B' }}>Inicia en:</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                    {hours}h {minutes}m {seconds}s
+                                </div>
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* PHYSICAL DRUM SIMULATION */}
@@ -320,7 +357,7 @@ const TVMode = () => {
                         {!autoPlay && (
                             <button
                                 onClick={drawBall}
-                                disabled={isSpinning}
+                                disabled={isSpinning || (game.start_time && new Date(game.start_time) > new Date())}
                                 style={{
                                     padding: '1rem', fontSize: '1.2rem', background: isSpinning ? '#30475e' : '#e94560', color: 'white',
                                     border: 'none', borderRadius: '12px', fontWeight: 'bold', cursor: isSpinning ? 'not-allowed' : 'pointer',
@@ -328,7 +365,7 @@ const TVMode = () => {
                                     transition: 'all 0.1s'
                                 }}
                             >
-                                {isSpinning ? 'MEZCLANDO...' : 'SACAR BALOTA MANUAL'}
+                                {isSpinning ? 'MEZCLANDO...' : (game.start_time && new Date(game.start_time) > new Date()) ? 'ESPERANDO INICIO...' : 'SACAR BALOTA MANUAL'}
                             </button>
                         )}
 

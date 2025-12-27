@@ -94,11 +94,18 @@ const PlayerView = () => {
         try {
             const tickets = await getTicketsByPhone(gameId, phoneToUse);
             if (tickets && tickets.length > 0) {
-                setMyTickets(tickets);
-                setIsAuthenticated(true);
-                localStorage.setItem(`bingo_phone_${gameId}`, phoneToUse);
+                // Filter only PAID/Active tickets just in case query returned pending (though getTicketsByPhone usually returns clean list, better safe)
+                const activeTickets = tickets.filter(t => t.status === 'PAID' || t.status === 'WIN_CLAIMED');
+
+                if (activeTickets.length > 0) {
+                    setMyTickets(activeTickets);
+                    setIsAuthenticated(true);
+                    localStorage.setItem(`bingo_phone_${gameId}`, phoneToUse);
+                } else {
+                    alert("Tienes cartones registrados pero AÚN NO ESTÁN ACTIVOS. El administrador debe verificar tu pago.");
+                }
             } else {
-                if (!directPhone) alert("No encontramos cartones PAGOS con ese celular.");
+                if (!directPhone) alert("No encontramos cartones con ese celular.");
             }
         } catch (error) {
             alert("Error al ingresar: " + error.message);
