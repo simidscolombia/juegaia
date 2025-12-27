@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createGameService, getGames, getGameTickets, getWallet, getProfile, mockRecharge, deleteGame, getSystemSettings, updateGame } from '../utils/storage'; // Updated imports
 import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
-import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2, Coins, Calendar, DollarSign } from 'lucide-react'; // Added Icons
+import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2, Coins, Calendar, DollarSign, CreditCard } from 'lucide-react'; // Added Icons
 
 import PaymentMethodsManager from '../components/PaymentMethodsManager';
 
