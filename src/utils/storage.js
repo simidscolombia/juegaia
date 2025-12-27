@@ -794,6 +794,59 @@ export const saveRaffleWinner = async (raffleId, winnerNumber) => {
     if (error) throw error;
 };
 
+// --- PAYMENT METHODS (User Specific) ---
+
+export const getPaymentMethods = async (userId) => {
+    const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+    if (error) {
+        console.warn("Error fetching payment methods (table might be missing):", error);
+        return [];
+    }
+    return data;
+};
+
+export const getAllMyPaymentMethods = async () => {
+    // For admin to see even inactive ones
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('user_id', user.id);
+
+    if (error) return [];
+    return data;
+};
+
+export const addPaymentMethod = async (type, details) => {
+    // details: { account_number, account_name, instructions, phone }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No autenticado");
+
+    const { data, error } = await supabase
+        .from('payment_methods')
+        .insert([{
+            user_id: user.id,
+            type, // 'NEQUI', 'DAVIPLATA', 'BANCOLOMBIA', 'EFECTIVO'
+            ...details
+        }])
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+};
+
+export const deletePaymentMethod = async (id) => {
+    const { error } = await supabase.from('payment_methods').delete().eq('id', id);
+    if (error) throw error;
+};
+
 // --- SUPER ADMIN FUNCTIONS ---
 
 export const getAllAllGames = async () => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getGame, createTicket, uploadBingoProof } from '../utils/storage';
+import { getGame, createTicket, uploadBingoProof, getPaymentMethods } from '../utils/storage';
 import { supabase } from '../utils/supabaseClient';
-import { Wallet, Check, AlertCircle, Upload } from 'lucide-react';
+import { Wallet, Check, AlertCircle, Upload, CreditCard } from 'lucide-react';
 import { generateBingoCard } from '../utils/bingoLogic';
 
 const BingoLobby = () => {
@@ -14,6 +14,8 @@ const BingoLobby = () => {
     const [paymentFile, setPaymentFile] = useState(null); // New state for file
     const [status, setStatus] = useState('idle'); // idle, submitting, success, error
     const [currentUser, setCurrentUser] = useState(null);
+    const [paymentMethods, setPaymentMethods] = useState([]);
+    const [selectedMethod, setSelectedMethod] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -26,6 +28,11 @@ const BingoLobby = () => {
                 supabase.auth.getUser()
             ]);
             setGame(g);
+
+            if (g && g.owner_id) {
+                const methods = await getPaymentMethods(g.owner_id);
+                setPaymentMethods(methods || []);
+            }
 
             if (user) {
                 setCurrentUser(user);
@@ -51,6 +58,9 @@ const BingoLobby = () => {
             if (!formData.name || !formData.phone || formData.quantity < 1) {
                 throw new Error("Por favor completa todos los campos.");
             }
+            if (paymentMethods.length > 0 && !selectedMethod) {
+                throw new Error("Por favor selecciona un método de pago.");
+            }
             if (!paymentFile) {
                 throw new Error("Debes subir el comprobante de pago.");
             }
@@ -72,6 +82,7 @@ const BingoLobby = () => {
                 const card = generateBingoCard();
                 const pin = Math.floor(1000 + Math.random() * 9000).toString();
                 // Provide proofUrl
+                // We could also store selectedMethod info if DB supported it, but proofUrl implies it.
                 promises.push(createTicket(gameId, formData.name, card, pin, 'PENDING', formData.phone, currentUser?.id, proofUrl));
             }
 
@@ -213,10 +224,40 @@ const BingoLobby = () => {
                         <small style={{ opacity: 0.7 }}>(Costo por cartón: ${(game.ticket_price || 10000).toLocaleString()})</small>
                     </div>
 
+                    {/* PAYMENT METHODS SECTION */}
+                    {paymentMethods.length > 0 && (
+                        <div style={{ marginBottom: '20px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '10px' }}>
+                                <CreditCard size={18} /> Elige dónde vas a pagar:
+                            </label>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {paymentMethods.map(m => (
+                                    <div
+                                        key={m.id}
+                                        onClick={() => setSelectedMethod(m)}
+                                        style={{
+                                            border: selectedMethod?.id === m.id ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                                            background: selectedMethod?.id === m.id ? 'rgba(37, 99, 235, 0.1)' : 'var(--color-bg)',
+                                            padding: '10px', borderRadius: '8px', cursor: 'pointer',
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                                        }}
+                                    >
+                                        <div>
+                                            <strong>{m.type}</strong>
+                                            <div style={{ fontSize: '0.9rem' }}>{m.account_number}</div>
+                                            {m.account_name && <small>{m.account_name}</small>}
+                                        </div>
+                                        {selectedMethod?.id === m.id && <Check size={20} color="var(--color-primary)" />}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Payment Proof Upload */}
                     <div style={{ marginBottom: '25px', background: 'var(--color-bg)', padding: '15px', borderRadius: '8px', border: '1px dashed var(--color-border)' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', cursor: 'pointer' }}>
-                            <Upload size={20} /> Subir Comprobante de Pago (Nequi/Daviplata)
+                            <Upload size={20} /> Subir Comprobante de Pago
                         </label>
                         <input
                             type="file"
@@ -229,7 +270,7 @@ const BingoLobby = () => {
                             style={{ width: '100%' }}
                             required
                         />
-                        <small style={{ display: 'block', marginTop: '5px', opacity: 0.7 }}>* Es obligatorio subir la captura del pago para que te activen.</small>
+                        <small style={{ display: 'block', marginTop: '5px', opacity: 0.7 }}>* Sube la foto del pago a la cuenta seleccionada.</small>
                     </div>
 
                     <button

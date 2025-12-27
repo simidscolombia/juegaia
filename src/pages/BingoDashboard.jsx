@@ -5,6 +5,8 @@ import { supabase } from '../utils/supabaseClient';
 import { generateBingoCard } from '../utils/bingoLogic';
 import { Play, Tv, Users, Plus, Ticket, Wallet, Copy, LogOut, Trash, Share2, Coins, Calendar, DollarSign } from 'lucide-react'; // Added Icons
 
+import PaymentMethodsManager from '../components/PaymentMethodsManager';
+
 const BingoDashboard = () => {
     const navigate = useNavigate();
     const [games, setGames] = useState([]);
@@ -15,6 +17,8 @@ const BingoDashboard = () => {
     const [profile, setProfile] = useState(null);
     const [ticketPrice, setTicketPrice] = useState('5000');
     const [startTime, setStartTime] = useState('');
+    const [adminWhatsapp, setAdminWhatsapp] = useState('');
+    const [showPaymentSettings, setShowPaymentSettings] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -32,7 +36,10 @@ const BingoDashboard = () => {
             ]);
             setGames(gamesData || []);
             if (walletData) setWallet(walletData);
-            if (profileData) setProfile(profileData);
+            if (profileData) {
+                setProfile(profileData);
+                // Pre-fill whatsapp if available in profile (optional, but convenient)
+            }
         } catch (error) {
             console.error("Error loading dashboard:", error);
         }
@@ -41,7 +48,7 @@ const BingoDashboard = () => {
     const handleCreateGame = async (e) => {
         e.preventDefault();
         if (!newGameName.trim()) return;
-        if (!ticketPrice || !startTime) return alert('Completa todos los campos (Precio y Fecha)');
+        if (!ticketPrice || !startTime || !adminWhatsapp) return alert('Completa todos los campos (Precio, Fecha y WhatsApp)');
 
         const cost = Number(prices.bingo_price);
 
@@ -58,7 +65,7 @@ const BingoDashboard = () => {
             if (result.success) {
                 const gId = result.game_id || result.id || result.data?.id;
                 if (gId) {
-                    await updateGame(gId, { ticketPrice, startTime });
+                    await updateGame(gId, { ticketPrice, startTime, adminWhatsapp });
                 }
                 alert(`¡Bingo "${newGameName}" creado exitosamente!\nSe descontaron $${cost} Coins.`);
                 await loadData();
@@ -75,8 +82,8 @@ const BingoDashboard = () => {
         setLoading(true);
         try {
             await mockRecharge(50000);
-            alert('¡Recarga exitosa! (+50,000 Coins)');
             await loadData();
+            alert('¡Recarga exitosa!');
         } catch (error) {
             alert('Error recargando: ' + error.message);
         } finally {
@@ -96,23 +103,26 @@ const BingoDashboard = () => {
         }
     };
 
-    const handleCreateTicket = async (gameId) => {
-        // ... (Logic kept if needed, but usually admin manages inside)
-    };
-
     return (
         <div style={{ textAlign: 'left', minHeight: '100vh' }}>
+            {showPaymentSettings && <PaymentMethodsManager onClose={() => setShowPaymentSettings(false)} />}
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', marginTop: 0 }}>
                 <h2 style={{ margin: 0 }}>Mis Bingos</h2>
-                <div
-                    onClick={() => navigate('/recharge')}
-                    style={{
-                        display: 'flex', alignItems: 'center', gap: '5px',
-                        background: 'var(--color-bg)', border: '1px solid var(--color-border)',
-                        padding: '5px 10px', borderRadius: '20px', cursor: 'pointer'
-                    }}>
-                    <Coins size={16} color="#F59E0B" />
-                    <span style={{ fontWeight: 'bold' }}>${wallet.balance?.toLocaleString()}</span>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button onClick={() => setShowPaymentSettings(true)} style={{ background: '#2563EB' }}>
+                        <CreditCard size={16} style={{ marginRight: '5px' }} /> Métodos de Pago
+                    </button>
+                    <div
+                        onClick={() => navigate('/recharge')}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '5px',
+                            background: 'var(--color-bg)', border: '1px solid var(--color-border)',
+                            padding: '5px 10px', borderRadius: '20px', cursor: 'pointer'
+                        }}>
+                        <Coins size={16} color="#F59E0B" />
+                        <span style={{ fontWeight: 'bold' }}>${wallet.balance?.toLocaleString()}</span>
+                    </div>
                 </div>
             </div>
 
@@ -159,6 +169,18 @@ const BingoDashboard = () => {
                                 type="datetime-local"
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
+                                disabled={loading}
+                                style={{ width: '100%', padding: '10px' }}
+                                required
+                            />
+                        </div>
+                        <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column' }}>
+                            <label style={{ fontSize: '0.8rem', opacity: 0.8, marginBottom: '2px' }}>WhatsApp (Para Comprobantes)</label>
+                            <input
+                                type="text"
+                                placeholder="Ej. 3001234567"
+                                value={adminWhatsapp}
+                                onChange={(e) => setAdminWhatsapp(e.target.value)}
                                 disabled={loading}
                                 style={{ width: '100%', padding: '10px' }}
                                 required
