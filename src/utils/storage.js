@@ -237,7 +237,8 @@ export const createGameService = async (serviceType, name, config = {}) => {
     const { data, error } = await supabase
         .rpc('create_game_service', {
             p_service_type: serviceType,
-            p_name: name
+            p_name: name,
+            p_config: config
         });
 
     if (error) throw error;
