@@ -267,7 +267,7 @@ const RafflePublic = () => {
             {/* Grid */}
             <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 1rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '8px' }}>
-                    {Array.from({ length: max - min + 1 }).map((_, i) => {
+                    {Array.from({ length: Math.min((max - min + 1), 10000) }).map((_, i) => {
                         const num = min + i;
                         const status = getTicketStatus(num);
                         const isSelected = selectedNums.includes(num);
@@ -285,6 +285,9 @@ const RafflePublic = () => {
                             bg = '#0984e3'; border = '2px solid #0984e3'; color = '#fff';
                         }
 
+                        // Determine padding length based on 'digits' config or max number length
+                        const padLength = raffle.digits || max.toString().length;
+
                         return (
                             <button
                                 key={num}
@@ -296,7 +299,7 @@ const RafflePublic = () => {
                                     fontSize: '1.1rem', fontWeight: 'bold', color: color
                                 }}
                             >
-                                {num.toString().padStart(max.toString().length, '0')}
+                                {num.toString().padStart(padLength, '0')}
                             </button>
                         );
                     })}
