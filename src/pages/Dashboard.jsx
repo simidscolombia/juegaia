@@ -194,34 +194,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* 3. Wallet Section (Ultra Compact) */}
-            <div style={{
-                background: 'linear-gradient(90deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.6) 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '16px', padding: '12px', marginBottom: '1.5rem',
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '8px', borderRadius: '50%' }}>
-                        <Wallet size={20} color="#10B981" />
-                    </div>
-                    <div>
-                        <div style={{ fontSize: '0.75rem', opacity: 0.6, lineHeight: 1 }}>Saldo Disponible</div>
-                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#fff' }}>${wallet.balance?.toLocaleString() || '0'}</div>
-                    </div>
-                </div>
 
-                <button
-                    onClick={() => navigate('/recharge')}
-                    style={{
-                        background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)',
-                        padding: '6px 12px', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '5px'
-                    }}
-                >
-                    <Plus size={16} /> Recargar
-                </button>
-            </div>
 
             {/* 4. Dashboard Grid - Mobile Friendly (2 Columns) */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.8rem' }}>

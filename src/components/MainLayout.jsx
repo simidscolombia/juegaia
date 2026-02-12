@@ -129,14 +129,32 @@ const MainLayout = ({ children }) => {
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '1rem', background: 'var(--color-bg)', padding: '10px', borderRadius: '8px' }}>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>{profile?.full_name || 'Usuario'}</div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '0.9rem', marginTop: '4px' }}>
-                            <Wallet size={14} />
-                            {wallet.balance.toLocaleString()}
+                    <div style={{ marginBottom: '1rem', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid var(--color-border)' }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '8px' }}>{profile?.full_name || 'Usuario'}</div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <Wallet size={18} />
+                                ${wallet.balance.toLocaleString()}
+                            </div>
+                            <button
+                                onClick={() => navigate('/recharge')}
+                                style={{
+                                    background: 'var(--color-primary)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    padding: '4px 8px',
+                                    fontSize: '0.75rem',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold'
+                                }}
+                            >
+                                + Recargar
+                            </button>
                         </div>
                     </div>
-                    <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid var(--color-border)', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', color: 'var(--color-text)' }}>
+                    <button onClick={handleLogout} style={{ background: 'transparent', border: '1px solid var(--color-border)', width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', color: 'var(--color-text)', padding: '10px', borderRadius: '8px', cursor: 'pointer' }}>
                         <LogOut size={16} /> Cerrar Sesión
                     </button>
 
@@ -164,8 +182,18 @@ const MainLayout = ({ children }) => {
                 alignItems: 'center',
                 flexShrink: 0 // Don't shrink
             }}>
-                <div style={{ fontWeight: 'bold' }}>JuegAIA</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '1.2rem' }}>JuegAIA</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div
+                        onClick={() => navigate('/recharge')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(0,0,0,0.2)', padding: '5px 10px', borderRadius: '20px', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+                    >
+                        <div style={{ color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '0.9rem' }}>
+                            ${wallet.balance.toLocaleString()}
+                        </div>
+                        <div style={{ background: 'var(--color-primary)', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: 'white' }}>+</div>
+                    </div>
+
                     <button
                         onClick={() => {
                             const keys = Object.keys(themes);
@@ -174,10 +202,6 @@ const MainLayout = ({ children }) => {
                         }}
                         style={{ padding: '5px', borderRadius: '50%', width: '30px', height: '30px', background: themes[currentTheme].colors.primary, border: '2px solid white' }}
                     />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--color-accent)', fontWeight: 'bold', fontSize: '0.9rem' }}>
-                        <Wallet size={16} />
-                        {wallet.balance.toLocaleString()}
-                    </div>
                     <button onClick={handleLogout} style={{ background: 'transparent', padding: '5px' }}>
                         <LogOut size={20} color="var(--color-text-muted)" />
                     </button>
