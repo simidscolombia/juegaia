@@ -71,8 +71,19 @@ const RaffleDashboard = () => {
         setForm({ ...form, digits, min: 0, max });
     };
 
+    const [uiDigitSelection, setUiDigitSelection] = useState(3); // 2, 3, 4, or 'custom'
+
     const handleCreate = async (e) => {
         e.preventDefault();
+
+        // STRICT VALIDATION
+        const digitsVal = Number(form.digits);
+        const minVal = Number(form.min_number !== undefined ? form.min_number : form.min);
+        const maxVal = Number(form.max_number !== undefined ? form.max_number : form.max);
+
+        if (isNaN(digitsVal) || isNaN(minVal) || isNaN(maxVal)) {
+            return alert("Error: Por favor verifica que el rango y número de cifras sean válidos (solo números).");
+        }
 
         if (editingId) {
             // Update Mode
@@ -80,22 +91,19 @@ const RaffleDashboard = () => {
                 const updates = {
                     name: form.name,
                     price: Number(form.price),
-                    // minRange: form.min, // Typically fixed after creation but can be allowed if dangerous
-                    // maxRange: form.max,
                     lotteryName: form.lotteryName,
                     drawDate: form.drawDate,
                     payment_info: form.paymentInfo,
-                    image: form.image
+                    image: form.image,
+                    // Typically range is not editable to avoid breaking sold tickets, but we pass if needed
                 };
-                // Only send digits/range if really needed, keeping it safe for now:
-                // Actually user requested date and price specifically.
 
                 await updateRaffle(editingId, updates);
                 await fetchAllRaffles();
 
                 // Update selected details if we are viewing it
                 if (selectedRaffle && selectedRaffle.id === editingId) {
-                    const updated = await getRaffles(); // inefficient but safe
+                    const updated = await getRaffles();
                     const fresh = updated.find(r => r.id === editingId);
                     setSelectedRaffle(fresh);
                 }
@@ -110,10 +118,9 @@ const RaffleDashboard = () => {
             return;
         }
 
-        // Creation Mode (Current Logic)
+        // Creation Mode
         const cost = 2000;
-        // ... (rest as before)
-        if (wallet.balance < cost) { // Changed from wallet to wallet.balance
+        if (wallet.balance < cost) {
             if (window.confirm(`Saldo insuficiente (${wallet.balance}). Crear rifa cuesta $${cost} Coins.\n¿Deseas recargar?`)) {
                 setShowRecharge(true);
             }
@@ -123,35 +130,33 @@ const RaffleDashboard = () => {
         if (!window.confirm(`Crear esta Rifa costará $${cost} Coins.\n¿Deseas continuar?`)) return;
 
         try {
-            const isCustom = form.digits === 'custom' || typeof form.digits === 'string';
+            // Force numeric calculation if custom
+            let finalDigits = digitsVal;
+            if (uiDigitSelection === 'custom') {
+                finalDigits = maxVal.toString().length;
+            }
 
             const config = {
-                // Fix: prioritize min_number/max_number if custom, otherwise use min/max from select
-                min: isCustom ? (form.min_number !== undefined ? form.min_number : 0) : form.min,
-                max: isCustom ? (form.max_number !== undefined ? form.max_number : 999) : form.max,
-
-                price: form.price,
+                min: minVal,
+                max: maxVal,
+                price: Number(form.price),
                 lottery: form.lotteryName,
-
-                // Fix: ensure digits is a number. If 'custom', calculate from max.
-                digits: isCustom
-                    ? (form.max_number || 999).toString().length
-                    : Number(form.digits),
-
+                digits: finalDigits,
                 image: form.image,
-                minutes: form.reservationMinutes,
+                minutes: Number(form.reservationMinutes),
                 drawDate: form.drawDate,
                 paymentInfo: form.paymentInfo,
 
-                // Explicitly send both for safety
-                min_number: isCustom ? form.min_number : form.min,
-                max_number: isCustom ? form.max_number : form.max
+                // Redundant safety
+                min_number: minVal,
+                max_number: maxVal
             };
 
             await createGameService('RAFFLE', form.name, config);
             await fetchAllRaffles();
             setShowCreate(false);
             setForm({ name: '', min: 0, max: 999, price: 10000, lotteryName: 'Chontico Día', digits: 3, image: '', reservationMinutes: 15, drawDate: '', paymentInfo: '' });
+            setUiDigitSelection(3); // Reset UI
             setIsManualLottery(false);
             alert(`¡Rifa creada! Se descontaron $${cost} Coins.`);
         } catch (err) {
@@ -170,9 +175,12 @@ const RaffleDashboard = () => {
             image: raffle.image || '',
             reservationMinutes: raffle.reservation_minutes,
             drawDate: raffle.draw_date ? raffle.draw_date.split('T')[0] : '', // Format for input type="date"
-            paymentInfo: raffle.payment_info || ''
+            paymentInfo: raffle.payment_info || '',
+            min_number: raffle.min_number,
+            max_number: raffle.max_number
         });
         setEditingId(raffle.id);
+        setUiDigitSelection(raffle.digits); // Pre-fill UI (might map to keys if standard)
         setShowCreate(true);
     };
 
@@ -345,17 +353,21 @@ const RaffleDashboard = () => {
                                 <div style={{ marginBottom: '15px' }}>
                                     <label style={{ display: 'block', fontSize: '0.85rem', color: '#a0a0a0', marginBottom: '5px' }}>Tipo de Juego / Rango</label>
                                     <select
-                                        value={form.digits === 'custom' ? 'custom' : form.digits}
+                                        value={uiDigitSelection}
                                         onChange={e => {
                                             const val = e.target.value;
+                                            setUiDigitSelection(val);
+
                                             if (val === 'custom') {
-                                                setForm({ ...form, digits: 'custom', min_number: 0, max_number: 100 });
+                                                // Keep digits as a placeholder number (e.g. 0) until create
+                                                // But set min/max to default custom range
+                                                setForm({ ...form, digits: 0, min_number: 0, max_number: 100 });
                                             } else {
                                                 const d = Number(val);
                                                 let max = 99;
                                                 if (d === 3) max = 999;
                                                 if (d === 4) max = 9999;
-                                                setForm({ ...form, digits: d, min_number: 0, max_number: max });
+                                                setForm({ ...form, digits: d, min: 0, max: max, min_number: 0, max_number: max });
                                             }
                                         }}
                                         style={{
@@ -369,13 +381,13 @@ const RaffleDashboard = () => {
                                         <option value="custom">Personalizado (Rango Manual)</option>
                                     </select>
 
-                                    {form.digits === 'custom' && (
+                                    {uiDigitSelection === 'custom' && (
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
                                             <div>
                                                 <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Desde (Mínimo)</label>
                                                 <input
                                                     type="number"
-                                                    value={form.min_number || 0}
+                                                    value={form.min_number !== undefined ? form.min_number : 0}
                                                     onChange={e => setForm({ ...form, min_number: Number(e.target.value) })}
                                                     style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#0f172a', border: '1px solid #334155', color: '#f8fafc' }}
                                                 />
@@ -384,7 +396,7 @@ const RaffleDashboard = () => {
                                                 <label style={{ fontSize: '0.8rem', color: '#64748b' }}>Hasta (Máximo)</label>
                                                 <input
                                                     type="number"
-                                                    value={form.max_number || 100}
+                                                    value={form.max_number !== undefined ? form.max_number : 100}
                                                     onChange={e => setForm({ ...form, max_number: Number(e.target.value) })}
                                                     style={{ width: '100%', padding: '8px', borderRadius: '6px', background: '#0f172a', border: '1px solid #334155', color: '#f8fafc' }}
                                                 />
