@@ -124,10 +124,21 @@ const RaffleDashboard = () => {
 
         try {
             const config = {
-                min: form.min, max: form.max, price: form.price,
-                lottery: form.lotteryName, digits: form.digits,
-                image: form.image, minutes: form.reservationMinutes,
-                drawDate: form.drawDate, paymentInfo: form.paymentInfo
+                min: form.min, // For 'custom' logic, we might need to map to min_number/max_number fields if they differ in state
+                max: form.max,
+                price: form.price,
+                lottery: form.lotteryName,
+                // Fix: ensure digits is a number. If 'custom', use max length.
+                digits: (form.digits === 'custom' || typeof form.digits === 'string')
+                    ? (form.max_number || form.max || 999).toString().length
+                    : Number(form.digits),
+                image: form.image,
+                minutes: form.reservationMinutes,
+                drawDate: form.drawDate,
+                paymentInfo: form.paymentInfo,
+                // Add explicit fields for custom range if needed by backend (though backend uses config.min/max too)
+                min_number: form.min_number !== undefined ? form.min_number : form.min,
+                max_number: form.max_number !== undefined ? form.max_number : form.max
             };
 
             await createGameService('RAFFLE', form.name, config);
