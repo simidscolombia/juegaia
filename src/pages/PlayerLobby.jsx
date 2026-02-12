@@ -229,39 +229,73 @@ const PlayerLobby = () => {
             {/* Content: Earn Money */}
             {activeTab === 'earn' && (
                 <div style={{ padding: '20px', textAlign: 'center' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', borderRadius: '12px', padding: '30px 20px', color: 'black', marginBottom: '30px' }}>
-                        <h1 style={{ margin: '0 0 10px 0', fontSize: '2.5rem' }}>10%</h1>
-                        <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>De Comisión Automática</p>
-                        <p style={{ opacity: 0.9 }}>Gana dinero cada vez que tus amigos compren cartones o recarguen.</p>
+                    <div style={{
+                        background: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
+                        borderRadius: '20px',
+                        padding: '40px 20px',
+                        color: '#000',
+                        marginBottom: '30px',
+                        boxShadow: '0 10px 30px -10px rgba(245, 158, 11, 0.5)'
+                    }}>
+                        <h1 style={{ margin: '0 0 10px 0', fontSize: '2.5rem', textShadow: '0 2px 0 rgba(255,255,255,0.5)' }}>🤑 ¡Gana Dinero!</h1>
+                        <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold' }}>Crea tus propios Sorteos</p>
+                        <p style={{ opacity: 0.9, marginTop: '10px' }}>
+                            Conviértete en Vendedor/Administrador y usa nuestra plataforma para organizar tus rifas y bingos.
+                        </p>
                     </div>
 
-                    <h3>¡Es muy fácil!</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', marginBottom: '30px' }}>
-                        <div>
-                            <div style={{ background: 'var(--color-card)', padding: '15px', borderRadius: '8px', marginBottom: '10px' }}>🔗</div>
-                            <small>1. Envía tu Link</small>
+                    <h3 style={{ marginBottom: '20px' }}>¿Cómo funciona?</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px', marginBottom: '30px', textAlign: 'left' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--color-card)', padding: '15px', borderRadius: '12px' }}>
+                            <div style={{ fontSize: '1.5rem' }}>🔥</div>
+                            <div>
+                                <strong>Regístrate como Admin</strong>
+                                <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>Crea una cuenta administradora gratis.</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style={{ background: 'var(--color-card)', padding: '15px', borderRadius: '8px', marginBottom: '10px' }}>🎟️</div>
-                            <small>2. Ellos Juegan</small>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--color-card)', padding: '15px', borderRadius: '12px' }}>
+                            <div style={{ fontSize: '1.5rem' }}>⚙️</div>
+                            <div>
+                                <strong>Configura tu Juego</strong>
+                                <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>Crea rifas o bingos en minutos.</div>
+                            </div>
                         </div>
-                        <div>
-                            <div style={{ background: 'var(--color-card)', padding: '15px', borderRadius: '8px', marginBottom: '10px' }}>💰</div>
-                            <small>3. Tú Ganas</small>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', background: 'var(--color-card)', padding: '15px', borderRadius: '12px' }}>
+                            <div style={{ fontSize: '1.5rem' }}>💸</div>
+                            <div>
+                                <strong>Vende y Gana</strong>
+                                <div style={{ fontSize: '0.85rem', opacity: 0.7 }}>Comparte tu link y recibe los pagos directamente.</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="card" style={{ textAlign: 'left' }}>
-                        <label style={{ fontSize: '0.8rem', opacity: 0.7 }}>Tu Enlace Único</label>
-                        <div style={{ display: 'flex', gap: '10px', marginTop: '5px' }}>
-                            <input
-                                readOnly
-                                value={`${window.location.origin}/register?ref=${profile?.id}`}
-                                style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid var(--color-border)', background: 'var(--color-bg)', color: 'var(--color-text)' }}
-                            />
-                            <button onClick={copyReferral} className="primary">Copiar</button>
-                        </div>
-                    </div>
+                    <button
+                        onClick={() => {
+                            // Logout current guest/player session and go to login as admin intent
+                            if (window.confirm("Para convertirte en vendedor debes cerrar tu sesión de jugador actual. ¿Continuar?")) {
+                                supabase.auth.signOut().then(() => navigate('/login'));
+                            }
+                        }}
+                        style={{
+                            width: '100%',
+                            background: 'white',
+                            color: '#000',
+                            padding: '16px',
+                            borderRadius: '12px',
+                            fontSize: '1.1rem',
+                            fontWeight: 'bold',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                            boxShadow: '0 4px 15px rgba(255,255,255,0.1)'
+                        }}
+                    >
+                        🚀 Comenzar a Vender
+                    </button>
+
+                    <p style={{ marginTop: '20px', fontSize: '0.8rem', opacity: 0.5 }}>
+                        * Requiere registro con correo electrónico.
+                    </p>
                 </div>
             )}
         </div>
