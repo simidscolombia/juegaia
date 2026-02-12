@@ -19,7 +19,26 @@ import PlayerLobby from './pages/PlayerLobby'
 import ProtectedRoute from './components/ProtectedRoute'
 import MainLayout from './components/MainLayout'
 
+import UpdatePassword from './pages/UpdatePassword'
+import { supabase } from './utils/supabaseClient'
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+
 function App() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === "PASSWORD_RECOVERY") {
+                navigate("/update-password");
+            }
+        });
+
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
+    }, []);
+
     return (
         <div style={{ width: '100%', height: '100vh', background: 'var(--color-bg)' }}>
             <Routes>
@@ -108,6 +127,10 @@ function App() {
 
                 {/* Guest/Public Player Lobby */}
                 <Route path="/lobby" element={<PlayerLobby />} />
+                {/* Password Reset Route - Protected because user is technically logged in via magic link */}
+                <Route path="/update-password" element={
+                    <UpdatePassword />
+                } />
             </Routes>
         </div>
     )
